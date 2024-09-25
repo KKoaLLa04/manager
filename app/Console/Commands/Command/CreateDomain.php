@@ -19,19 +19,9 @@ class CreateDomain extends Command
         $this->createFolder($domainPath, 'Models');
         $this->createFolder($domainPath, 'Controllers');
         $this->createController($domainPath, 'Controllers', $domainName);
-        $this->createFolder($domainPath, 'DTO');
-        $this->createDTO($domainPath, 'DTO', $domainName);
         $this->createFolder($domainPath, 'Requests');
         $this->createRequest($domainPath, 'Requests', $domainName);
-        $this->createFolder($domainPath, 'Features');
-        $this->createFeature($domainPath, 'Features', $domainName);
-        $this->createFolder($domainPath, 'Operations');
-        $this->createFolder($domainPath, 'Actions');
-        $this->createFolder($domainPath, 'ModelData');
-        $this->createFolder($domainPath, 'Events');
-        $this->createFolder($domainPath, 'Listeners');
-        $this->createFolder($domainPath, 'Transformers');
-        $this->createTransformer($domainPath, 'Transformers', $domainName);
+        $this->createFolder($domainPath, 'Repository');
         $this->createFolder($domainPath, 'Routes');
         $this->createRoute($domainPath, $domainName);
     }
@@ -98,31 +88,6 @@ Route::group(['prefix' => '$domainName'], function () {
         }
     }
 
-    private function createDTO(string $domainPath, string $folderName, string $domainName)
-    {
-        $folderPath = "{$domainPath}/{$folderName}";
-
-        if (!file_exists($folderPath)) {
-            mkdir($folderPath);
-        }
-        if (!file_exists("{$folderPath}/{$domainName}DTO.php")) {
-            $namespace         = "App\Domain\.$domainName.\DTO";
-            $namespace         = str_replace('.', '', $namespace);
-            $dtoContent = "<?php
-namespace {$namespace};
-
-class {$domainName}DTO 
-{
-    public function __construct()
-    {
-    }
-
-}
-            ";
-            file_put_contents("{$folderPath}/{$domainName}DTO.php", $dtoContent);
-        }
-    }
-
     private function createRequest(string $domainPath, string $folderName, string $domainName)
     {
         $folderPath = "{$domainPath}/{$folderName}";
@@ -156,85 +121,10 @@ class {$domainName}Request extends FormRequest
         ];
     }
     
-    public function getDTO() 
-    {
-        
-    }
-
 }
             ";
             file_put_contents("{$folderPath}/{$domainName}Request.php", $dtoContent);
         }
     }
 
-    private function createFeature(string $domainPath, string $folderName, string $domainName)
-    {
-        $folderPath = "{$domainPath}/{$folderName}";
-
-        if (!file_exists($folderPath)) {
-            mkdir($folderPath);
-        }
-        if (!file_exists("{$folderPath}/{$domainName}Feature.php")) {
-            $namespace         = "App\Domain\.$domainName.\Features";
-            $namespace         = str_replace('.', '', $namespace);
-
-            $useDTO      = "App\Domain\.$domainName.\DTO\.$domainName.DTO;";
-            $useDTO = str_replace('.', '', $useDTO);
-
-            $dto               = lcfirst($domainName)."DTO";
-            $dtoContent = "<?php
-namespace {$namespace};
-
-use {$useDTO}
-
-class {$domainName}Feature 
-{
-    private {$domainName}DTO "."$"."{$dto};
-        
-    public function __construct()
-    {
-    }
-    public function setDTO({$domainName}DTO "."$"."{$dto})
-    {
-        "."$"."this->{$dto} = "."$"."{$dto};
-    }
-    
-    public function getDTO(): {$domainName}DTO
-    {
-        return "."$"."this->{$dto};
-    }
-    
-    public function handle(){
-        
-    }
-}
-            ";
-            file_put_contents("{$folderPath}/{$domainName}Feature.php", $dtoContent);
-        }
-    }
-
-    private function createTransformer(string $domainPath, string $folderName, string $domainName)
-    {
-        $folderPath = "{$domainPath}/{$folderName}";
-
-        if (!file_exists($folderPath)) {
-            mkdir($folderPath);
-        }
-        if (!file_exists("{$folderPath}/{$domainName}Transformer.php")) {
-            $namespace         = "App\Domain\.$domainName.\Transformers";
-            $namespace         = str_replace('.', '', $namespace);
-            $dtoContent = "<?php
-namespace {$namespace};
-
-class {$domainName}Transformer 
-{
-    public function toArray() {
-    
-    }
-
-}
-            ";
-            file_put_contents("{$folderPath}/{$domainName}Transformer.php", $dtoContent);
-        }
-    }
 }
