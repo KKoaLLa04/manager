@@ -1,0 +1,15 @@
+version: "2.4"
+
+services:
+  workspace:
+    image: "manager"
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: "manager"
+    working_dir: /var/www/html
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+    restart: on-failure
