@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 class CreateDomain extends Command
 {
 
-    protected $signature = 'create:domain {domainName}';
+    protected $signature = 'make:domain {domainName}';
 
     protected $description = 'Create a domain with all components';
 
