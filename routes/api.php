@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::group(['prefix' => 'manager/{apartmentId}'], function () {
+Route::group(['prefix' => 'manager/'], function () {
     $domains = collect(scandir(app_path('Domain')))->filter(function ($dir) {
         return !in_array($dir, ['.', '..']);
     })->values()->toArray();
@@ -11,4 +11,4 @@ Route::group(['prefix' => 'manager/{apartmentId}'], function () {
             require app_path('Domain').'/'.$domain.'/Routes/routes.php';
         }
     }
-});
+})->middleware('api');
