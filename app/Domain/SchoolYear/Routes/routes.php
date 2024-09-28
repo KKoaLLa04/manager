@@ -4,7 +4,7 @@
 use App\Domain\SchoolYear\Controllers\SchoolYearController;
 use Illuminate\Support\Facades\Route;
 
-Route::group(['prefix' => 'schoolyear'], function () {
+Route::group(['prefix' => 'manager/schoolyear'], function () {
 
     Route::get('/', [SchoolYearController::class, 'index']);
     Route::get('/{id}', [SchoolYearController::class, 'detail']);
