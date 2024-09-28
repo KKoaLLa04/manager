@@ -17,14 +17,14 @@ class BaseController extends Controller
         return response()->json($data, ResponseAlias::HTTP_OK);
     }
 
-    protected function responseError(string $message = ''): JsonResponse
+    protected function responseError(string $message = '', $status = ResponseAlias::HTTP_BAD_REQUEST): JsonResponse
     {
         return Response::json(
             [
                 'msg'  => !empty($message) ? $message : '',
                 'data' => null,
             ],
-            ResponseAlias::HTTP_INTERNAL_SERVER_ERROR
+            $status
         );
     }
 }
