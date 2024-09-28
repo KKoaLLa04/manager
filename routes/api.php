@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::group(['prefix' => 'manager/'], function () {
+Route::group(['prefix' => ''], function () {
     $domains = collect(scandir(app_path('Domain')))->filter(function ($dir) {
         return !in_array($dir, ['.', '..']);
     })->values()->toArray();
