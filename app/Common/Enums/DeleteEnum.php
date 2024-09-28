@@ -4,6 +4,6 @@ namespace App\Common\Enums;
 
 enum DeleteEnum: int
 {
-    case Deleted = 0;
-    case NotDeleted = 1;
+    case DELETED = 1;
+    case NOT_DELETE = 0;
 }
