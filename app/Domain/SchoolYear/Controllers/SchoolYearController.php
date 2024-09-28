@@ -1,6 +1,8 @@
 <?php
+
 namespace App\Domain\SchoolYear\Controllers;
 
+use App\Common\Repository\GetUserRepository;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
@@ -11,11 +13,18 @@ use App\Domain\SchoolYear\Repository\SchoolYearDetailRepository;
 use App\Domain\SchoolYear\Repository\SchoolYearDeleteRepository;
 use App\Domain\SchoolYear\Requests\SchoolYearAddRequest;
 use App\Domain\SchoolYear\Requests\SchoolYearEditRequest;
+use App\Models\User;
 
 class SchoolYearController extends BaseController
 {
+
+    private $user;
+
     public function __construct(Request $request)
     {
+
+        $this->user = new GetUserRepository();
+
         parent::__construct($request);
     }
 
@@ -27,12 +36,11 @@ class SchoolYearController extends BaseController
 
         $check = $SchoolYearIndexRepository->handle();
 
-        if($check){
+        if ($check) {
             return response()->json(['status' => 'success', 'data' => $check->toArray()]);
-        }else{
+        } else {
             return response()->json(['status' => 'error', 'data' => []]);
         }
-
     }
 
 
@@ -43,32 +51,47 @@ class SchoolYearController extends BaseController
 
         $check = $SchoolYearDetailRepository->handle($id);
 
-        if($check){
+        if ($check) {
             return response()->json(['status' => 'success', 'data' => $check->toArray()]);
-        }else{
+        } else {
             return response()->json(['status' => 'error', 'data' => []]);
         }
-
     }
 
 
-    public function delete(int $id)
+    public function delete(int $id, Request $request)
     {
+
+        $request->validate([
+            'user_id' => [
+                'required',
+                'integer'
+            ],
+            'type' => [
+                'required',
+                'integer'
+            ],
+        ]);
+
 
         $SchoolYearDeleteRepository = new SchoolYearDeleteRepository();
 
-        $user_id = 1;
+        $user_id = $request->user_id;
+        $type = $request->type;
+
+        if (!$this->user->getUser($user_id, $type)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
 
         $check = $SchoolYearDeleteRepository->handle($id, $user_id);
 
-        if($check){
+        if ($check) {
             $data = SchoolYear::find($id);
-            return response()->json(['message' => 'Xóa năm học '.$data->name.' thành công', 'status' => 'success']);
-        }else{
+            return response()->json(['message' => 'Xóa năm học ' . $data->name . ' thành công', 'status' => 'success']);
+        } else {
             $data = SchoolYear::find($id);
-            return response()->json(['message' => 'Xóa năm học '.$data->name.' thất bại', 'status' => 'error']);
+            return response()->json(['message' => 'Xóa năm học ' . $data->name . ' thất bại', 'status' => 'error']);
         }
-
     }
 
 
@@ -76,44 +99,49 @@ class SchoolYearController extends BaseController
     public function add(SchoolYearAddRequest $request)
     {
 
+
         $SchoolYearAddRepository = new SchoolYearAddRepository();
-        $user_id = 1;
+        $user_id = $request->user_id;
+        $type = $request->type;
+
+        if (!$this->user->getUser($user_id, $type)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
 
         $check = $SchoolYearAddRepository->handle($user_id, $request);
 
-        if($check){
+        if ($check) {
             $data = SchoolYear::all();
             $data = $data->last();
-            return response()->json(['message' => 'Thêm năm học '.$data->name.' thành công', 'status' => 'success', 'data' => $data]);
+            return response()->json(['message' => 'Thêm năm học ' . $data->name . ' thành công', 'status' => 'success', 'data' => $data]);
             // return 1;
-        }else{
+        } else {
             $data = SchoolYear::all();
             $data = $data->last();
-            return response()->json(['status' => 'error', 'data' => [], 'message' => 'Thêm năm học '.$data->name.' thất bại']);
+            return response()->json(['status' => 'error', 'data' => [], 'message' => 'Thêm năm học ' . $data->name . ' thất bại']);
             // return 0;
         }
-
     }
 
     public function edit(int $id, SchoolYearEditRequest $request)
     {
 
         $SchoolYearEditRepository = new SchoolYearEditRepository();
-        $user_id = 1;
-        $check = $SchoolYearEditRepository->handle($id, $user_id, $request);
-
-        if($check){
-            $data = SchoolYear::find($id);
-            return response()->json(['message' => 'Sửa năm học '.$data->name.' thành công', 'status' => 'success', 'data' => $data]);
-        }else{
-            $data = SchoolYear::find($id);
-            return response()->json(['message' => 'Sửa năm học '.$data->name.' thất bại', 'status' => 'error', 'data' => []]);
-            // return 0;
+        $user_id = $request->user_id;
+        $type = $request->type;
+        if (!$this->user->getUser($user_id, $type)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
         }
 
+        $check = $SchoolYearEditRepository->handle($id, $user_id, $request);
+
+        if ($check) {
+            $data = SchoolYear::find($id);
+            return response()->json(['message' => 'Sửa năm học ' . $data->name . ' thành công', 'status' => 'success', 'data' => $data]);
+        } else {
+            $data = SchoolYear::find($id);
+            return response()->json(['message' => 'Sửa năm học ' . $data->name . ' thất bại', 'status' => 'error', 'data' => []]);
+            // return 0;
+        }
     }
-
-
-
-
 }

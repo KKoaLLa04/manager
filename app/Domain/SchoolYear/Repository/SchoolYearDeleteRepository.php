@@ -1,5 +1,7 @@
 <?php
 namespace App\Domain\SchoolYear\Repository;
+
+use App\Common\Enums\DeleteEnum;
 use App\Domain\SchoolYear\Requests\SchoolYearEditRequest;
 use App\Domain\SchoolYear\Models\SchoolYear;
 
@@ -12,7 +14,7 @@ class SchoolYearDeleteRepository {
 
         if($item){
 
-            $item->is_deleted = 0;
+            $item->is_deleted = DeleteEnum::NOT_DELETE->value;
             $item->modified_user_id = $user_id;
 
             if($item->save()) return true;
