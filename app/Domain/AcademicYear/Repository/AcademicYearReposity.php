@@ -50,7 +50,7 @@ public function softDelete(int $id)
 
     
     if ($academicYear && ($academicYear->status == 1 || $academicYear->status == 2)) {
-        $academicYear->is_deleted = 0; 
+        $academicYear->is_deleted = 1; 
         $academicYear->save();
         
         return $academicYear;
