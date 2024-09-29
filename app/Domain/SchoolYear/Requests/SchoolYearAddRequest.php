@@ -31,7 +31,7 @@ class SchoolYearAddRequest extends FormRequest
                     $inputYear = Carbon::parse($value)->year;
                     $currentYear = Carbon::now()->year;
                     if ($inputYear < $currentYear) {
-                        $fail('Thời gian bắt đầu phải lớn hơn hoặc bằng thời gian hiện tại');
+                        $fail(trans('api.school_year.start_date_before_end_date'));
                     }
                 },
                 function ($attribute, $value, $fail) {
