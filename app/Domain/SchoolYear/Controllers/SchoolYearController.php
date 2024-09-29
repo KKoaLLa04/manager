@@ -29,8 +29,26 @@ class SchoolYearController extends BaseController
     }
 
 
-    public function index()
+    public function index(Request $request)
     {
+
+        $request->validate([
+            'user_id' => [
+                'required',
+                'integer'
+            ],
+            'type' => [
+                'required',
+                'integer'
+            ],
+        ]);
+
+        $user_id = $request->user_id;
+        $type = $request->type;
+
+        if (!$this->user->getUser($user_id, $type)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
 
         $SchoolYearIndexRepository = new SchoolYearIndexRepository();
 
@@ -44,8 +62,26 @@ class SchoolYearController extends BaseController
     }
 
 
-    public function detail(int $id)
+    public function detail(int $id, Request $request)
     {
+
+        $request->validate([
+            'user_id' => [
+                'required',
+                'integer'
+            ],
+            'type' => [
+                'required',
+                'integer'
+            ],
+        ]);
+
+        $user_id = $request->user_id;
+        $type = $request->type;
+
+        if (!$this->user->getUser($user_id, $type)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
 
         $SchoolYearDetailRepository = new SchoolYearDetailRepository();
 
@@ -73,15 +109,14 @@ class SchoolYearController extends BaseController
             ],
         ]);
 
-
-        $SchoolYearDeleteRepository = new SchoolYearDeleteRepository();
-
         $user_id = $request->user_id;
         $type = $request->type;
 
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
+
+        $SchoolYearDeleteRepository = new SchoolYearDeleteRepository();
 
         $check = $SchoolYearDeleteRepository->handle($id, $user_id);
 
