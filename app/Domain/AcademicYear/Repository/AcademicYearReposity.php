@@ -37,13 +37,23 @@ public function update(int $id, array $data)
     $academicYear = AcademicYear::find($id);
 
     if (!$academicYear) {
-        return null;
+        return response()->json([
+            'success' => false,
+            'message' => 'Niên khóa không tôn tại',
+        ], 400);
     }
 
-    
+    if($academicYear->status == 2){
+        return response()->json([
+            'success' => false,
+            'message' => 'Niên khóa đã đóng',
+        ], 400);
+    }
+
+    if($academicYear->status == 0 || $academicYear->status == 1){
     $academicYear->fill($data);
     $academicYear->save();
-
+    }
     return $academicYear;
 }
 
@@ -53,8 +63,14 @@ public function softDelete(int $id, int $user_id)
    
     $academicYear = AcademicYear::find($id);
 
+    if(!$academicYear){
+        return response()->json([
+            'success' => false,
+            'message' => 'Niên khóa không tôn tại',
+        ], 400);
+    }
     
-    if ($academicYear && ($academicYear->status == 0 || $academicYear->status == 2)) {
+    if ($academicYear && ($academicYear->status == 0)){
         
         $academicYear->is_deleted = DeleteEnum::DELETED->value;
         

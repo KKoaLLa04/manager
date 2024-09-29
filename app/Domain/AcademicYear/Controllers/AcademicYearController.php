@@ -133,7 +133,7 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
         } else {
             return response()->json([
                 'success' => false,
-                'message' => 'Niên khóa không tồn tại',
+                'message' => 'Niên khóa đã kết thúc',
             ], 400);
         }
     }
@@ -168,7 +168,7 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
         // Nếu không thành công, trả về lỗi
         return response()->json([
             'success' => false,
-            'message' => 'Niên khóa không tôn tại hoặc vẫn còn hoạt động!',
+            'message' => 'Niên khóa vẫn còn hoạt động!',
         ], 400); 
     }
     
