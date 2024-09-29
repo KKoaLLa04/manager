@@ -1,6 +1,7 @@
 <?php
 namespace App\Domain\AcademicYear\Repository;
 
+use App\Common\Enums\AcademicTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusAcademicEnum;
 use App\Common\Enums\StatusEnum;
@@ -43,14 +44,14 @@ public function update(int $id, array $data)
         ], 400);
     }
 
-    if($academicYear->status == 2){
+    if($academicYear->status == AcademicTypeEnum::FINISHED){
         return response()->json([
             'success' => false,
             'message' => 'Niên khóa đã đóng',
         ], 400);
     }
 
-    if($academicYear->status == 0 || $academicYear->status == 1){
+    if($academicYear->status == AcademicTypeEnum::NOT_STARTED_YET || $academicYear->status == AcademicTypeEnum::ONGOING){
     $academicYear->fill($data);
     $academicYear->save();
     }
@@ -70,7 +71,7 @@ public function softDelete(int $id, int $user_id)
         ], 400);
     }
     
-    if ($academicYear && ($academicYear->status == 0)){
+    if ($academicYear && ($academicYear->status == AcademicTypeEnum::NOT_STARTED_YET)){
         
         $academicYear->is_deleted = DeleteEnum::DELETED->value;
         
