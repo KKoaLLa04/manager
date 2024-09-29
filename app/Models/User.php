@@ -3,10 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Common\Enums\DeleteEnum;
-use App\Common\Enums\StatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -71,13 +68,5 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
-    }
-
-    public function students(): BelongsToMany
-    {
-        return $this->belongsToMany(Student::class, 'user_student', 'user_id', 'student_id')
-            ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->withTimestamps()
-            ->where('students.status', StatusEnum::ACTIVE->value);
     }
 }
