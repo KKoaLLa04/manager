@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('name',255);
             $table->string('code',255)->unique();
-            $table->integer('status')->default(1)->comment('1: Chưa diễn ra; 2: Đang diễn ra; 3: Đã kết thúc');
+            $table->integer('status')->default(0)->comment('0: Chưa diễn ra; 1: Đang diễn ra; 2: Đã kết thúc');
             $table->dateTime('start_year');
             $table->dateTime('end_year');
-            $table->integer('is_deleted')->default(1)->comment('0: Deleted; 1: Active');
+            $table->integer('is_deleted')->default(0)->comment('0: Deleted; 1: Active');
             $table->integer('created_user_id');
-            $table->integer('modified_user_id');
+            $table->integer('modified_user_id')->nullable();
             $table->timestamps();
         });
     }
