@@ -18,4 +18,7 @@ return [
         'regex' => 'Số điện thoại phải có độ dài từ 10-11 chữ số và chỉ chứa số.'
 
     ],
+    'school_year' => [
+        'start_date_before_end_date' => 'Thời gian bắt đầu phải lớn hơn hoặc bằng thời gian hiện tại',
+    ]
 ];
