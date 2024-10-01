@@ -32,13 +32,32 @@ class AcademicYearController extends BaseController
         if (!$getUser) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
+
+        $keyword = "";
+        
+        if(!empty($request->keyword)){
+            $keyword = $request->keyword;
+        }
+
+        $pageIndex = 1;
+
+        if(!empty($request->pageIndex)){
+            $pageIndex = $request->pageIndex;
+        }
+
+        $pageSize = 15;
+
+        if(!empty($request->pageSize)){
+            $pageSize = $request->pageSize;
+        }
+
         $academicYears = $this->academicYearRepository->getAcademicYear();
         
-        
-        return response()->json([
-            'success' => true,
-            'data' => $academicYears,
-        ], 200);
+        if($academicYears){
+        return $this->responseSuccess(['data'=>$academicYears->forPage($pageIndex,$pageSize)],trans('api.academic_year.index.success'));
+        }else{
+        return $this->responseError(trans('api.academic_year.index.errors'));
+        }
     }
 
     public function show(int $id, Request $request, GetUserRepository $getUserRepository){
@@ -51,16 +70,11 @@ class AcademicYearController extends BaseController
         }
         $academicYear = $this->academicYearRepository->findById($id);
 
-        if ($academicYear) {
-            return response()->json([
-               'success' => true,
+        if($academicYear){
+            response()->json([
                 'data' => $academicYear,
-            ], 200);
-        } else {
-            return response()->json([
-               'success' => false,
-               'message' => 'Không tìm thấy niên khóa!',
-            ], 400);
+                'message' => true
+            ]);
         }
     }
     
@@ -87,17 +101,10 @@ class AcademicYearController extends BaseController
     
     $item = $this->academicYearRepository->create($dataInsert);
 
-    if ($item) {
-        return response()->json([
-            'success' => true,
-            'message' => 'Thêm niên khóa thành công!',
-            'data' => $item,
-        ], 201);
-    } else {
-        return response()->json([
-            'success' => false,
-            'message' => 'Thêm niên khóa thất bại!',
-        ], 400);
+    if($item){
+        return $this->responseSuccess(['data'=> $item],trans('api.academic_year.add.success'));
+    }else{
+        return $this->responseError(trans('api.academic_year.add.errors'));
     }
 }
 
@@ -124,17 +131,10 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
         
         $item = $this->academicYearRepository->update($id, $dataUpdate);
 
-        if ($item) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Cập nhật niên khóa thành công!',
-                'data' => $item,
-            ], 200);
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Niên khóa đã kết thúc',
-            ], 400);
+        if($item){
+            return $this->responseSuccess(['data'=> $item],trans('api.academic_year.update.success'));
+        }else{
+            return $this->responseError(trans('api.academic_year.update.errors'));
         }
     }
 
@@ -156,20 +156,11 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
         // Thực hiện xóa mềm với id niên khóa và user_id
         $deletedAcademicYear = $this->academicYearRepository->softDelete($id, $user_id);
     
-        // Nếu xóa thành công
-        if ($deletedAcademicYear) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Xóa niên khóa thành công!',
-                'data' => $deletedAcademicYear,
-            ], 200);
+        if($deletedAcademicYear){
+            return $this->responseSuccess(['data'=> $deletedAcademicYear],trans('api.academic_year.delete.success'));
+        }else{
+            return $this->responseError(trans('api.academic_year.delete.errors'));
         }
-    
-        // Nếu không thành công, trả về lỗi
-        return response()->json([
-            'success' => false,
-            'message' => 'Niên khóa vẫn còn hoạt động!',
-        ], 400); 
     }
     
 
