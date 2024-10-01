@@ -12,7 +12,7 @@ class ClassController extends BaseController
     }
     public function index()
     {
+        dd(123);
         // TODO: Implement index method.
     }
 }
-            
