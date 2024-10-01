@@ -19,6 +19,8 @@ return [
         'integer' => 'phải là kiểu số nguyên',
         'date' => 'phải là kiểu ngày tháng năm',
         'after_or_equal' => 'phải là ngày sau hoặc bằng :date',
+        'same' => 'Bắt buộc phải giống :other',
+        'email' => 'phải là kiểu email',
         'school_year' => [
             'start_date_before_end_date' => 'Thời gian bắt đầu phải lớn hơn hoặc bằng thời gian hiện tại',
             'start_date_not_equal_end_date_before' => 'Năm bắt đầu không được bằng năm kết thúc của năm học trước đó'
@@ -36,6 +38,18 @@ return [
             'add_failed' => 'Thêm mới năm học thất bại',
             'edit_success' => 'Sửa năm học thành công',
             'edit_failed' => 'Sửa năm học thất bại',
+        ],
+        'together' => [
+            'delete_success' => 'Xóa thành công',
+            'delete_failed' => 'Xóa thất bại',
+            'index_success' => 'Lấy danh sách thành công',
+            'index_failed' => 'Lấy danh sách thất bại',
+            'detail_success' => 'Lấy chi tiết thành công',
+            'detail_failed' => 'Lấy chi tiết thất bại',
+            'add_success' => 'Thêm mới thành công',
+            'add_failed' => 'Thêm mới thất bại',
+            'edit_success' => 'Sửa thành công',
+            'edit_failed' => 'Sửa thất bại',
         ]
     ]
 ];
