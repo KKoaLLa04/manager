@@ -3,7 +3,7 @@ namespace App\Domain\Class\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ClassRequest extends FormRequest 
+class GetClassRequest extends FormRequest
 {
     public function __construct()
     {
@@ -22,4 +22,3 @@ class ClassRequest extends FormRequest
     }
     
 }
-            

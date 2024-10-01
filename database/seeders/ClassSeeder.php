@@ -5,9 +5,11 @@ namespace Database\Seeders;
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
+use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use App\Models\Classes;
+use App\Models\ClassSubjectTeacher;
 use App\Models\Grade;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -35,17 +37,27 @@ class ClassSeeder extends Seeder
             ]
         );
         $userId = $user->id;
-        Classes::query()->create(
+        $classId = Classes::query()->create(
             [
                 'grade_id' => $gradeId,
                 'school_year_id' => $schoolYearId,
                 'academic_year_id' => $academicYearId,
                 'name' => "Lớp 6",
                 'code' => 'LOP-6',
-                'main_teacher' => $userId,
                 'status' => StatusEnum::ACTIVE->value,
                 'is_deleted' => DeleteEnum::NOT_DELETE->value,
 
+            ]
+        )->id;
+
+        ClassSubjectTeacher::query()->create(
+            [
+                'class_id' => $classId,
+                'user_id' => $userId,
+                'start_date' => now(),
+                'status' => StatusEnum::ACTIVE->value,
+                'access_type' => StatusTeacherEnum::MAIN_TEACHER->value,
+                'is_deleted' => DeleteEnum::NOT_DELETE->value,
             ]
         );
     }
