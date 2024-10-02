@@ -11,4 +11,5 @@ class SchoolYear extends Model
 
     public $table = "school_year";
 
+
 }
