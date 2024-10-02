@@ -8,6 +8,7 @@ return [
         'user_not_permission' => 'Người dùng không có quyền truy cập',
         
         'required' => ' trường này là bắt buộc.',
+        'type_required' => 'Loại người dùng là bắt buộc.',
         'string' => ' phải là một chuỗi ký tự.',
         'min' => ' phải có ít nhất :min ký tự.',
         'max' => ' không được vượt quá :max ký tự.',
