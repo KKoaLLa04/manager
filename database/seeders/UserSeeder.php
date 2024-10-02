@@ -22,7 +22,7 @@ class UserSeeder extends Seeder
         $user->password = Hash::make('12345678');
         $user->code = "PH38040";
         $user->address = "HaNoi";
-        $user->access_type = 3;
+        $user->access_type = 1;
         $user->dob = "2024-07-31";
         $user->status = 1;
         $user->gender = 1;
