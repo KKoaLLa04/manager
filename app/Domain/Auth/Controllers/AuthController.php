@@ -33,8 +33,8 @@ class AuthController extends BaseController
             return $this->responseError(trans('api.error.not_found'),ResponseAlias::HTTP_UNAUTHORIZED);
         }
         $studentOfUser = $this->loginRepository->getStudentOfUser($user);
-
-        $dataResponse = $this->loginRepository->transform($user, $studentOfUser, $token);
+        $schoolYear = $this->loginRepository->getSchoolYear();
+        $dataResponse = $this->loginRepository->transform($user, $studentOfUser, $token,$schoolYear);
         return $this->responseSuccess($dataResponse);
     }
 
