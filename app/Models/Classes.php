@@ -2,7 +2,14 @@
 
 namespace App\Models;
 
+use App\Common\Enums\DeleteEnum;
+use App\Common\Enums\StatusEnum;
+use App\Common\Enums\StatusTeacherEnum;
+use App\Domain\AcademicYear\Models\AcademicYear;
+use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Classes extends Model
 {
@@ -12,7 +19,6 @@ class Classes extends Model
         'id',
         'name',
         'code',
-        'main_teacher',
         'school_year_id',
         'academic_year_id',
         'status',
@@ -23,5 +29,29 @@ class Classes extends Model
         'created_at',
         'updated_at',
     ];
+
+    public function grade(): HasOne
+    {
+        return $this->hasOne(Grade::class,'id','grade_id');
+    }
+
+    public function schoolYear(): HasOne
+    {
+        return $this->hasOne(SchoolYear::class,'id','school_year_id');
+    }
+
+    public function academicYear(): HasOne
+    {
+        return $this->hasOne(AcademicYear::class,'id','academic_year_id');
+    }
+
+    public function user(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'class_subject_teacher', 'class_id', 'user_id')
+            ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->wherePivot('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
+            ->withTimestamps()
+            ->where('users.status', StatusEnum::ACTIVE->value);
+    }
 
 }
