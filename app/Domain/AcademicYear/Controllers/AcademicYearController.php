@@ -9,6 +9,7 @@ use App\Domain\AcademicYear\Repository\AcademicYearReposity;
 use App\Domain\AcademicYear\Requests\AcademicYearRequest;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Enum;
 
 class AcademicYearController extends BaseController
@@ -25,7 +26,7 @@ class AcademicYearController extends BaseController
     
     public function index(Request $request, GetUserRepository $getUserRepository)
     {
-        $user_id = $request->user_id;
+        $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
         $getUser = $getUserRepository->getUser($user_id, $type); 
@@ -39,29 +40,27 @@ class AcademicYearController extends BaseController
             $keyword = $request->keyword;
         }
 
-        $pageIndex = 1;
-
-        if(!empty($request->pageIndex)){
-            $pageIndex = $request->pageIndex;
-        }
-
-        $pageSize = 15;
-
-        if(!empty($request->pageSize)){
-            $pageSize = $request->pageSize;
-        }
+        $pageIndex = $request->get('pageIndex',1);
+        $pageSize = $request->get('pageSize',10);
 
         $academicYears = $this->academicYearRepository->getAcademicYear();
         
         if($academicYears){
-        return $this->responseSuccess(['data'=>$academicYears->forPage($pageIndex,$pageSize)],trans('api.academic_year.index.success'));
+        return $this->responseSuccess([
+            'data'=>$academicYears,
+            'total' => $academicYears->total(),
+            'current_page' => $academicYears->currentPage(),
+            'last_page' => $academicYears->lastPage(),
+            'per_page' => $academicYears->perPage(),
+        ]
+        ,trans('api.academic_year.index.success'));
         }else{
         return $this->responseError(trans('api.academic_year.index.errors'));
         }
     }
 
     public function show(int $id, Request $request, GetUserRepository $getUserRepository){
-        $user_id = $request->user_id;
+        $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
         $showUser = $getUserRepository->getUser($user_id, $type); 
@@ -80,7 +79,7 @@ class AcademicYearController extends BaseController
     
     public function store(AcademicYearRequest $request, GetUserRepository $getUserRepository)
 {
-    $user_id = $request->user_id;
+    $user_id = Auth::user()->id;
     $type = AccessTypeEnum::MANAGER->value;
     
     $createdUser = $getUserRepository->getUser($user_id, $type); 
@@ -112,7 +111,7 @@ class AcademicYearController extends BaseController
 
 public function update(AcademicYearRequest $request, int $id, GetUserRepository $getUserRepository)
     {
-        $user_id = $request->user_id;
+        $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
         $modifiedUser = $getUserRepository->getUser($user_id, $type); 
@@ -142,7 +141,7 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
     public function delete(Request $request, int $id, GetUserRepository $getUserRepository)
     {
         
-        $user_id = $request->user_id;
+        $user_id = Auth::user()->id;
         
         $type = AccessTypeEnum::MANAGER->value;
     

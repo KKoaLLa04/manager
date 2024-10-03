@@ -14,7 +14,7 @@ class AcademicYearReposity {
 
     public function getAcademicYear()
 {
-    return AcademicYear::where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
+    return AcademicYear::where('is_deleted', DeleteEnum::NOT_DELETE->value)->paginate();
 }
 
 
