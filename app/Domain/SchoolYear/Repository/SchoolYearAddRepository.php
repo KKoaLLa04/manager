@@ -2,6 +2,7 @@
 
 namespace App\Domain\SchoolYear\Repository;
 
+use App\Common\Enums\DeleteEnum;
 use App\Domain\SchoolYear\Requests\SchoolYearAddRequest;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use SebastianBergmann\Type\TrueType;
@@ -20,6 +21,7 @@ class SchoolYearAddRepository {
         $item->start_date = $request->start_date;
         $item->end_date = $request->end_date;
         $item->created_user_id = $user_id;
+        $item->is_deleted = DeleteEnum::NOT_DELETE->value;
 
         if($item->save()) return true;
 

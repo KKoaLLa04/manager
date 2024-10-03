@@ -1,16 +1,14 @@
 <?php
-namespace App\Domain\SchoolYear\Repository;
+namespace App\Domain\User\Repository;
 
 use App\Common\Enums\DeleteEnum;
-use App\Domain\SchoolYear\Requests\SchoolYearEditRequest;
-use App\Domain\SchoolYear\Models\SchoolYear;
-
-class SchoolYearDeleteRepository {
+use App\Models\User;
+class UserDeleteRepository {
 
 
     public function handle (int $id, int $user_id) {
 
-        $item = SchoolYear::find($id);
+        $item = User::find($id);
 
         if($item){
 
