@@ -11,6 +11,6 @@ class School extends Model
     public $table = 'school';
 
     protected $fillable = [
-        'id','code', 'name', 'avatar', 'address', 'logo', 'telephone', 'email', 'modified_user_id'
+        'code', 'name', 'avatar', 'address', 'logo', 'telephone', 'email', 'modified_user_id'
     ];
 }
