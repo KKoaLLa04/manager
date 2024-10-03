@@ -9,6 +9,7 @@ use App\Domain\AcademicYear\Repository\AcademicYearReposity;
 use App\Domain\AcademicYear\Requests\AcademicYearRequest;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Enum;
 
 class AcademicYearController extends BaseController
@@ -25,7 +26,7 @@ class AcademicYearController extends BaseController
     
     public function index(Request $request, GetUserRepository $getUserRepository)
     {
-        $user_id = $request->user_id;
+        $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
         $getUser = $getUserRepository->getUser($user_id, $type); 
@@ -33,6 +34,7 @@ class AcademicYearController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
+        
         $keyword = "";
         
         if(!empty($request->keyword)){
@@ -61,7 +63,7 @@ class AcademicYearController extends BaseController
     }
 
     public function show(int $id, Request $request, GetUserRepository $getUserRepository){
-        $user_id = $request->user_id;
+        $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
         $showUser = $getUserRepository->getUser($user_id, $type); 
@@ -80,7 +82,7 @@ class AcademicYearController extends BaseController
     
     public function store(AcademicYearRequest $request, GetUserRepository $getUserRepository)
 {
-    $user_id = $request->user_id;
+    $user_id = Auth::user()->id;
     $type = AccessTypeEnum::MANAGER->value;
     
     $createdUser = $getUserRepository->getUser($user_id, $type); 
@@ -112,7 +114,7 @@ class AcademicYearController extends BaseController
 
 public function update(AcademicYearRequest $request, int $id, GetUserRepository $getUserRepository)
     {
-        $user_id = $request->user_id;
+                $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
         $modifiedUser = $getUserRepository->getUser($user_id, $type); 
@@ -142,7 +144,7 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
     public function delete(Request $request, int $id, GetUserRepository $getUserRepository)
     {
         
-        $user_id = $request->user_id;
+                $user_id = Auth::user()->id;
         
         $type = AccessTypeEnum::MANAGER->value;
     
@@ -167,3 +169,4 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
     
 
 }
+

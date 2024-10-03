@@ -24,12 +24,32 @@ return [
 
     'academic_year' => [
         'index.success'=> 'Lấy danh sách niên khóa thành công',
-        'index.errors'=> 'Lấy danh sách niên khóa niên khóa',
+        'index.errors'=> 'Lấy danh sách niên khóa thất bại',
         'add.success' => 'Thêm mới niên khóa thành công',
         'add.errors'=> 'Thêm mới niên khóa thất bại',
         'edit.success' => 'Cập nhập niên khóa thành công',
         'edit.errors' => 'Niên khóa đã kết thúc',
         'delete.success' => 'Xóa niên khóa thành công',
         'delete.errors' => 'Niên khóa vẫn còn hoạt động!',
+    ],
+
+    'guardian' => [
+        'index.success'=> 'Lấy danh sách phụ huynh thành công',
+        'index.errors'=> 'Lấy danh sách phụ huynh thất bại',
+        'add.success' => 'Thêm mới phụ huynh thành công',
+        'add.errors'=> 'Thêm mới phụ huynh thất bại',
+        'edit.success' => 'Cập nhập phụ huynh thành công',
+        'edit.errors' => 'phụ huynh đã kết thúc',
+        'delete.success' => 'Xóa phụ huynh thành công',
+        'delete.errors' => 'phụ huynh vẫn còn hoạt động!',
+        'show.success' => 'Lấy danh sách 1 phụ huynh thành công',
+        'show.errors' => 'Lấy danh sách 1 phụ huynh thất bại',
+        'password_mismatch'=> 'Mật khẩu xác nhận không trùng với mật khẩu',
+        'lock.success'=> 'Khóa tài khoản thành công',
+        'lock.errors'=> 'Khóa tài khoản thất bại',
+        'unlock.success'=> 'Mở tài khoản thành công',
+        'unlock.errors'=> 'Mở tài khoản thất bại',
+        'change_password.success'=> 'Đổi mật khẩu phụ huynh thành công',
+        'change_password.errors'=> 'Đổi mật khẩu phụ huynh thất bại',
     ],
 ];
