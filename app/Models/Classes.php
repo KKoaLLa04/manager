@@ -4,22 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Student extends Model
+class Classes extends Model
 {
-    protected $table = 'students';
+    protected $table = 'classes';
 
     protected $fillable = [
-        'email',
-        'fullname',
-        'address',
-        'student_code',
-        'dob',
+        'id',
+        'name',
+        'code',
+        'main_teacher',
+        'school_year_id',
+        'academic_year_id',
         'status',
-        'gender',
+        'grade_id',
         'is_deleted',
         'created_user_id',
         'modified_user_id',
         'created_at',
         'updated_at',
     ];
+
 }

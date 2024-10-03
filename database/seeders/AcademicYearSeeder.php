@@ -16,7 +16,7 @@ class AcademicYearSeeder extends Seeder
         $academy = new AcademicYear();
         $academy->name = "KH18";
         $academy->code = "KH123";
-        $academy->status = 0;
+        $academy->status = 1;
         $academy->start_year = "2024-09-29 00:00:00";
         $academy->end_year = "2028-09-29 00:00:00";
         $academy->created_user_id = 1;
