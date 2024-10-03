@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Domain\SchoolYear\Models;
+namespace App\Domain\Subject\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SchoolYear extends Model
+class Subject extends Model
 {
     use HasFactory;
 
-    public $table = "school_year";
-
+    public $table = "subjects";
 
 }

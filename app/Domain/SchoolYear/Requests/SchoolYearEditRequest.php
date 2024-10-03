@@ -35,17 +35,10 @@ class SchoolYearEditRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'required' => ':attribute bắt buộc phải nhập',
-            'min' => ':attribute không được bé hơn :min ký tự',
-            'max' => ':attribute không được lớn hơn :max ký tự',
-        ];
-    }
-
-    public function attributes(): array
-    {
-        return [
-            'name' => 'Tên năm học',
-            'status' => 'Trang thái',
+            'required' => trans('api.error.required'),
+            'min' => trans('api.error.min'),
+            'max' => trans('api.error.max'),
+            'integer' => trans('api.error.integer')
         ];
     }
 
