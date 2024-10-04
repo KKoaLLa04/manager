@@ -3,8 +3,13 @@
 namespace App\Domain\User\Repository;
 
 use App\Common\Enums\DeleteEnum;
+use App\Common\Enums\StatusEnum;
+use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\User\Requests\UserAddRequest;
+use App\Models\ClassSubjectTeacher;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class UserAddRepository {
@@ -26,12 +31,33 @@ class UserAddRepository {
         $item->dob = $request->dob;
         $item->status = $request->status;
         $item->gender = $request->gender;
-        // $item->active = $request->active;
         $item->is_deleted = DeleteEnum::NOT_DELETE->value;
         $item->created_user_id = $user_id;
         $item->code = "NV".time();
 
-        if($item->save()) return true;
+        if($item->save()){
+
+            if(!empty($request->class_id)){
+
+                $CSTNew = new ClassSubjectTeacher();
+
+                $CSTNew->class_id = $request->class_id;
+                $CSTNew->user_id = $item->id;
+                $CSTNew->start_date = Carbon::now();
+                $CSTNew->status = StatusEnum::ACTIVE->value;
+                $CSTNew->access_type = StatusTeacherEnum::MAIN_TEACHER->value;
+                $CSTNew->is_deleted = DeleteEnum::NOT_DELETE->value;
+                $CSTNew->created_user_id = Auth::user()->id;
+
+                $CSTNew->save();
+
+            }
+
+
+            return true;
+
+        }
+
 
         return false;
 
