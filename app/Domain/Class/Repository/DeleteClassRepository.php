@@ -20,7 +20,7 @@ class DeleteClassRepository extends ClassRepository
     {
         return Classes::query()->where('id', $request->class_id)
             ->update(
-                ['is_deleted', DeleteEnum::DELETED->value]
+                ['is_deleted'=> DeleteEnum::DELETED->value]
             );
     }
 

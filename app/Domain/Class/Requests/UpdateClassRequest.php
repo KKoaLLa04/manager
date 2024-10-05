@@ -17,7 +17,7 @@ class UpdateClassRequest extends FormRequest
     {
         $status = StatusClassEnum::values();
         return [
-            "classId"        => ["required", 'integer', "exists:classes,id"],
+            "class_id"        => ["required", 'integer', "exists:classes,id"],
             "name"           => ["required","string","max:255"],
             "teacher_id"     => ["required", "integer", "exists:users,id"],
             "status"         => ["required", "integer", Rule::in($status)],

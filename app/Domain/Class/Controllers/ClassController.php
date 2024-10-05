@@ -122,7 +122,7 @@ class ClassController extends BaseController
 
         $statusCreateClass = $this->updateClassRepository->UpdateClass($request);
         if ($statusCreateClass) {
-            $classId                         = $statusCreateClass->id;
+            $classId                         = $request->class_id;
             $statusCreateClassSubjectTeacher = $this->updateClassRepository->createClassTeacherSubject($classId,
                 $request->teacher_id);
             if ($statusCreateClassSubjectTeacher) {
@@ -141,7 +141,7 @@ class ClassController extends BaseController
 
         $statusCreateClass = $this->deleteClassRepository->deleteClass($request);
         if ($statusCreateClass) {
-            $classId                         = $statusCreateClass->id;
+            $classId                         = $request->class_id;
             $statusCreateClassSubjectTeacher = $this->deleteClassRepository->updateClassTeacherSubject($classId);
             if ($statusCreateClassSubjectTeacher) {
                 return $this->responseSuccess();
