@@ -41,3 +41,19 @@
 2024-09-26 14:51:50,503 INFO spawned: 'php-fpm' with pid 12
 2024-09-26 14:51:51,637 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
 2024-09-26 14:51:51,637 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-04 14:51:55,746 INFO Set uid to user 0 succeeded
+2024-10-04 14:51:55,749 INFO supervisord started with pid 1
+2024-10-04 14:51:56,753 INFO spawned: 'nginx' with pid 11
+2024-10-04 14:51:56,756 INFO spawned: 'php-fpm' with pid 12
+2024-10-04 14:51:57,918 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-04 14:51:57,918 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-04 17:12:54,290 WARN received SIGQUIT indicating exit request
+2024-10-04 17:12:54,301 INFO waiting for nginx, php-fpm to die
+2024-10-04 17:12:54,423 INFO stopped: php-fpm (exit status 0)
+2024-10-04 17:12:54,461 INFO stopped: nginx (exit status 0)
+2024-10-05 14:50:30,265 INFO Set uid to user 0 succeeded
+2024-10-05 14:50:30,271 INFO supervisord started with pid 1
+2024-10-05 14:50:31,275 INFO spawned: 'nginx' with pid 11
+2024-10-05 14:50:31,278 INFO spawned: 'php-fpm' with pid 12
+2024-10-05 14:50:32,570 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-05 14:50:32,570 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)

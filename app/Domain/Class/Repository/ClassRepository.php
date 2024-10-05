@@ -2,11 +2,17 @@
 
 namespace App\Domain\Class\Repository;
 
+use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\PaginateEnum;
 use App\Common\Enums\StatusEnum;
+use App\Common\Enums\StatusTeacherEnum;
+use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use App\Models\Classes;
+use App\Models\ClassSubjectTeacher;
+use App\Models\Grade;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -78,5 +84,64 @@ class ClassRepository
             ];
         }
         return $dataClasses;
+    }
+
+    public function getGrades(): Collection
+    {
+        return Grade::query()->get();
+    }
+
+    public function getAcademicYear(): Collection
+    {
+        return AcademicYear::query()->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
+    }
+
+    public function getTeachers(): Collection
+    {
+        $classSubjectTeacherMain = ClassSubjectTeacher::query()
+            ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->pluck('user_id')->unique()->toArray();
+
+        return User::query()->where('access_type', AccessTypeEnum::TEACHER->value)
+            ->whereNotIn('id', $classSubjectTeacherMain)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->get();
+
+    }
+
+    public function transformDataCreate(Collection $grades, Collection $academicYear, Collection $schoolYear, Collection $teachers): array
+    {
+        return [
+            'grades' => $this->toArray($grades),
+            'academics' => $this->toArray($academicYear),
+            'schoolYears' => $this->toArray($schoolYear),
+            'teachers' => $this->dataTeaches($teachers),
+        ];
+    }
+    private function dataTeaches(Collection $teachers): array
+    {
+        $dataReturn = [];
+        foreach ($teachers as $item) {
+            $dataReturn[] = [
+                'id'            => $item->id,
+                'name'          => $item->fullname,
+            ];
+        }
+        return $dataReturn;
+    }
+
+    private function toArray(Collection $items): array
+    {
+        $dataReturn = [];
+        foreach ($items as $item) {
+            $dataReturn[] = [
+                'id'            => $item->id,
+                'name'          => $item->name,
+            ];
+        }
+        return $dataReturn;
     }
 }
