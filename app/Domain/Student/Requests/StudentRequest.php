@@ -18,8 +18,7 @@ class StudentRequest extends FormRequest
             'dob' => 'required|date',
             'status' => 'required',
             'gender' => 'required',
-            'user_id' => 'required|integer',
-            'type' => 'required|integer',
+            'class_id' => 'required|integer|exists:classes,id', // class_id phải tồn tại trong bảng classes
         ];
     }
     
@@ -49,8 +48,10 @@ class StudentRequest extends FormRequest
        
 
         'gender.required' => 'Trường giới tính là bắt buộc.',
-
-      
+        
+        'class_id.required'=> 'lớp học bắt buộc chọn',
+        'class_id.exists'=> 'lớp học không tồn tại.',     
+        'class_id.integer' => 'Lớp học phải là số nguyên.',
         ];
     }
     
