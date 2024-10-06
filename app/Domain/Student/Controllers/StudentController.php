@@ -150,6 +150,72 @@ class StudentController extends BaseController
             ]);
         }
     }
+    // public function show($id)
+    // {    
+    //     $user_id = Auth::user()->id;
+    //     $type = AccessTypeEnum::MANAGER->value;
+
+    //     if (!$this->user->getUser($user_id, $type)) {
+    //         return $this->responseError(trans('api.error.user_not_permission'));
+    //     }
+    //     $student = Student::with('classHistory.class')->find($id);
+
+    //     // Kiểm tra nếu học sinh không tồn tại
+    //     if (!$student) {
+    //         return response()->json([
+    //             'message' => 'Không tìm thấy học sinh',
+    //             'status' => 'error',
+    //             'data' => []
+    //         ]);
+    //     }
+
+    //     // Chuyển đối tượng Student thành mảng và thêm thông tin class
+    //     $studentArray = $student->toArray();
+    //     $studentArray['class_id'] = optional($student->classHistory)->class_id;
+    //     $studentArray['class_name'] = optional($student->classHistory->class)->name; // Lấy tên của lớp học nếu tồn tại
+
+    //     return response()->json([
+    //         'message' => 'Lấy thông tin học sinh thành công',
+    //         'status' => 'success',
+    //         'data' => $studentArray
+    //     ]);
+    // }
+    public function show($id){
+        $student = Student::with(['classHistory' => function($query) {
+            // Chỉ lấy các trường cần thiết từ StudentClassHistory và lấy thêm thông tin lớp học
+            $query->select('student_id', 'class_id', 'start_date', 'end_date', 'status')
+                  ->with(['class' => function($q) {
+                      // Chỉ lấy class_id và name của lớp
+                      $q->select('id', 'name');
+                  }]);
+        }])->find($id);
+
+            if (!$student) {
+            return response()->json([
+                'message' => 'Không tìm thấy học sinh',
+                'status' => 'error',
+                'data' => []
+            ]);
+        }
+    
+        $studentArray = $student->toArray();
+        
+        // Thêm thông tin cần thiết từ classHistory
+        $studentArray['start_date'] = optional($student->classHistory)->start_date;
+        $studentArray['end_date'] = optional($student->classHistory)->end_date;
+        $studentArray['class_history_status'] = optional($student->classHistory)->status;
+        $studentArray['class_id'] = optional($student->classHistory->class)->id;
+        $studentArray['class_name'] = optional($student->classHistory->class)->name;
+    
+        return response()->json([
+            'message' => 'Lấy thông tin học sinh thành công',
+            'status' => 'success',
+            'data' => $studentArray
+        ]);
+    }
+    
+
+
     
     
 }

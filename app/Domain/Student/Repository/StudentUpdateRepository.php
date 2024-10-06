@@ -33,12 +33,14 @@ class StudentUpdateRepository {
                 // Cập nhật class_id nếu record đã tồn tại
                 $studentClassHistory->class_id = $request->class_id;
                 $studentClassHistory->modified_user_id = $user_id;
+                $studentClassHistory->end_date = $request->end_date ?? null;
             } else {
                 // Tạo mới nếu không có record
                 $studentClassHistory = new StudentClassHistory();
                 $studentClassHistory->student_id = $item->id;
                 $studentClassHistory->class_id = $request->class_id;
                 $studentClassHistory->start_date = now(); // Gán ngày bắt đầu là thời điểm hiện tại
+                $studentClassHistory->end_date = $request->end_date ?? null;  // Gán ngày kết thúc là null cho đang học
                 $studentClassHistory->status = 1; 
                 $studentClassHistory->is_deleted = 1; 
                 $studentClassHistory->modified_user_id = $user_id;
