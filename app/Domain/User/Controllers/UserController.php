@@ -161,8 +161,6 @@ class UserController extends BaseController
             return $this->responseError(trans('api.alert.together.delete_failed'));
         }
 
-
-
     }
 
 
