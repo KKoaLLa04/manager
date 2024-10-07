@@ -11,6 +11,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use App\Common\Enums\StatusTeacherEnum;
+
+
+
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -80,4 +84,30 @@ class User extends Authenticatable implements JWTSubject
             ->withTimestamps()
             ->where('students.status', StatusEnum::ACTIVE->value);
     }
+
+
+    public function infoMainTearchWithClass () {
+
+        $itemTearchMainHasClass = ClassSubjectTeacher::where('user_id', $this->id)->where('end_date', null)->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)->where('status', StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
+
+        if($itemTearchMainHasClass){
+
+            $class = Classes::find($itemTearchMainHasClass->class_id);
+
+            return array_merge(
+                $this->toArray(),
+                ['class' => $class->toArray()]
+            );
+
+        }else{
+
+            return array_merge(
+                $this->toArray(),
+                ['class' => []]
+            );
+
+        }
+
+    }
+
 }
