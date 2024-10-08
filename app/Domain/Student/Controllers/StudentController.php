@@ -3,6 +3,7 @@ namespace App\Domain\Student\Controllers;
 
 use App\Common\Enums\AcademicTypeEnum;
 use App\Common\Enums\AccessTypeEnum;
+use App\Common\Enums\DeleteEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\Student\Repository\StudentAddRepository;
 use App\Domain\Student\Repository\StudentDeleteRepository;
@@ -184,7 +185,8 @@ class StudentController extends BaseController
     //         'data' => $studentArray
     //     ]);
     // }
-    public function show($id){
+    public function show($id)
+    {
         $student = Student::with(['classHistory' => function($query) {
             // Chỉ lấy các trường cần thiết từ StudentClassHistory và lấy thêm thông tin lớp học
             $query->select('student_id', 'class_id', 'start_date', 'end_date', 'status')
@@ -192,9 +194,16 @@ class StudentController extends BaseController
                       // Chỉ lấy class_id và name của lớp
                       $q->select('id', 'name');
                   }]);
+        }, 'parents' => function($query) use ($id) {
+            // Chỉ lấy các trường cần thiết từ phụ huynh
+            $query->select('users.id', 'fullname', 'phone', 'code', 'gender', 'email', 'dob')
+                  ->join('user_student as us', 'users.id', '=', 'us.user_id') // Đổi alias thành 'us'
+                  ->where('users.access_type', AccessTypeEnum::GUARDIAN->value)
+                  ->where('users.is_deleted', DeleteEnum::DELETED->value)
+                  ->where('us.student_id', $id); // Sử dụng alias 'us'
         }])->find($id);
-
-            if (!$student) {
+    
+        if (!$student) {
             return response()->json([
                 'message' => 'Không tìm thấy học sinh',
                 'status' => 'error',
@@ -211,12 +220,19 @@ class StudentController extends BaseController
         $studentArray['class_id'] = optional($student->classHistory->class)->id;
         $studentArray['class_name'] = optional($student->classHistory->class)->name;
     
+        // Thêm thông tin phụ huynh vào mảng học sinh
+        $studentArray['parents'] = $student->parents; 
+    
         return response()->json([
             'message' => 'Lấy thông tin học sinh thành công',
             'status' => 'success',
             'data' => $studentArray
         ]);
     }
+    
+    
+    
+
     
     public function assignParent(int $student_id, AssignParentRequest $request) 
     {
