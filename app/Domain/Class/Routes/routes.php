@@ -10,4 +10,5 @@ Route::group(['prefix' => 'manager/class', 'middleware' => 'auth:api'], function
     Route::post('/create', [ClassController::class, 'create']);
     Route::post('/update', [ClassController::class, 'update']);
     Route::post('/delete', [ClassController::class, 'delete']);
+    Route::post('/formAssignTeacher', [ClassController::class, 'formAssignTeacher']);
 });

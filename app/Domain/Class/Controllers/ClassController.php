@@ -150,4 +150,9 @@ class ClassController extends BaseController
         }
         return $this->responseError();
     }
+
+    public function formAssignTeacher()
+    {
+
+    }
 }
