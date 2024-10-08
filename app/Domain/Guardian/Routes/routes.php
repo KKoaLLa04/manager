@@ -12,4 +12,6 @@ Route::group(['prefix' => 'manager/guardian', 'middleware' => 'auth:api'], funct
     Route::put('lock/{id}',[GuardianController::class,'LockGuardian']);
     Route::put('unlock/{id}',[GuardianController::class,'UnLockGuardian']);
     Route::put('change/{id}',[GuardianController::class,'ChangePasswordGuardian']);
+    Route::post('add/{guardianId}/assign-student', [GuardianController::class, 'assignStudent']);
+    Route::post('delete/{guardianId}/unassign-student', [GuardianController::class, 'unassignStudent']);
 });

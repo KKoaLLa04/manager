@@ -51,5 +51,6 @@ return [
         'unlock.errors'=> 'Mở tài khoản thất bại',
         'change_password.success'=> 'Đổi mật khẩu phụ huynh thành công',
         'change_password.errors'=> 'Đổi mật khẩu phụ huynh thất bại',
+        'assign_student.success'=> 'Học sinh đã được gán cho phụ huynh này.',
     ],
 ];

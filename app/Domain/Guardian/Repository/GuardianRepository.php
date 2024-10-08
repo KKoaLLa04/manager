@@ -5,18 +5,20 @@ use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use App\Domain\Guardian\Models\Guardian;
+use App\Models\Student;
+use Exception;
 
 class GuardianRepository{
     public function __construct(){
 
     }
 
-    public function getGuardian()
+    public function getGuardian($pageSize)
 {
     return Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
     ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
     ->withCount('students')
-    ->paginate();
+    ->paginate($pageSize);
 
 
 }
@@ -147,6 +149,54 @@ class GuardianRepository{
         return $one;
     }
 
+    public function assignStudent(int $guardianId, array $studentIds, int $createdUserId, int $deletedUser = 0)
+{
     
+    $parent = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->find($guardianId);
+
+    if ($parent) {
+        $assignedStudents = [];  
+        $alreadyAssigned = [];  
+
+        
+        foreach ($studentIds as $studentId) {
+            
+            if (!$parent->students()->where('student_id', $studentId)->exists()) {
+                
+                $parent->students()->attach($studentId, ['created_user_id' => $createdUserId, 'is_deleted'=>$deletedUser]);
+
+                
+                $assignedStudents[] = Student::find($studentId);
+            } else {
+                throw new Exception('Học sinh đã có phụ huynh!');
+            }
+        }
+
+        
+        return [
+            'guardian' => $parent,
+            'assigned_students' => $assignedStudents,
+            'already_assigned' => $alreadyAssigned
+        ];
+    } else {
+        throw new Exception('Phụ huynh không tồn tại.');
+    }
+}
+
+public function unassignStudent(int $guardianId, array $studentIds)
+{
+    $parent = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->find($guardianId);
+
+    if ($parent) {
+        $parent->students()->detach($studentIds);
+        return true; 
+    } else {
+        throw new Exception('Phụ huynh không tồn tại.');
+    }
+}
 
 }

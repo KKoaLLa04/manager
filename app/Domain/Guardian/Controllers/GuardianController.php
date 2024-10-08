@@ -8,6 +8,7 @@ use App\Domain\Guardian\Repository\GuardianRepository;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use App\Domain\Guardian\Requests\GuardianRequest;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -35,8 +36,8 @@ class GuardianController extends BaseController
         }
 
        $pageIndex = $request->get('pageIndex',1);
-       $pageSize = $request->get('pageSize',10);
-        $guarDian = $this->guardianRepository->getGuardian();
+       $pageSize = $request->input('pageSize',10);
+        $guarDian = $this->guardianRepository->getGuardian($pageSize);
         
         if($guarDian){
         return $this->responseSuccess([
@@ -185,7 +186,7 @@ class GuardianController extends BaseController
     }
 
     public function ChangePasswordGuardian(int $id, GetUserRepository $getUserRepository, Request $request){
-                $user_id = Auth::user()->id;
+        $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
         $getUser = $getUserRepository->getUser($user_id, $type); 
@@ -208,6 +209,61 @@ class GuardianController extends BaseController
             return $this->responseError(trans('api.guardian.change_password.errors'));
         }
     }
+
+    public function assignStudent(Request $request, GetUserRepository $getUserRepository, $guardianId)
+{
+    $user_id = Auth::user()->id;
+    $type = AccessTypeEnum::MANAGER->value;
+    
+    $getUser = $getUserRepository->getUser($user_id, $type); 
+    if (!$getUser) {
+        return $this->responseError(trans('api.error.user_not_permission'));
+    }
+
+    $studentIds = $request->input('student_id');
+
+    try {
+        $data = $this->guardianRepository->assignStudent($guardianId, $studentIds, $user_id);
+
+        return response()->json([
+            'message' => 'Học sinh được gán thành công cho phụ huynh '.$data['guardian']->fullname,
+            'guardian' => $data['guardian'],
+            'assigned_students' => $data['assigned_students'],
+            'already_assigned' => $data['already_assigned']
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => $e->getMessage()
+        ], 400);
+    }
+}
+
+
+public function unassignStudent(Request $request, int $guardianId, GetUserRepository $getUserRepository)
+{
+    $user_id = Auth::user()->id;
+    $type = AccessTypeEnum::MANAGER->value;
+    
+    $getUser = $getUserRepository->getUser($user_id, $type); 
+    if (!$getUser) {
+        return $this->responseError(trans('api.error.user_not_permission'));
+    }
+    $studentIds = $request->input('student_id');
+
+    try {
+       $this->guardianRepository->unassignStudent($guardianId, $studentIds);
+
+        return response()->json([
+            'message' => 'Học sinh đã được gỡ khỏi phụ huynh thành công.'
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json([
+            'message' => 'Gỡ phụ huynh thất bại',
+        ], 400);
+    }
+}
+
+
     
 }
             

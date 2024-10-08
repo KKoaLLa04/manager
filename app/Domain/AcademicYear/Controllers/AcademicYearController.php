@@ -155,7 +155,7 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
             return $this->responseError(trans('api.error.user_not_permission'));
         }
     
-        // Thực hiện xóa mềm với id niên khóa và user_id
+        
         $deletedAcademicYear = $this->academicYearRepository->softDelete($id, $user_id);
     
         if($deletedAcademicYear){
