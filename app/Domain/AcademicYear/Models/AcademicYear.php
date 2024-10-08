@@ -2,6 +2,7 @@
 
 namespace App\Domain\AcademicYear\Models;
 
+use App\Models\Classes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -18,6 +19,11 @@ class AcademicYear extends Model
     {
         $randomString = strtoupper(Str::random(6)); 
         return 'KH' . $randomString; 
+    }
+
+    public function classes()
+    {
+        return $this->hasMany(Classes::class, 'academic_year_id');
     }
 
 }
