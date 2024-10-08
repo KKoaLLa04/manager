@@ -194,18 +194,18 @@ class StudentController extends BaseController
                       // Chỉ lấy class_id và name của lớp
                       $q->select('id', 'name');
                   }]);
-        }, 'parents' => function($query) use ($id) {
+        }, 'parents' => function($query) {
             // Chỉ lấy các trường cần thiết từ phụ huynh
             $query->select('users.id', 'fullname', 'phone', 'code', 'gender', 'email', 'dob')
-                  ->join('user_student as us', 'users.id', '=', 'us.user_id') // Đổi alias thành 'us'
                   ->where('users.access_type', AccessTypeEnum::GUARDIAN->value)
-                  ->where('users.is_deleted', DeleteEnum::DELETED->value)
-                  ->where('us.student_id', $id); // Sử dụng alias 'us'
-        }])->find($id);
+                  ->where('users.is_deleted', DeleteEnum::DELETED->value);
+        }])
+        ->where('is_deleted', DeleteEnum::DELETED->value) // Kiểm tra xem học sinh có bị xóa không
+        ->find($id);
     
         if (!$student) {
             return response()->json([
-                'message' => 'Không tìm thấy học sinh',
+                'message' => 'Học sinh này không tồn tại',
                 'status' => 'error',
                 'data' => []
             ]);
@@ -214,14 +214,22 @@ class StudentController extends BaseController
         $studentArray = $student->toArray();
         
         // Thêm thông tin cần thiết từ classHistory
-        $studentArray['start_date'] = optional($student->classHistory)->start_date;
-        $studentArray['end_date'] = optional($student->classHistory)->end_date;
-        $studentArray['class_history_status'] = optional($student->classHistory)->status;
-        $studentArray['class_id'] = optional($student->classHistory->class)->id;
-        $studentArray['class_name'] = optional($student->classHistory->class)->name;
+        $classHistory = $student->classHistory;
+        $studentArray['start_date'] = optional($classHistory)->start_date;
+        $studentArray['end_date'] = optional($classHistory)->end_date;
+        $studentArray['class_history_status'] = optional($classHistory)->status;
+    
+        // Kiểm tra xem classHistory có tồn tại không trước khi lấy class_id và class_name
+        if ($classHistory) {
+            $studentArray['class_id'] = optional($classHistory->class)->id;  // class có thể null
+            $studentArray['class_name'] = optional($classHistory->class)->name; // class có thể null
+        } else {
+            $studentArray['class_id'] = null;
+            $studentArray['class_name'] = null;
+        }
     
         // Thêm thông tin phụ huynh vào mảng học sinh
-        $studentArray['parents'] = $student->parents; 
+        $studentArray['parents'] = $student->parents ?? []; // Đảm bảo có giá trị mặc định là mảng rỗng nếu không có phụ huynh
     
         return response()->json([
             'message' => 'Lấy thông tin học sinh thành công',
@@ -229,6 +237,8 @@ class StudentController extends BaseController
             'data' => $studentArray
         ]);
     }
+    
+    
     
     
     
