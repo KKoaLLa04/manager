@@ -1,16 +1,19 @@
 <?php
 namespace App\Domain\Student\Controllers;
 
+use App\Common\Enums\AcademicTypeEnum;
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\Student\Repository\StudentAddRepository;
 use App\Domain\Student\Repository\StudentDeleteRepository;
 use App\Domain\Student\Repository\StudentRepository;
 use App\Domain\Student\Repository\StudentUpdateRepository;
+use App\Domain\Student\Requests\AssignParentRequest;
 use App\Domain\Student\Requests\StudentRequest;
 use App\Domain\Student\Requests\StudentUpdateRequest;
 use App\Http\Controllers\BaseController;
 use App\Models\Student;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,8 +21,9 @@ class StudentController extends BaseController
 {
     protected $studentRepository;
     private $user;
-    public function __construct(Request $request)
+    public function __construct(StudentRepository $studentRepository, Request $request)
     {
+        $this->studentRepository = $studentRepository;
         $this->user = new GetUserRepository();
         parent::__construct($request);
     }
@@ -35,7 +39,7 @@ class StudentController extends BaseController
         }
     
         // Lấy kích thước trang
-        $pageSize = $request->get('pageSize', 10);  
+        $pageSize = $request->input('pageSize', 10);  
     
         $studentRepository = new StudentRepository();
     
@@ -214,7 +218,79 @@ class StudentController extends BaseController
         ]);
     }
     
+    public function assignParent(int $student_id, AssignParentRequest $request) 
+    {
+        $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::MANAGER->value;
 
+        if (!$this->user->getUser($user_id, $type)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $parent_id = $request->input('parent_id');
+
+        // Gọi phương thức gán phụ huynh từ repository
+        $result = $this->studentRepository->assignParentToStudent($student_id, $parent_id);
+
+        if (isset($result['error'])) {
+            return response()->json(['message' => $result['error'], 'status' => 'error']);
+        }
+
+        return response()->json([
+            'message' => 'Gán phụ huynh thành công',
+            'status' => 'success',
+            'data' => [
+                'student' => $result['student'],
+                'parent' => $result['parent'],
+                'children_count' => $result['children_count'],
+            ],
+        ]);
+    }
+
+    public function detachParent(int $student_id, Request $request)
+    {
+        $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::MANAGER->value;
+
+        if (!$this->user->getUser($user_id, $type)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+    
+        $parent_id = $request->input('parent_id');
+    
+        // Gọi phương thức hủy gán phụ huynh từ repository
+        $result = $this->studentRepository->detachParentFromStudent($student_id, $parent_id);
+    
+        // Kiểm tra xem có lỗi trong kết quả không
+        if (isset($result['error'])) {
+            return response()->json(['message' => $result['error'], 'status' => 'error']);
+        }
+    
+        if (!$result) {
+            return response()->json(['message' => 'Hủy gán không thành công', 'status' => 'error']);
+        }
+    
+        return response()->json([
+            'message' => 'Hủy gán phụ huynh thành công',
+            'status' => 'success',
+            'data' => [
+                'student' => $result['student'],
+                'parent_id' => $result['parent_id'], 
+                'children_count' => $result['children_count'], 
+            ],
+        ]);
+    }
+    
+    
+    
+    
+
+
+    
+    
+    
+    
+    
 
     
     

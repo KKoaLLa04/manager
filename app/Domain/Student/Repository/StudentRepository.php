@@ -1,9 +1,12 @@
 <?php
 namespace App\Domain\Student\Repository;
 
+use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Models\ClassModel;
 use App\Models\Student;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class StudentRepository {
 
@@ -54,6 +57,85 @@ class StudentRepository {
         return $students; // Trả về đối tượng LengthAwarePaginator
     }
     
+    // Phương thức gán phụ huynh cho học sinh
+    public function assignParentToStudent(int $student_id, int $parent_id)
+    {
+        // Kiểm tra phụ huynh có hợp lệ không
+        $parent = User::where('id', $parent_id)
+            ->where('access_type', AccessTypeEnum::GUARDIAN->value)
+            ->where('is_deleted', DeleteEnum::DELETED->value) 
+            ->first();
+    
+        if (!$parent) {
+            return [
+                'error' => 'Phụ huynh không hợp lệ hoặc không có quyền truy cập',
+            ];
+        }
+    
+        // Kiểm tra học sinh có tồn tại không
+        $student = Student::find($student_id);
+        if (!$student) {
+            return [
+                'error' => 'Học sinh không tồn tại',
+            ];
+        }
+          // Kiểm tra xem học sinh đã có phụ huynh được gán chưa
+        if ($student->parents()->exists()) {
+            return [
+                'error' => 'Học sinh này đã được gán phụ huynh, không thể gán lại.',
+            ];
+        }
+    
+        // Gán phụ huynh cho học sinh
+        $student->parents()->attach($parent->id, ['created_user_id' => Auth::user()->id]);
+        $childrenCount = $parent->students()->count();
+
+        return [
+            'student' => $student,
+            'parent' => $parent,
+            'children_count' => $childrenCount
+        ];
+    }
+    
+    public function detachParentFromStudent(int $student_id, int $parent_id)
+    {
+        // Kiểm tra học sinh có tồn tại không
+        $student = Student::find($student_id);
+        if (!$student) {
+            return null; // Hoặc ném ra exception nếu muốn
+        }
+    
+        // Kiểm tra phụ huynh có tồn tại và hợp lệ không
+        $parent = User::where('id', $parent_id)
+            ->where('access_type', AccessTypeEnum::GUARDIAN->value)
+            ->where('is_deleted', DeleteEnum::DELETED->value)
+            ->first(); 
+    
+        if (!$parent) {
+            return [
+                'error' => 'Phụ huynh không hợp lệ hoặc không có quyền truy cập',
+            ];
+        }
+    
+        $relationshipExists = $student->parents()->where('users.id', $parent_id)->exists();
+        if (!$relationshipExists) {
+            return [
+                'error' => 'Phụ huynh không hợp lệ hoặc không được gán cho học sinh này',
+            ];
+        }
+    
+        $student->parents()->detach($parent_id);
+        $childrenCount = $parent->students()->count();
+    
+        return [
+            'student' => $student,
+            'parent_id' => $parent_id, // Đảm bảo rằng parent_id luôn được trả về
+            'children_count' => $childrenCount, // Trả về số lượng con còn lại của phụ huynh
+        ];
+    }
+    
+
+
     
     
 
