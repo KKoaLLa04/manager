@@ -4,9 +4,11 @@ namespace App\Domain\Auth\Repository;
 
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
+use App\Common\Enums\StatusEnum;
+use App\Domain\SchoolYear\Models\SchoolYear;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Collection;
 
 class LoginRepository
 {
@@ -41,8 +43,14 @@ class LoginRepository
         return [];
     }
 
-    public function transform(?User $user, array $studentOfUser, string $token): array
+    public function getSchoolYear(): Collection
     {
+        return SchoolYear::select('id','name','end_date','start_date')->where('status', StatusEnum::ACTIVE->value)->get();
+    }
+
+    public function transform(?User $user, array $studentOfUser, string $token, Collection $schoolYear): array
+    {
+
         return [
             'token' => $token,
             "user"  => [
@@ -57,7 +65,25 @@ class LoginRepository
                 'email'       => !is_null($user->email) ? $user->email : "",
                 'username'    => !is_null($user->username) ? $user->username : "",
                 'students'    => $studentOfUser
-            ]
+            ],
+            "schoolYear" => $this->transformSchoolYear($schoolYear),
         ];
+    }
+
+    private function transformSchoolYear(Collection $schoolYear): array
+    {
+        if ($schoolYear->isEmpty()) {
+            return [];
+        }
+
+        return $schoolYear->map(function (SchoolYear $schoolYear) {
+            return [
+                "id" => $schoolYear->id,
+                "name" => $schoolYear->name,
+                "start_date" => Carbon::parse($schoolYear->start_date)->timestamp,
+                "end_date" => Carbon::parse($schoolYear->end_date)->timestamp,
+            ];
+        })->toArray();
+
     }
 }

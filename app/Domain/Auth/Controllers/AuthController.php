@@ -2,6 +2,7 @@
 namespace App\Domain\Auth\Controllers;
 
 use App\Common\Enums\StatusEnum;
+use App\Common\Repository\GetSchoolYearRepository;
 use App\Domain\Auth\Repository\LoginRepository;
 use App\Domain\Auth\Requests\LoginRequest;
 use App\Http\Controllers\BaseController;
@@ -12,7 +13,8 @@ class AuthController extends BaseController
 {
     public function __construct(
         Request $request,
-        protected LoginRepository $loginRepository
+        protected LoginRepository $loginRepository,
+        protected GetSchoolYearRepository $getSchoolYearRepository
     )
     {
         parent::__construct($request);
@@ -33,8 +35,8 @@ class AuthController extends BaseController
             return $this->responseError(trans('api.error.not_found'),ResponseAlias::HTTP_UNAUTHORIZED);
         }
         $studentOfUser = $this->loginRepository->getStudentOfUser($user);
-
-        $dataResponse = $this->loginRepository->transform($user, $studentOfUser, $token);
+        $schoolYear = $this->getSchoolYearRepository->getSchoolYear();
+        $dataResponse = $this->loginRepository->transform($user, $studentOfUser, $token,$schoolYear);
         return $this->responseSuccess($dataResponse);
     }
 

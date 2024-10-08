@@ -64,14 +64,6 @@ class UserAddRequest extends FormRequest
             //     'required',
             //     'integer'
             // ],
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
         ];
     }
 

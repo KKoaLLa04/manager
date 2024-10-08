@@ -2,6 +2,7 @@
 
 namespace App\Domain\SchoolYear\Controllers;
 
+use App\Common\Enums\AccessTypeEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use App\Http\Controllers\BaseController;
@@ -14,6 +15,7 @@ use App\Domain\SchoolYear\Repository\SchoolYearDeleteRepository;
 use App\Domain\SchoolYear\Requests\SchoolYearAddRequest;
 use App\Domain\SchoolYear\Requests\SchoolYearEditRequest;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class SchoolYearController extends BaseController
 {
@@ -32,16 +34,6 @@ class SchoolYearController extends BaseController
     public function index(Request $request)
     {
 
-        $request->validate([
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
-        ]);
 
         $keyword = "";
 
@@ -61,12 +53,11 @@ class SchoolYearController extends BaseController
             $pageSize = $request->pageSize;
         }
 
-        // $user_id = $request->user_id;
-        // $type = $request->type;
+        $user_id = Auth::user()->id;
 
-        // if (!$this->user->getUser($user_id, $type)) {
-        //     return $this->responseError(trans('api.error.user_not_permission'));
-        // }
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
 
         $SchoolYearIndexRepository = new SchoolYearIndexRepository();
 
@@ -83,21 +74,9 @@ class SchoolYearController extends BaseController
     public function detail(int $id, Request $request)
     {
 
-        $request->validate([
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
-        ]);
+        $user_id = Auth::user()->id;
 
-        $user_id = $request->user_id;
-        $type = $request->type;
-
-        if (!$this->user->getUser($user_id, $type)) {
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -117,21 +96,9 @@ class SchoolYearController extends BaseController
     public function delete(int $id, Request $request)
     {
 
-        $request->validate([
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
-        ]);
+        $user_id = Auth::user()->id;
 
-        $user_id = $request->user_id;
-        $type = $request->type;
-
-        if (!$this->user->getUser($user_id, $type)) {
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -152,14 +119,13 @@ class SchoolYearController extends BaseController
     public function add(SchoolYearAddRequest $request)
     {
 
-        $SchoolYearAddRepository = new SchoolYearAddRepository();
-        $user_id = $request->user_id;
-        $type = $request->type;
+        $user_id = Auth::user()->id;
 
-        if (!$this->user->getUser($user_id, $type)) {
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
+        $SchoolYearAddRepository = new SchoolYearAddRepository();
         $check = $SchoolYearAddRepository->handle($user_id, $request);
 
         if ($check) {
@@ -175,10 +141,11 @@ class SchoolYearController extends BaseController
     public function edit(int $id, SchoolYearEditRequest $request)
     {
 
+        $user_id = Auth::user()->id;
+
         $SchoolYearEditRepository = new SchoolYearEditRepository();
-        $user_id = $request->user_id;
-        $type = $request->type;
-        if (!$this->user->getUser($user_id, $type)) {
+
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
