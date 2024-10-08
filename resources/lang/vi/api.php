@@ -24,6 +24,10 @@ return [
         'school_year' => [
             'start_date_before_end_date' => 'Thời gian bắt đầu phải lớn hơn hoặc bằng thời gian hiện tại',
             'start_date_not_equal_end_date_before' => 'Năm bắt đầu không được bằng năm kết thúc của năm học trước đó'
+        ],
+        'subject' => [
+            'have_subject_class' => 'Lớp đã có môn học này',
+            'subjects_array' => 'Phải là một mảng dữ liệu'
         ]
     ],
 

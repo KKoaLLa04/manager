@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\Subject\Repository\SubjectIndexRepository;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class SubjectController extends BaseController
 {
@@ -39,4 +40,31 @@ class SubjectController extends BaseController
 
 
     }
+
+    public function mixSubjectForClass (Request $request) {
+
+        $validator = Validator::make($request->all(), [
+            'class_id' => 'required|integer',
+        ], [
+            'integer' => trans('api.error.integer'),
+            'required' => trans('api.error.required'),
+        ]);
+
+        $errors = $validator->errors()->messages();
+
+        $checkError = false;
+
+        if(empty($request->subjects) ){
+            $errors['subjects'] = [
+                trans('api.error.school_year.start_date_not_equal_end_date_before')
+            ];
+            $checkError = true;
+        }
+
+
+        if($validator->fails() || $checkError) return back()->withErrors($errors)->withInput();
+
+    }
+
+
 }
