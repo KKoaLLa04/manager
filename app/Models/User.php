@@ -86,8 +86,8 @@ class User extends Authenticatable implements JWTSubject
             ->withTimestamps()
             ->where('students.status', StatusEnum::ACTIVE->value);
         }
-        
-        
+
+
     public function assign_relationship(): BelongsToMany
     {
         return $this->belongsToMany(Student::class, 'user_student', 'user_id', 'student_id')
@@ -95,7 +95,6 @@ class User extends Authenticatable implements JWTSubject
             ->where('access_type', AccessTypeEnum::GUARDIAN->value) // Điều kiện chỉ lấy phụ huynh
             ->withTimestamps()
             ->where('students.status', StatusEnum::ACTIVE->value);
-    }
     }
 
 
@@ -124,3 +123,4 @@ class User extends Authenticatable implements JWTSubject
     }
 
 }
+

@@ -25,6 +25,9 @@ return [
         'school_year' => [
             'start_date_before_end_date' => 'Thời gian bắt đầu phải lớn hơn hoặc bằng thời gian hiện tại',
             'start_date_not_equal_end_date_before' => 'Năm bắt đầu không được bằng năm kết thúc của năm học trước đó'
+        ],
+        'student' => [
+            'students_array_required' => 'Bắt buộc phải nhập và phải là một mảng',
         ]
     ],
 

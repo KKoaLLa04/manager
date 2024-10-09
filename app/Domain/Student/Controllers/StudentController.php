@@ -7,8 +7,10 @@ use App\Common\Enums\DeleteEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\Student\Repository\StudentAddRepository;
 use App\Domain\Student\Repository\StudentDeleteRepository;
+use App\Domain\Student\Repository\StudentIndexClassByYearRepository;
 use App\Domain\Student\Repository\StudentRepository;
 use App\Domain\Student\Repository\StudentUpdateRepository;
+use App\Domain\Student\Repository\StudentUpGradeRepository;
 use App\Domain\Student\Requests\AssignParentRequest;
 use App\Domain\Student\Requests\StudentRequest;
 use App\Domain\Student\Requests\StudentUpdateRequest;
@@ -17,6 +19,10 @@ use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+
+
 
 class StudentController extends BaseController
 {
@@ -312,6 +318,87 @@ class StudentController extends BaseController
     public function upGrade (Request $request) {
 
 
+        $user_id = Auth::user()->id;
+
+        if(!$this->user->getManager($user_id)){
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $validator = Validator::make($request->all(), [
+            'class_id' => 'required|integer',
+        ], [
+            'integer' => trans('api.error.integer'),
+            'required' => trans('api.error.required'),
+        ]);
+
+        $errors = $validator->errors()->messages();
+
+        $checkError = false;
+
+        if(empty($request->students) || !is_array($request->students)){
+            $errors['students'] = [
+                trans('api.error.student.students_array_required')
+            ];
+            $checkError = true;
+        }
+
+        // Nếu có lỗi trong validation hoặc lỗi tùy chỉnh
+        if ($validator->fails() || $checkError) {
+            // Tùy chỉnh mảng lỗi để trả về
+            $customErrors = [];
+            foreach ($errors as $field => $messages) {
+                foreach ($messages as $message) {
+                    $customErrors[$field] = [
+                        $message,
+                    ];
+                }
+            }
+
+            // Trả về phản hồi JSON với lỗi
+            return response()->json([
+                'errors' => $customErrors,
+            ], ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
+
+        }
+
+
+        $repository = new StudentUpGradeRepository();
+
+        $check = $repository->handle($user_id, $request->students, $request);
+
+        if($check){
+            return $this->responseSuccess([], trans('api.alert.together.add_success'));
+        }else{
+            return $this->responseError(trans('api.alert.together.add_failed'));
+        }
+
+
+
+    }
+
+
+
+    public function classByYear (Request $request) {
+
+        $user_id = Auth::user()->id;
+
+        if(!$this->user->getManager($user_id)){
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $request->validate([
+            'school_year_id' => 'required|integer',
+        ], [
+            'integer' => trans('api.error.integer'),
+            'required' => trans('api.error.required'),
+        ]);
+
+
+        $repository = new StudentIndexClassByYearRepository();
+
+        $check = $repository->handle($request->school_year_id);
+
+        return $this->responseSuccess($check, trans('api.alert.together.index_success'));
 
     }
 
