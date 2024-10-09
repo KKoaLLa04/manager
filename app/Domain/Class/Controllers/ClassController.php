@@ -11,8 +11,10 @@ use App\Domain\Class\Repository\ClassRepository;
 use App\Domain\Class\Repository\CreateClassRepository;
 use App\Domain\Class\Repository\DeleteClassRepository;
 use App\Domain\Class\Repository\UpdateClassRepository;
+use App\Domain\Class\Requests\AssignMainTeacherRequest;
 use App\Domain\Class\Requests\CreateClassRequest;
 use App\Domain\Class\Requests\DeleteClassRequest;
+use App\Domain\Class\Requests\DetailClassRequest;
 use App\Domain\Class\Requests\GetClassRequest;
 use App\Domain\Class\Requests\UpdateClassRequest;
 use App\Http\Controllers\BaseController;
@@ -49,6 +51,20 @@ class ClassController extends BaseController
 
         list($totalPage, $page, $size, $classes) = $this->classRepository->getClasses($request);
         return $this->responseSuccess($this->classRepository->transform($page, $totalPage, $size, $classes));
+    }
+
+    public function detail(DetailClassRequest $request)
+    {
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+
+        $class = $this->classRepository->detailClass($request->class_id);
+        if(is_null($class)){
+            return $this->responseSuccess();
+        }
+
+        $students = $this->classRepository->getStudentOfClass($request->class_id);
     }
 
     public function form()
@@ -92,13 +108,11 @@ class ClassController extends BaseController
 
         $statusCreateClass = $this->createClassRepository->createClass($request);
         if ($statusCreateClass) {
-            $classId                         = $statusCreateClass->id;
-            $statusCreateClassSubjectTeacher = $this->createClassRepository->createClassTeacherSubject($classId,
+            $classId = $statusCreateClass->id;
+            $this->createClassRepository->createClassTeacherSubject($classId,
                 $request->teacher_id);
-            if ($statusCreateClassSubjectTeacher) {
-                return $this->responseSuccess();
-            }
-            return $this->responseError();
+
+            return $this->responseSuccess();
         }
         return $this->responseError();
     }
@@ -122,13 +136,11 @@ class ClassController extends BaseController
 
         $statusCreateClass = $this->updateClassRepository->UpdateClass($request);
         if ($statusCreateClass) {
-            $classId                         = $request->class_id;
-            $statusCreateClassSubjectTeacher = $this->updateClassRepository->createClassTeacherSubject($classId,
+            $classId = $request->class_id;
+            $this->updateClassRepository->createClassTeacherSubject($classId,
                 $request->teacher_id);
-            if ($statusCreateClassSubjectTeacher) {
-                return $this->responseSuccess();
-            }
-            return $this->responseError();
+
+            return $this->responseSuccess();
         }
         return $this->responseError();
     }
@@ -149,5 +161,26 @@ class ClassController extends BaseController
             return $this->responseError();
         }
         return $this->responseError();
+    }
+
+    public function formAssignMainTeacher()
+    {
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+
+        $teachers = $this->classRepository->getTeachers();
+
+        return $this->responseSuccess($this->classRepository->transformDataAssign($teachers));
+    }
+
+    public function assignMainTeacher(AssignMainTeacherRequest $request)
+    {
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+        $this->updateClassRepository->createClassTeacherSubject($request->class_id,
+            $request->teacher_id);
+        return $this->responseSuccess();
     }
 }
