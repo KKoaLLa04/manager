@@ -44,14 +44,14 @@ public function update(int $id, array $data)
         ], 400);
     }
 
-    if($academicYear->status == AcademicTypeEnum::FINISHED){
+    if($academicYear->status == AcademicTypeEnum::FINISHED->value){
         return response()->json([
             'success' => false,
             'message' => 'Niên khóa đã đóng',
         ], 400);
     }
 
-    if($academicYear->status == AcademicTypeEnum::NOT_STARTED_YET || $academicYear->status == AcademicTypeEnum::ONGOING){
+    if($academicYear->status == AcademicTypeEnum::NOT_STARTED_YET->value || $academicYear->status == AcademicTypeEnum::ONGOING->value){
     $academicYear->fill($data);
     $academicYear->save();
     }
@@ -71,7 +71,7 @@ public function softDelete(int $id, int $user_id)
         ], 400);
     }
     
-    if ($academicYear && ($academicYear->status == AcademicTypeEnum::NOT_STARTED_YET)){
+    if ($academicYear && ($academicYear->status == AcademicTypeEnum::NOT_STARTED_YET->value)){
         
         $academicYear->is_deleted = DeleteEnum::DELETED->value;
         

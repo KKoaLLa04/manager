@@ -2,6 +2,7 @@
 <?php
 
 use App\Domain\SchoolYear\Controllers\SchoolYearController;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'manager/schoolyear', 'middleware' => 'auth:api'], function () {

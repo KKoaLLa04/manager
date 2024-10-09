@@ -17,8 +17,11 @@ class StudentClassHistory extends Model
         'end_date',
         'status',
         'is_deleted',
+        'created_by',
+        'updated_by',
         'created_user_id',
         'modified_user_id',
+        'id'
     ];
 
     public function student()

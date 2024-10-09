@@ -31,7 +31,7 @@ class SchoolYearAddRequest extends FormRequest
                     $inputYear = Carbon::parse($value)->year;
                     $currentYear = Carbon::now()->year;
                     if ($inputYear < $currentYear) {
-                        $fail(trans('api.school_year.start_date_before_end_date'));
+                        $fail(trans('api.error.school_year.start_date_before_end_date'));
                     }
                 },
                 function ($attribute, $value, $fail) {
@@ -41,7 +41,7 @@ class SchoolYearAddRequest extends FormRequest
                         $time1 = Carbon::parse($value);
                         $time2 = Carbon::parse($school_year_last->end_date);
                         if ($time1 == $time2) {
-                            $fail('Năm bắt đầu không được bằng năm kết thúc của năm học trước đó.');
+                            $fail(trans('api.error.school_year.start_date_not_equal_end_date_before'));
                         }
                     }
                 },
@@ -52,36 +52,18 @@ class SchoolYearAddRequest extends FormRequest
                 'after_or_equal:now',
                 'after_or_equal:start_year'
             ],
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'required' => ':attribute bắt buộc phải nhập',
-            'min' => ':attribute không được bé hơn :min ký tự',
-            'max' => ':attribute không được lớn hơn :max ký tự',
-            'date' => ':attribute phải là kiểu thời gian',
-            'after_or_equal' => ':attribute phải lớn hơn hoặc bằng thời gian hiện tại',
-            'after' => ':attribute phải lớn hơn thời gian bắt đầu'
-        ];
-    }
-
-    public function attributes(): array
-    {
-        return [
-            'name' => 'Tên năm học',
-            'status' => 'Trang thái',
-            'start_year' => 'Thời gian bắt đầu',
-            'end_year' => 'Thời gian kết thúc'
+            'required' => trans('api.error.required'),
+            'min' => trans('api.error.min'),
+            'max' => trans('api.error.max'),
+            'integer' => trans('api.error.integer'),
+            'date' => trans('api.error.date'),
+            'after_or_equal' => trans('api.error.after_or_equal')
         ];
     }
 

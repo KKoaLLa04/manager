@@ -14,7 +14,7 @@ class SchoolYearDeleteRepository {
 
         if($item){
 
-            $item->is_deleted = DeleteEnum::NOT_DELETE->value;
+            $item->is_deleted = DeleteEnum::DELETED->value;
             $item->modified_user_id = $user_id;
 
             if($item->save()) return true;
