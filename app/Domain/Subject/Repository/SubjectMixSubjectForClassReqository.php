@@ -12,19 +12,30 @@ class SubjectMixSubjectForClassReqository {
 
     public function handle ($user_id, $subjects, Request $request) {
 
-        foreach ($subjects as $value) {
+        try {
 
-            $classSubject = new ClassSubject();
+            foreach ($subjects as $value) {
 
-            $classSubject->class_id = $request->class_id;
-            $classSubject->subject_id = $value;
-            $classSubject->status = StatusEnum::ACTIVE->value;
-            $classSubject->is_deleted = DeleteEnum::NOT_DELETE->value;
-            $classSubject->created_user_id = $user_id;
+                $classSubject = new ClassSubject();
 
-            $classSubject->save();
+                $classSubject->class_id = $request->class_id;
+                $classSubject->subject_id = $value;
+                $classSubject->status = StatusEnum::ACTIVE->value;
+                $classSubject->is_deleted = DeleteEnum::NOT_DELETE->value;
+                $classSubject->created_user_id = $user_id;
+
+                $classSubject->save();
+
+            }
+
+            return true;
+
+        } catch (\Throwable $th) {
+
+            return false;
 
         }
+
 
     }
 

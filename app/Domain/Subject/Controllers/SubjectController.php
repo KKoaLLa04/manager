@@ -5,6 +5,7 @@ use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\Subject\Repository\SubjectIndexRepository;
+use App\Domain\Subject\Repository\SubjectMixSubjectForClassReqository;
 use App\Models\ClassSubject;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -44,6 +45,11 @@ class SubjectController extends BaseController
 
     public function mixSubjectForClass (Request $request) {
 
+        $user_id = Auth::user()->id;
+
+        if(!$this->user->getManager($user_id)){
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
 
         $validator = Validator::make($request->all(), [
             'class_id' => 'required|integer',
@@ -88,13 +94,19 @@ class SubjectController extends BaseController
             }
 
             // Trả về phản hồi JSON với lỗi
-            // return response()->json([
-            //     'errors' => $customErrors,
-            // ], ResponseAlias::);
+            return $this->responseValidate($customErrors);
+
         }
 
+        $reqository = new SubjectMixSubjectForClassReqository();
 
+        $check = $reqository->handle($user_id, $request->subjects, $request);
 
+        if($check){
+            return $this->responseSuccess([], trans('api.alert.together.add_success'));
+        }else{
+            return $this->responseError(trans('api.alert.together.add_failed'));
+        }
 
 
     }
