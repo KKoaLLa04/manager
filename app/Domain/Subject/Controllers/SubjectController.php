@@ -5,9 +5,10 @@ use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\Subject\Repository\SubjectIndexRepository;
+use App\Models\ClassSubject;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 class SubjectController extends BaseController
 {
 
@@ -43,6 +44,7 @@ class SubjectController extends BaseController
 
     public function mixSubjectForClass (Request $request) {
 
+
         $validator = Validator::make($request->all(), [
             'class_id' => 'required|integer',
         ], [
@@ -54,15 +56,46 @@ class SubjectController extends BaseController
 
         $checkError = false;
 
-        if(empty($request->subjects) ){
+        if(empty($request->subjects) || !is_array($request->subjects)){
             $errors['subjects'] = [
-                trans('api.error.school_year.start_date_not_equal_end_date_before')
+                trans('api.error.subject.subjects_array_required')
             ];
             $checkError = true;
+        }else{
+            if(!empty($request->class_id)){
+                foreach ($request->subjects as $sub) {
+                    $exists = ClassSubject::where('class_id', $request->class_id)->where('subject_id', $sub)->first();
+                    if($exists){
+                        $errors['subjects'] = [
+                            trans('api.error.subject.have_subject_class')
+                        ];
+                        $checkError = true;
+                    }
+                }
+            }
+        }
+
+        // Nếu có lỗi trong validation hoặc lỗi tùy chỉnh
+        if ($validator->fails() || $checkError) {
+            // Tùy chỉnh mảng lỗi để trả về
+            $customErrors = [];
+            foreach ($errors as $field => $messages) {
+                foreach ($messages as $message) {
+                    $customErrors[$field] = [
+                        $message,
+                    ];
+                }
+            }
+
+            // Trả về phản hồi JSON với lỗi
+            // return response()->json([
+            //     'errors' => $customErrors,
+            // ], ResponseAlias::);
         }
 
 
-        if($validator->fails() || $checkError) return back()->withErrors($errors)->withInput();
+
+
 
     }
 

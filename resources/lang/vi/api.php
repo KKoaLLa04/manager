@@ -27,7 +27,7 @@ return [
         ],
         'subject' => [
             'have_subject_class' => 'Lớp đã có môn học này',
-            'subjects_array' => 'Phải là một mảng dữ liệu'
+            'subjects_array_required' => 'bắt buộc phải nhập và phải là một mảng dữ liệu'
         ]
     ],
 
