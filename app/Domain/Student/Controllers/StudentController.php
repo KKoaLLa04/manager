@@ -33,20 +33,20 @@ class StudentController extends BaseController
     {
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-    
+
         // Kiểm tra quyền truy cập của người dùng
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-    
+
         // Lấy kích thước trang
-        $pageSize = $request->input('pageSize', 10);  
-    
+        $pageSize = $request->input('pageSize', 10);
+
         $studentRepository = new StudentRepository();
-    
+
         // Lấy danh sách sinh viên
         $students = $studentRepository->paginateStudents($pageSize);
-    
+
         // Kiểm tra nếu có sinh viên
         if ($students->count() > 0) {
             return response()->json([
@@ -61,22 +61,22 @@ class StudentController extends BaseController
             return response()->json(['status' => 'error', 'data' => []]);
         }
     }
-    
+
 
 
     public function store(StudentRequest $request) {
         $StudentAddRepository = new StudentAddRepository();
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-    
+
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-    
+
         $check = $StudentAddRepository->handle($user_id, $request);
-    
+
         if ($check) {
-            
+
             return response()->json([
                 'message' => 'Thêm học sinh thành công',
                 'status' => 'success',
@@ -90,9 +90,9 @@ class StudentController extends BaseController
             ]);
         }
     }
-    
+
     public function delete(int $id, ){
-    
+
 
         $user_id =Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
@@ -109,7 +109,7 @@ class StudentController extends BaseController
             return response()->json([
                 'message' => 'Xóa học sinh ' . $data->fullname . ' thành công',
                 'status' => 'success',
-               
+
             ]);
         } else {
             $data = Student::find($id);
@@ -121,8 +121,8 @@ class StudentController extends BaseController
         }
     }
 
-    
-    
+
+
     public function update(int $id, StudentUpdateRequest $request){
 
         $StudentUpdateRepository = new StudentUpdateRepository();
@@ -135,7 +135,7 @@ class StudentController extends BaseController
         $check = $StudentUpdateRepository->handle($id, $user_id, $request);
         if ($check) {
             $data = Student::find($id);
-            
+
             // Chuyển đổi đối tượng thành mảng
             $studentArray = $data->toArray();
             $studentArray['class_id'] = optional($data->classHistory)->class_id;
@@ -156,7 +156,7 @@ class StudentController extends BaseController
         }
     }
     // public function show($id)
-    // {    
+    // {
     //     $user_id = Auth::user()->id;
     //     $type = AccessTypeEnum::MANAGER->value;
 
@@ -202,7 +202,7 @@ class StudentController extends BaseController
         }])
         ->where('is_deleted', DeleteEnum::DELETED->value) // Kiểm tra xem học sinh có bị xóa không
         ->find($id);
-    
+
         if (!$student) {
             return response()->json([
                 'message' => 'Học sinh này không tồn tại',
@@ -210,15 +210,15 @@ class StudentController extends BaseController
                 'data' => []
             ]);
         }
-    
+
         $studentArray = $student->toArray();
-        
+
         // Thêm thông tin cần thiết từ classHistory
         $classHistory = $student->classHistory;
         $studentArray['start_date'] = optional($classHistory)->start_date;
         $studentArray['end_date'] = optional($classHistory)->end_date;
         $studentArray['class_history_status'] = optional($classHistory)->status;
-    
+
         // Kiểm tra xem classHistory có tồn tại không trước khi lấy class_id và class_name
         if ($classHistory) {
             $studentArray['class_id'] = optional($classHistory->class)->id;  // class có thể null
@@ -227,24 +227,24 @@ class StudentController extends BaseController
             $studentArray['class_id'] = null;
             $studentArray['class_name'] = null;
         }
-    
+
         // Thêm thông tin phụ huynh vào mảng học sinh
         $studentArray['parents'] = $student->parents ?? []; // Đảm bảo có giá trị mặc định là mảng rỗng nếu không có phụ huynh
-    
+
         return response()->json([
             'message' => 'Lấy thông tin học sinh thành công',
             'status' => 'success',
             'data' => $studentArray
         ]);
     }
-    
-    
-    
-    
-    
 
-    
-    public function assignParent(int $student_id, AssignParentRequest $request) 
+
+
+
+
+
+
+    public function assignParent(int $student_id, AssignParentRequest $request)
     {
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
@@ -281,44 +281,48 @@ class StudentController extends BaseController
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-    
+
         $parent_id = $request->input('parent_id');
-    
+
         // Gọi phương thức hủy gán phụ huynh từ repository
         $result = $this->studentRepository->detachParentFromStudent($student_id, $parent_id);
-    
+
         // Kiểm tra xem có lỗi trong kết quả không
         if (isset($result['error'])) {
             return response()->json(['message' => $result['error'], 'status' => 'error']);
         }
-    
+
         if (!$result) {
             return response()->json(['message' => 'Hủy gán không thành công', 'status' => 'error']);
         }
-    
+
         return response()->json([
             'message' => 'Hủy gán phụ huynh thành công',
             'status' => 'success',
             'data' => [
                 'student' => $result['student'],
-                'parent_id' => $result['parent_id'], 
-                'children_count' => $result['children_count'], 
+                'parent_id' => $result['parent_id'],
+                'children_count' => $result['children_count'],
             ],
         ]);
+
     }
-    
-    
-    
-    
 
 
-    
-    
-    
-    
-    
+    public function upGrade (Request $request) {
 
-    
-    
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
 }
-            
