@@ -5,6 +5,7 @@ namespace App\Domain\Class\Repository;
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\PaginateEnum;
+use App\Common\Enums\StatusClassStudentEnum;
 use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\AcademicYear\Models\AcademicYear;
@@ -12,6 +13,8 @@ use App\Domain\SchoolYear\Models\SchoolYear;
 use App\Models\Classes;
 use App\Models\ClassSubjectTeacher;
 use App\Models\Grade;
+use App\Models\Student;
+use App\Models\StudentClassHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -69,21 +72,20 @@ class ClassRepository
 
     public function transformClass(Collection $classes): array
     {
-        $dataClasses = [];
-        foreach ($classes as $class) {
-            $dataClasses[] = [
+
+        return $classes->map(function ($class){
+            return  [
                 "id"            => $class->id,
-                "name"          => $class->name,
-                "schoolYear"    => $class->schoolYear->name,
-                "grade"         => $class->grade->name,
-                "academic_name" => $class->academicYear->name,
-                "academic_code" => $class->academicYear->code,
-                "teacher_name"  => $class->user->first()->fullname,
-                "teacher_email" => $class->user->first()->fullname,
-                "status"        => $class->status,
+                "name"          => is_null($class->name) ? "" : $class->name,
+                "schoolYear"    => is_null($class->schoolYear->name) ? "" : $class->schoolYear->name,
+                "grade"         => is_null($class->grade->name) ? "" : $class->grade->name,
+                "academic_name" => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
+                "academic_code" => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
+                "teacher_name"  => is_null($class->user->first()->name) ? "" : $class->user->first()->name,
+                "teacher_email" => is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname,
+                "status"        => is_null($class->status) ? "1" : $class->status,
             ];
-        }
-        return $dataClasses;
+        })->toArray();
     }
 
     public function getGrades(): Collection
@@ -103,7 +105,6 @@ class ClassRepository
             ->where('status', StatusEnum::ACTIVE->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->pluck('user_id')->unique()->toArray();
-
         return User::query()->where('access_type', AccessTypeEnum::TEACHER->value)
             ->whereNotIn('id', $classSubjectTeacherMain)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
@@ -127,7 +128,7 @@ class ClassRepository
         foreach ($teachers as $item) {
             $dataReturn[] = [
                 'id'            => $item->id,
-                'name'          => $item->fullname,
+                'name'          => is_null($item->fullname) ? "": $item->fullname,
             ];
         }
         return $dataReturn;
@@ -139,9 +140,45 @@ class ClassRepository
         foreach ($items as $item) {
             $dataReturn[] = [
                 'id'            => $item->id,
-                'name'          => $item->name,
+                'name'          => is_null($item->fullname) ? "": $item->fullname,
             ];
         }
         return $dataReturn;
+    }
+
+    public function transformDataAssign(Collection $teachers): array
+    {
+        return $teachers->map(function ($item) {
+            return [
+                'id'            => $item->id,
+                'name'          => is_null($item->fullname) ? '' : $item->fullname,
+                'email'         => $item->email,
+                'gender'        => is_null($item->gender) ? "1" : $item->gender,
+                'dob'           => is_null($item->dob) ? "" : $item->dob,
+                'phone'          => is_null($item->phone) ? "" : $item->phone,
+            ];
+        })->toArray();
+    }
+
+    public function detailClass(int $class_id): ?Classes
+    {
+        return Classes::where('id', $class_id)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
+    }
+
+    public function getStudentOfClass(int $class_id): Collection
+    {
+        $date = now();
+        $studentIds =  StudentClassHistory::query()->where('class_id', $class_id)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('status', StatusClassStudentEnum::STUDYING->value)
+            ->where(function ($query)use ($date) {
+                $query->where('start_date', '<=', $date)
+                    ->whereNull('end_date');
+                $query->orWhere(function ($query)use ($date) {
+                    $query->where('end_date', '>=', $date)->where('start_date', '<=', $date);
+                });
+            })
+            ->pluck('student_id')->toArray();
+        return Student::query()->whereIn('id', $studentIds)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
     }
 }

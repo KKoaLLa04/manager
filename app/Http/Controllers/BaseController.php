@@ -14,7 +14,12 @@ class BaseController extends Controller
 
     public function responseSuccess($data = [], $message = 'success'): JsonResponse
     {
-        return response()->json($data, ResponseAlias::HTTP_OK);
+        return response()->json(
+            [
+                'msg'  => !empty($message) ? $message : '',
+                'data' => $data,
+            ]
+            , ResponseAlias::HTTP_OK);
     }
 
     protected function responseError(string $message = '', $status = ResponseAlias::HTTP_BAD_REQUEST): JsonResponse
