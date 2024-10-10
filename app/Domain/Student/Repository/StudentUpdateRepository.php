@@ -42,7 +42,7 @@ class StudentUpdateRepository {
                 $studentClassHistory->start_date = now(); // Gán ngày bắt đầu là thời điểm hiện tại
                 $studentClassHistory->end_date = $request->end_date ?? null;  // Gán ngày kết thúc là null cho đang học
                 $studentClassHistory->status = 1; 
-                $studentClassHistory->is_deleted = 1; 
+                $studentClassHistory->is_deleted = 0; 
                 $studentClassHistory->modified_user_id = $user_id;
             }
 

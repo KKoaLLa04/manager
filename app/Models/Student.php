@@ -17,7 +17,7 @@ class Student extends Model
     ];
     public function classHistory()
     {
-        return $this->hasOne(StudentClassHistory::class, 'student_id')->where('is_deleted', DeleteEnum::DELETED->value);
+        return $this->hasOne(StudentClassHistory::class, 'student_id')->where('is_deleted', DeleteEnum::NOT_DELETE->value);
 
     }
     public function parents()
@@ -25,4 +25,5 @@ class Student extends Model
         return $this->belongsToMany(User::class, 'user_student', 'student_id', 'user_id')
                     ->where('access_type', AccessTypeEnum::GUARDIAN->value); // Chỉ lấy user có access_type là phụ huynh
     }
+    
 }

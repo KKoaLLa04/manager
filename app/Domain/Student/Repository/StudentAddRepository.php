@@ -25,7 +25,7 @@ class StudentAddRepository {
             $student->dob = $request->dob; 
             $student->status = $request->status; 
             $student->gender = $request->gender; 
-            $student->is_deleted = $request->is_deleted ?? 1; 
+            $student->is_deleted = $request->is_deleted ?? 0; 
             $student->created_user_id = $user_id; 
 
             if (!$student->save()) {
@@ -52,7 +52,7 @@ class StudentAddRepository {
             $studentClassHistory->start_date = now(); 
             $studentClassHistory->end_date = null; 
             $studentClassHistory->status = 1; // 1: Đang học
-            $studentClassHistory->is_deleted = 1; // 1: Active
+            $studentClassHistory->is_deleted = 0; // 0: Active
             $studentClassHistory->created_user_id = $user_id; 
             
 

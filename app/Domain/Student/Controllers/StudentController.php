@@ -68,25 +68,30 @@ class StudentController extends BaseController
         }
     }
 
-
-
     public function store(StudentRequest $request) {
         $StudentAddRepository = new StudentAddRepository();
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-
+    
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-
+    
         $check = $StudentAddRepository->handle($user_id, $request);
-
         if ($check) {
-
+            $student = Student::with(['classHistory' => function($query) {
+                $query->select('student_id', 'class_id')
+                      ->with(['class' => function($q) {
+                          $q->select('id', 'name');
+                      }]);
+            }])->where('student_code', $request->student_code)->first(); 
+    
+            $studentArray = $student->toArray();
+    
             return response()->json([
                 'message' => 'Thêm học sinh thành công',
                 'status' => 'success',
-                'data' => $request->all()
+                'data' => $studentArray 
             ]);
         } else {
             return response()->json([
@@ -96,6 +101,9 @@ class StudentController extends BaseController
             ]);
         }
     }
+    
+    
+    
 
     public function delete(int $id, ){
 
@@ -161,38 +169,16 @@ class StudentController extends BaseController
             ]);
         }
     }
-    // public function show($id)
-    // {
-    //     $user_id = Auth::user()->id;
-    //     $type = AccessTypeEnum::MANAGER->value;
 
-    //     if (!$this->user->getUser($user_id, $type)) {
-    //         return $this->responseError(trans('api.error.user_not_permission'));
-    //     }
-    //     $student = Student::with('classHistory.class')->find($id);
-
-    //     // Kiểm tra nếu học sinh không tồn tại
-    //     if (!$student) {
-    //         return response()->json([
-    //             'message' => 'Không tìm thấy học sinh',
-    //             'status' => 'error',
-    //             'data' => []
-    //         ]);
-    //     }
-
-    //     // Chuyển đối tượng Student thành mảng và thêm thông tin class
-    //     $studentArray = $student->toArray();
-    //     $studentArray['class_id'] = optional($student->classHistory)->class_id;
-    //     $studentArray['class_name'] = optional($student->classHistory->class)->name; // Lấy tên của lớp học nếu tồn tại
-
-    //     return response()->json([
-    //         'message' => 'Lấy thông tin học sinh thành công',
-    //         'status' => 'success',
-    //         'data' => $studentArray
-    //     ]);
-    // }
     public function show($id)
     {
+        $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::MANAGER->value;
+
+        // Kiểm tra quyền truy cập của người dùng
+        if (!$this->user->getUser($user_id, $type)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
         $student = Student::with(['classHistory' => function($query) {
             // Chỉ lấy các trường cần thiết từ StudentClassHistory và lấy thêm thông tin lớp học
             $query->select('student_id', 'class_id', 'start_date', 'end_date', 'status')
@@ -204,9 +190,9 @@ class StudentController extends BaseController
             // Chỉ lấy các trường cần thiết từ phụ huynh
             $query->select('users.id', 'fullname', 'phone', 'code', 'gender', 'email', 'dob')
                   ->where('users.access_type', AccessTypeEnum::GUARDIAN->value)
-                  ->where('users.is_deleted', DeleteEnum::DELETED->value);
+                  ->where('users.is_deleted', DeleteEnum::NOT_DELETE->value);
         }])
-        ->where('is_deleted', DeleteEnum::DELETED->value) // Kiểm tra xem học sinh có bị xóa không
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value) // Kiểm tra xem học sinh có bị xóa không
         ->find($id);
 
         if (!$student) {
@@ -299,7 +285,7 @@ class StudentController extends BaseController
         }
 
         if (!$result) {
-            return response()->json(['message' => 'Hủy gán không thành công', 'status' => 'error']);
+            return response()->json(['message' => 'Hủy gán không thành công ', 'status' => 'error']);
         }
 
         return response()->json([

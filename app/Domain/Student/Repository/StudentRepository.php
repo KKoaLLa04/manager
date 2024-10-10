@@ -26,7 +26,7 @@ class StudentRepository {
     public function paginateStudents($pageSize)
     {
         // Lấy danh sách sinh viên không bị xóa
-        $students = Student::where('is_deleted', DeleteEnum::DELETED->value)->paginate($pageSize);
+        $students = Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)->paginate($pageSize);
     
         // Lấy tất cả lớp và chuyển đổi thành mảng với key là id
         $classes = ClassModel::all()->keyBy('id');
@@ -49,12 +49,12 @@ class StudentRepository {
                 'created_at' => $student->created_at,
                 'updated_at' => $student->updated_at,
                 'class_id' => $classId,
-                'class_name' => $class->name ?? null, // Lấy name từ lớp
+                'class_name' => $class->name ?? null, 
                 'class_details' => $class, // Lấy tất cả thông tin từ lớp
             ];
         });
     
-        return $students; // Trả về đối tượng LengthAwarePaginator
+        return $students; 
     }
     
     // Phương thức gán phụ huynh cho học sinh
@@ -63,7 +63,7 @@ class StudentRepository {
         // Kiểm tra phụ huynh có hợp lệ không
         $parent = User::where('id', $parent_id)
             ->where('access_type', AccessTypeEnum::GUARDIAN->value)
-            ->where('is_deleted', DeleteEnum::DELETED->value) 
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value) 
             ->first();
     
         if (!$parent) {
@@ -108,7 +108,7 @@ class StudentRepository {
         // Kiểm tra phụ huynh có tồn tại và hợp lệ không
         $parent = User::where('id', $parent_id)
             ->where('access_type', AccessTypeEnum::GUARDIAN->value)
-            ->where('is_deleted', DeleteEnum::DELETED->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->first(); 
     
         if (!$parent) {
