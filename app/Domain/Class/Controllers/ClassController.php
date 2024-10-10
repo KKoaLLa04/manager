@@ -65,6 +65,11 @@ class ClassController extends BaseController
         }
 
         $students = $this->classRepository->getStudentOfClass($request->class_id);
+
+        $classSubjects = $this->classRepository->getSubjectOfClass($request->class_id);
+
+        $subjectTeacher = $this->classRepository->getClassSubjectTeacher($classSubjects->pluck('id')->toArray());
+        return $this->responseSuccess($this->classRepository->transformDetailClass($class, $students, $classSubjects, $subjectTeacher));
     }
 
     public function form()

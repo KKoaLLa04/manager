@@ -11,12 +11,14 @@ use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use App\Models\Classes;
+use App\Models\ClassSubject;
 use App\Models\ClassSubjectTeacher;
 use App\Models\Grade;
 use App\Models\Student;
 use App\Models\StudentClassHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -72,17 +74,16 @@ class ClassRepository
 
     public function transformClass(Collection $classes): array
     {
-
-        return $classes->map(function ($class){
-            return  [
+        return $classes->map(function ($class) {
+            return [
                 "id"            => $class->id,
                 "name"          => is_null($class->name) ? "" : $class->name,
                 "schoolYear"    => is_null($class->schoolYear->name) ? "" : $class->schoolYear->name,
                 "grade"         => is_null($class->grade->name) ? "" : $class->grade->name,
                 "academic_name" => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
                 "academic_code" => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
-                "teacher_name"  => is_null($class->user->first()->name) ? "" : $class->user->first()->name,
-                "teacher_email" => is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname,
+                "teacher_name"  => is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname,
+                "teacher_email" => is_null($class->user->first()->email) ? "" : $class->user->first()->email,
                 "status"        => is_null($class->status) ? "1" : $class->status,
             ];
         })->toArray();
@@ -110,25 +111,29 @@ class ClassRepository
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->where('status', StatusEnum::ACTIVE->value)
             ->get();
-
     }
 
-    public function transformDataCreate(Collection $grades, Collection $academicYear, Collection $schoolYear, Collection $teachers): array
-    {
+    public function transformDataCreate(
+        Collection $grades,
+        Collection $academicYear,
+        Collection $schoolYear,
+        Collection $teachers
+    ): array {
         return [
-            'grades' => $this->toArray($grades),
-            'academics' => $this->toArray($academicYear),
+            'grades'      => $this->toArray($grades),
+            'academics'   => $this->toArray($academicYear),
             'schoolYears' => $this->toArray($schoolYear),
-            'teachers' => $this->dataTeaches($teachers),
+            'teachers'    => $this->dataTeaches($teachers),
         ];
     }
+
     private function dataTeaches(Collection $teachers): array
     {
         $dataReturn = [];
         foreach ($teachers as $item) {
             $dataReturn[] = [
-                'id'            => $item->id,
-                'name'          => is_null($item->fullname) ? "": $item->fullname,
+                'id'   => $item->id,
+                'name' => is_null($item->fullname) ? "" : $item->fullname,
             ];
         }
         return $dataReturn;
@@ -139,8 +144,8 @@ class ClassRepository
         $dataReturn = [];
         foreach ($items as $item) {
             $dataReturn[] = [
-                'id'            => $item->id,
-                'name'          => is_null($item->fullname) ? "": $item->fullname,
+                'id'   => $item->id,
+                'name' => is_null($item->fullname) ? "" : $item->fullname,
             ];
         }
         return $dataReturn;
@@ -150,35 +155,105 @@ class ClassRepository
     {
         return $teachers->map(function ($item) {
             return [
-                'id'            => $item->id,
-                'name'          => is_null($item->fullname) ? '' : $item->fullname,
-                'email'         => $item->email,
-                'gender'        => is_null($item->gender) ? "1" : $item->gender,
-                'dob'           => is_null($item->dob) ? "" : $item->dob,
-                'phone'          => is_null($item->phone) ? "" : $item->phone,
+                'id'     => $item->id,
+                'name'   => is_null($item->fullname) ? '' : $item->fullname,
+                'email'  => $item->email,
+                'gender' => is_null($item->gender) ? "1" : $item->gender,
+                'dob'    => is_null($item->dob) ? "" : $item->dob,
+                'phone'  => is_null($item->phone) ? "" : $item->phone,
             ];
         })->toArray();
     }
 
     public function detailClass(int $class_id): ?Classes
     {
-        return Classes::where('id', $class_id)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
+        return Classes::where('id', $class_id)->where('is_deleted',
+            DeleteEnum::NOT_DELETE->value)->with(
+            [
+                'schoolYear',
+                'grade',
+                'academicYear',
+                'user'
+            ]
+        )->first();
     }
 
     public function getStudentOfClass(int $class_id): Collection
     {
-        $date = now();
-        $studentIds =  StudentClassHistory::query()->where('class_id', $class_id)
+        $date       = now()->format('Y-m-d');
+        $studentIds = StudentClassHistory::query()->where('class_id', $class_id)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->where('status', StatusClassStudentEnum::STUDYING->value)
-            ->where(function ($query)use ($date) {
+            ->where(function ($query) use ($date) {
                 $query->where('start_date', '<=', $date)
                     ->whereNull('end_date');
-                $query->orWhere(function ($query)use ($date) {
+                $query->orWhere(function ($query) use ($date) {
                     $query->where('end_date', '>=', $date)->where('start_date', '<=', $date);
                 });
             })
             ->pluck('student_id')->toArray();
         return Student::query()->whereIn('id', $studentIds)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
+    }
+
+    public function getSubjectOfClass(int $class_id): Collection
+    {
+        return ClassSubject::query()->where('class_id', $class_id)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->with('subject')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
+    }
+
+    public function getClassSubjectTeacher(array $subjectClassIds): Collection
+    {
+        return ClassSubjectTeacher::query()
+            ->whereIn('class_subject_id', $subjectClassIds)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->with('user')
+            ->get()
+            ->groupBy('class_subject_id');
+    }
+
+    public function transformDetailClass(
+        Classes    $class,
+        Collection $students,
+        Collection $classSubjects,
+        Collection $subjectTeachers
+    ): array {
+        return [
+            "id"           => $class->id,
+            "name"         => is_null($class->name) ? "" : $class->name,
+            "schoolYear"   => is_null($class->schoolYear->name) ? "" : $class->schoolYear->name,
+            "grade"        => is_null($class->grade->name) ? "" : $class->grade->name,
+            "academic"     => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
+            "teacherName"  => is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname,
+            "students"     => $students->map(function ($item) {
+                return [
+                    "code" => !is_null($item->student_code) ? $item->student_code : "",
+                    "name" => is_null($item->fullname) ? "" : $item->fullname,
+                    "dob"  => is_null($item->dob) ? now()->timestamp : Carbon::parse($item->dob)->timestamp,
+                ];
+            })->toArray(),
+            "classSubject" => $classSubjects->map(function ($item) use ($subjectTeachers) {
+                return [
+                    "id"      => $item->id,
+                    "subjectId" => !isset($item->subject->id) ? 0 :  $item->subject->id,
+                    "subjectName" => !isset($item->subject->name) ? "" :  $item->subject->name,
+                    "teacher" => $this->transformSubjectTeacher($subjectTeachers, $item->id),
+                ];
+            })
+        ];
+    }
+
+    private function transformSubjectTeacher(Collection $subjectTeachers, int $classSubjectId): array
+    {
+        if ($subjectTeachers->has($classSubjectId)) {
+            $subjectTeacher = collect($subjectTeachers->get($classSubjectId))->first();
+            return [
+                "id"   => $subjectTeacher->user->first()->id,
+                "name" => is_null($subjectTeacher->user->first()->fullname) ? "" : $subjectTeacher->user->first()->fullname,
+            ];
+        }
+        return [];
     }
 }
