@@ -48,10 +48,10 @@ class AcademicYearController extends BaseController
         if($academicYears){
         return $this->responseSuccess([
             'data'=>$academicYears,
-            'total' => $academicYears->total(),
-            'current_page' => $academicYears->currentPage(),
-            'last_page' => $academicYears->lastPage(),
-            'per_page' => $academicYears->perPage(),
+            // 'total' => $academicYears->total(),
+            // // 'current_page' => $academicYears->currentPage(),
+            // 'last_page' => $academicYears->lastPage(),
+            // 'per_page' => $academicYears->perPage(),
         ]
         ,trans('api.academic_year.index.success'));
         }else{
@@ -156,9 +156,13 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
         $deletedAcademicYear = $this->academicYearRepository->softDelete($id, $user_id);
     
         if($deletedAcademicYear){
-            return $this->responseSuccess(['data'=> $deletedAcademicYear],trans('api.academic_year.delete.success'));
+            return response()->json([
+               'message' => 'Xóa niên khóa thành công'
+            ]);
         }else{
-            return $this->responseError(trans('api.academic_year.delete.errors'));
+            return response()->json([
+                'message' => 'Xóa niên khóa thất bại'
+             ]);
         }
     }
     

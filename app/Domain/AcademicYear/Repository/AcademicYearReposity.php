@@ -15,11 +15,22 @@ class AcademicYearReposity {
     public function getAcademicYear()
 {
     return AcademicYear::where('is_deleted', DeleteEnum::NOT_DELETE->value)
-        ->with(['classes.grade' => function ($query) {
-            $query->select('id','name');
-        }])
-        ->paginate();
+        ->with(['classes.grade']) 
+        ->paginate()
+        ->map(function ($academicYear) {
+            
+            return [
+                'id' => $academicYear->id,
+                'name' => $academicYear->name,
+                'code' => $academicYear->code,
+                'status' => $academicYear->status,
+                'start_year' => $academicYear->start_year,
+                'end_year' => $academicYear->end_year,
+                'grades' => $academicYear->classes->pluck('grade.name')->unique()
+            ];
+        });
 }
+
 
 
 
