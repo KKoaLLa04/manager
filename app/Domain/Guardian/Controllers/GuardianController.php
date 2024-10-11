@@ -106,6 +106,23 @@ class GuardianController extends BaseController
         }
     }
 
+    public function getStudent(Request $request, GetUserRepository $getUserRepository){
+        $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::MANAGER->value;
+        
+        $getUser = $getUserRepository->getUser($user_id, $type); 
+        if (!$getUser) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $student = $this->guardianRepository->getStudent();
+        if($student){
+            return $this->responseSuccess(['data' => $student], 'Lấy dữ liệu thành công');
+        }else{
+            return $this->responseError('Lấy dữ liệu thất bại!');
+        }
+    }
+
     public function update(int $id, GuardianRequest $request, GetUserRepository $getUserRepository) {
                 $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;

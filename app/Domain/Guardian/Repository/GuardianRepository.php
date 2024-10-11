@@ -54,6 +54,12 @@ class GuardianRepository{
     ]);
 }
 
+    public function getStudent(){
+        return Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->where('status', StatusEnum::ACTIVE->value)
+        ->get();
+    }
+
     public function updateGuardian(int $id, array $data){
         $one = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
         ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
