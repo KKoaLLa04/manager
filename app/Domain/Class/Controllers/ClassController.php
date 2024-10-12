@@ -17,9 +17,12 @@ use App\Domain\Class\Requests\DeleteClassRequest;
 use App\Domain\Class\Requests\DetailClassRequest;
 use App\Domain\Class\Requests\GetClassRequest;
 use App\Domain\Class\Requests\UpdateClassRequest;
+use App\Domain\Class\Requests\UpdateTeacherForSubjectOfClassRequest;
 use App\Http\Controllers\BaseController;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class ClassController extends BaseController
@@ -36,6 +39,11 @@ class ClassController extends BaseController
         protected DeleteClassRepository        $deleteClassRepository
     ) {
         parent::__construct($request);
+
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+
     }
 
     public function index(GetClassRequest $request)
@@ -186,6 +194,25 @@ class ClassController extends BaseController
         }
         $this->updateClassRepository->createClassTeacherSubject($request->class_id,
             $request->teacher_id);
+        return $this->responseSuccess();
+    }
+
+    public function formUpdateTeacherForSubject()
+    {
+        $teachers = $this->getUserRepository->getTeachers();
+        return $this->responseSuccess($this->classRepository->transformTeacher($teachers));
+    }
+
+    public function updateTeacherForSubject(UpdateTeacherForSubjectOfClassRequest $request)
+    {
+        if($this->classRepository->checkClassSubjectTeacher($request->class_id, $request->teacher_id, $request->class_subject_id)){
+            return $this->responseSuccess();
+        }
+
+        $this->classRepository->changeStatusClassSubjectTeacher($request->class_id, $request->class_subject_id);
+
+        $this->classRepository->updateClassSubjectTeacher($request->class_id, $request->teacher_id, $request->class_subject_id);
+
         return $this->responseSuccess();
     }
 }

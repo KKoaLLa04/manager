@@ -236,10 +236,10 @@ class ClassRepository
             })->toArray(),
             "classSubject" => $classSubjects->map(function ($item) use ($subjectTeachers) {
                 return [
-                    "id"      => $item->id,
-                    "subjectId" => !isset($item->subject->id) ? 0 :  $item->subject->id,
-                    "subjectName" => !isset($item->subject->name) ? "" :  $item->subject->name,
-                    "teacher" => $this->transformSubjectTeacher($subjectTeachers, $item->id),
+                    "id"          => $item->id,
+                    "subjectId"   => !isset($item->subject->id) ? 0 : $item->subject->id,
+                    "subjectName" => !isset($item->subject->name) ? "" : $item->subject->name,
+                    "teacher"     => $this->transformSubjectTeacher($subjectTeachers, $item->id),
                 ];
             })
         ];
@@ -255,5 +255,58 @@ class ClassRepository
             ];
         }
         return [];
+    }
+
+    public function transformTeacher(Collection $teachers): array
+    {
+        return $teachers->map(function ($item) {
+            return [
+                "id"   => $item->id,
+                "name" => is_null($item->fullname) ? "" : $item->fullname,
+            ];
+        })->toArray();
+    }
+
+    public function changeStatusClassSubjectTeacher(int $class_id, int $class_subject_id): void
+    {
+        ClassSubjectTeacher::query()
+            ->where('class_id', $class_id)
+            ->where('class_subject_id', $class_subject_id)
+            ->where('access_type', StatusTeacherEnum::TEACHER->value)
+            ->update([
+                'status'           => StatusEnum::UN_ACTIVE->value,
+                'end_date'         => now(),
+                'modified_user_id' => Auth::id(),
+            ]);
+    }
+
+    public function checkClassSubjectTeacher(int $class_id, int $teacher_id, int $class_subject_id): bool
+    {
+        return ClassSubjectTeacher::query()
+            ->where('class_id', $class_id)
+            ->where('class_subject_id', $class_subject_id)
+            ->where('access_type', StatusTeacherEnum::TEACHER->value)
+            ->where('user_id', $teacher_id)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->exists();
+
+    }
+
+    public function updateClassSubjectTeacher(int $class_id, int $teacher_id, int $class_subject_id)
+    {
+         ClassSubjectTeacher::query()
+            ->create(
+                [
+                    "class_id"         => $class_id,
+                    "class_subject_id" => $class_subject_id,
+                    "user_id"          => $teacher_id,
+                    "access_type"     => StatusTeacherEnum::TEACHER->value,
+                    "is_deleted"       => DeleteEnum::NOT_DELETE->value,
+                    "status"           => StatusEnum::ACTIVE->value,
+                    "start_date"       => now(),
+                    "created_user_id"  => Auth::id(),
+                ]
+            );
     }
 }

@@ -13,4 +13,6 @@ Route::group(['prefix' => 'manager/class', 'middleware' => 'auth:api'], function
     Route::post('/delete', [ClassController::class, 'delete']);
     Route::get('/formAssignMainTeacher', [ClassController::class, 'formAssignMainTeacher']);
     Route::post('/assignMainTeacher', [ClassController::class, 'assignMainTeacher']);
+    Route::get('/formUpdateTeacherForSubject', [ClassController::class, 'formUpdateTeacherForSubject']);
+    Route::post('/updateTeacherForSubject', [ClassController::class, 'updateTeacherForSubject']);
 });
