@@ -11,4 +11,14 @@ class Subject extends Model
 
     public $table = "subjects";
 
+    protected $fillable = [
+        'name',
+        'code',
+        'is_deleted',
+        'created_user_id',
+        'modified_user_id',
+        'created_at',
+        'updated_at',
+    ];
+
 }
