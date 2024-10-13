@@ -13,12 +13,16 @@ use App\Domain\Class\Repository\DeleteClassRepository;
 use App\Domain\Class\Repository\UpdateClassRepository;
 use App\Domain\Class\Requests\AssignMainTeacherRequest;
 use App\Domain\Class\Requests\CreateClassRequest;
+use App\Domain\Class\Requests\CreateSubjectOfClassRequest;
 use App\Domain\Class\Requests\DeleteClassRequest;
+use App\Domain\Class\Requests\DeleteSubjectOfClassRequest;
 use App\Domain\Class\Requests\DetailClassRequest;
+use App\Domain\Class\Requests\FormCreateSubjectForClassRequest;
 use App\Domain\Class\Requests\GetClassRequest;
 use App\Domain\Class\Requests\UpdateClassRequest;
 use App\Domain\Class\Requests\UpdateTeacherForSubjectOfClassRequest;
 use App\Http\Controllers\BaseController;
+use App\Models\ClassSubject;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,11 +43,6 @@ class ClassController extends BaseController
         protected DeleteClassRepository        $deleteClassRepository
     ) {
         parent::__construct($request);
-
-        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
-            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
-        }
-
     }
 
     public function index(GetClassRequest $request)
@@ -68,7 +67,7 @@ class ClassController extends BaseController
         }
 
         $class = $this->classRepository->detailClass($request->class_id);
-        if(is_null($class)){
+        if (is_null($class)) {
             return $this->responseSuccess();
         }
 
@@ -77,7 +76,8 @@ class ClassController extends BaseController
         $classSubjects = $this->classRepository->getSubjectOfClass($request->class_id);
 
         $subjectTeacher = $this->classRepository->getClassSubjectTeacher($classSubjects->pluck('id')->toArray());
-        return $this->responseSuccess($this->classRepository->transformDetailClass($class, $students, $classSubjects, $subjectTeacher));
+        return $this->responseSuccess($this->classRepository->transformDetailClass($class, $students, $classSubjects,
+            $subjectTeacher));
     }
 
     public function form()
@@ -205,14 +205,64 @@ class ClassController extends BaseController
 
     public function updateTeacherForSubject(UpdateTeacherForSubjectOfClassRequest $request)
     {
-        if($this->classRepository->checkClassSubjectTeacher($request->class_id, $request->teacher_id, $request->class_subject_id)){
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+        if ($this->classRepository->checkClassSubjectTeacher($request->class_id, $request->teacher_id,
+            $request->class_subject_id)) {
             return $this->responseSuccess();
         }
 
         $this->classRepository->changeStatusClassSubjectTeacher($request->class_id, $request->class_subject_id);
 
-        $this->classRepository->updateClassSubjectTeacher($request->class_id, $request->teacher_id, $request->class_subject_id);
+        $this->classRepository->updateClassSubjectTeacher($request->class_id, $request->teacher_id,
+            $request->class_subject_id);
 
         return $this->responseSuccess();
+    }
+
+    public function formCreateSubjectForClass(FormCreateSubjectForClassRequest $request)
+    {
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+        $teachers          = $this->getUserRepository->getTeachers();
+        $subjectIdsOfClass = $this->classRepository->getSubjectOfClass($request->class_id)
+            ->pluck('subject_id')
+            ->toArray();
+        $subjects          = $this->classRepository->getSubjectNotOfClass($subjectIdsOfClass);
+
+        return $this->responseSuccess($this->classRepository->transformCreateSubjectForClass($teachers, $subjects));
+    }
+
+    public function createSubjectForClass(CreateSubjectOfClassRequest $request)
+    {
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+        $subjectClass = $this->classRepository->createSubjectForClass($request->class_id, $request->subject_id);
+        if ($subjectClass instanceof ClassSubject) {
+            $subjectClassId = $subjectClass->id ?? 0;
+            $this->classRepository->createSubjectTeacherForClass($subjectClassId, $request->teacher_id,
+                $request->class_id);
+            return $this->responseSuccess();
+        }
+
+        $this->responseError();
+    }
+
+    public function deleteSubjectForClass(DeleteSubjectOfClassRequest $request)
+    {
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+
+        $statusDeleteSubjectForClass = $this->classRepository->deleteSubjectForClass($request->class_id,
+            $request->class_subject_id);
+        if($statusDeleteSubjectForClass){
+            return $this->responseSuccess();
+        }
+
+        return $this->responseError();
     }
 }
