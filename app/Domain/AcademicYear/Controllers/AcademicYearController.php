@@ -2,7 +2,9 @@
 
 namespace App\Domain\AcademicYear\Controllers;
 
+use App\Common\Enums\AcademicTypeEnum;
 use App\Common\Enums\AccessTypeEnum;
+use App\Common\Enums\DeleteEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\AcademicYear\Repository\AcademicYearReposity;
@@ -24,43 +26,22 @@ class AcademicYearController extends BaseController
     }
 
     
-    public function index(Request $request, GetUserRepository $getUserRepository)
-    {
-        $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
-        
-        $getUser = $getUserRepository->getUser($user_id, $type); 
-        if (!$getUser) {
-            return $this->responseError(trans('api.error.user_not_permission'));
-        }
+    public function index(Request $request)
+{
+    $keyword = $request->get('keyword', null);
+    $pageIndex = $request->get('pageIndex', 1);
+    $pageSize = $request->get('pageSize', 10);
 
-        
-        $keyword = "";
-        
-        if(!empty($request->keyword)){
-            $keyword = $request->keyword;
-        }
+    $academicYears = $this->academicYearRepository->getAcademicYear($keyword, $pageIndex, $pageSize);
 
-        $pageIndex = 1;
-
-        if(!empty($request->pageIndex)){
-            $pageIndex = $request->pageIndex;
-        }
-
-        $pageSize = 15;
-
-        if(!empty($request->pageSize)){
-            $pageSize = $request->pageSize;
-        }
-
-        $academicYears = $this->academicYearRepository->getAcademicYear();
-        
-        if($academicYears){
-        return $this->responseSuccess(['data'=>$academicYears->forPage($pageIndex,$pageSize)],trans('api.academic_year.index.success'));
-        }else{
+    if (!empty($academicYears)) {
+        return $this->responseSuccess($academicYears, trans('api.academic_year.index.success'));
+    } else {
         return $this->responseError(trans('api.academic_year.index.errors'));
-        }
     }
+}
+
+
 
     public function show(int $id, Request $request, GetUserRepository $getUserRepository){
         $user_id = Auth::user()->id;
@@ -95,7 +76,8 @@ class AcademicYearController extends BaseController
         'code' => AcademicYear::generateRandomCode(),
         'start_year' => $request->start_year,
         'end_year' => $request->end_year,
-        'status' => $request->status,
+        'status' => AcademicTypeEnum::NOT_STARTED_YET->value,
+        'is_deleted' => DeleteEnum::NOT_DELETE->value,
         'created_user_id' => $user_id,
         'created_at' => now(),
     ];
@@ -104,7 +86,7 @@ class AcademicYearController extends BaseController
     $item = $this->academicYearRepository->create($dataInsert);
 
     if($item){
-        return $this->responseSuccess(['data'=> $item],trans('api.academic_year.add.success'));
+        return $this->responseSuccess(['data'=>[]],trans('api.academic_year.add.success'));
     }else{
         return $this->responseError(trans('api.academic_year.add.errors'));
     }
@@ -114,7 +96,7 @@ class AcademicYearController extends BaseController
 
 public function update(AcademicYearRequest $request, int $id, GetUserRepository $getUserRepository)
     {
-                $user_id = Auth::user()->id;
+        $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
         $modifiedUser = $getUserRepository->getUser($user_id, $type); 
@@ -144,7 +126,7 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
     public function delete(Request $request, int $id, GetUserRepository $getUserRepository)
     {
         
-                $user_id = Auth::user()->id;
+        $user_id = Auth::user()->id;
         
         $type = AccessTypeEnum::MANAGER->value;
     
@@ -159,9 +141,13 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
         $deletedAcademicYear = $this->academicYearRepository->softDelete($id, $user_id);
     
         if($deletedAcademicYear){
-            return $this->responseSuccess(['data'=> $deletedAcademicYear],trans('api.academic_year.delete.success'));
+            return response()->json([
+               'message' => 'Xóa niên khóa thành công'
+            ]);
         }else{
-            return $this->responseError(trans('api.academic_year.delete.errors'));
+            return response()->json([
+                'message' => 'Xóa niên khóa thất bại'
+             ]);
         }
     }
     

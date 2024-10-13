@@ -12,12 +12,43 @@ class AcademicYearReposity {
 
     }
 
-    public function getAcademicYear()
+    public function getAcademicYear($keyword = null, $pageIndex = 1, $pageSize = 10)
 {
-    return AcademicYear::where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
+    $query = AcademicYear::where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->with(['classes.grade']);
+
+    // Tìm kiếm theo từ khóa nếu có
+    if ($keyword) {
+        $query->where('name', 'LIKE', '%' . $keyword . '%')
+              ->orWhere('code', 'LIKE', '%' . $keyword . '%');
+    }
+
+    // Thực hiện phân trang
+    $academicYears = $query->paginate($pageSize, ['*'], 'page', $pageIndex);
+
+    // Ánh xạ dữ liệu và chuyển `gradeName` từ mảng thành chuỗi
+    $mappedData = $academicYears->getCollection()->map(function ($academicYear) {
+        return [
+            'id' => $academicYear->id,
+            'name' => $academicYear->name,
+            'code' => $academicYear->code,
+            'status' => $academicYear->status,
+            'start_year' => $academicYear->start_year,
+            'end_year' => $academicYear->end_year,
+            // Sử dụng implode để chuyển thành chuỗi
+            'gradeName' => $academicYear->classes->pluck('grade.name')->unique()->implode(', ')
+        ];
+    });
+
+    // Thay đổi collection thành một đối tượng mới với dữ liệu đã ánh xạ
+    return [
+        'data' => $mappedData,
+        'total' => $academicYears->total(),
+        'current_page' => $academicYears->currentPage(),
+        'last_page' => $academicYears->lastPage(),
+        'per_page' => $academicYears->perPage(),
+    ];
 }
-
-
 
 
 public function create(array $data)
