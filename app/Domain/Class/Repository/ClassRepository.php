@@ -160,7 +160,7 @@ class ClassRepository
                 'name'   => is_null($item->fullname) ? '' : $item->fullname,
                 'email'  => $item->email,
                 'gender' => is_null($item->gender) ? "1" : $item->gender,
-                'dob'    => is_null($item->dob) ? "" : $item->dob,
+                'dob'    => is_null($item->dob) ? now()->timestamp : Carbon::parse($item->dob)->timestamp,
                 'phone'  => is_null($item->phone) ? "" : $item->phone,
             ];
         })->toArray();
