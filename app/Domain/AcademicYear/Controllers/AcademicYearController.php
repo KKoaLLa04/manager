@@ -2,7 +2,9 @@
 
 namespace App\Domain\AcademicYear\Controllers;
 
+use App\Common\Enums\AcademicTypeEnum;
 use App\Common\Enums\AccessTypeEnum;
+use App\Common\Enums\DeleteEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\AcademicYear\Repository\AcademicYearReposity;
@@ -24,40 +26,22 @@ class AcademicYearController extends BaseController
     }
 
     
-    public function index(Request $request, GetUserRepository $getUserRepository)
-    {
-        $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
-        
-        $getUser = $getUserRepository->getUser($user_id, $type); 
-        if (!$getUser) {
-            return $this->responseError(trans('api.error.user_not_permission'));
-        }
+    public function index(Request $request)
+{
+    $keyword = $request->get('keyword', null);
+    $pageIndex = $request->get('pageIndex', 1);
+    $pageSize = $request->get('pageSize', 10);
 
-        $keyword = "";
-        
-        if(!empty($request->keyword)){
-            $keyword = $request->keyword;
-        }
+    $academicYears = $this->academicYearRepository->getAcademicYear($keyword, $pageIndex, $pageSize);
 
-        $pageIndex = $request->get('pageIndex',1);
-        $pageSize = $request->get('pageSize',10);
-
-        $academicYears = $this->academicYearRepository->getAcademicYear();
-        
-        if($academicYears){
-        return $this->responseSuccess([
-            'data'=>$academicYears,
-            // 'total' => $academicYears->total(),
-            // // 'current_page' => $academicYears->currentPage(),
-            // 'last_page' => $academicYears->lastPage(),
-            // 'per_page' => $academicYears->perPage(),
-        ]
-        ,trans('api.academic_year.index.success'));
-        }else{
+    if (!empty($academicYears)) {
+        return $this->responseSuccess($academicYears, trans('api.academic_year.index.success'));
+    } else {
         return $this->responseError(trans('api.academic_year.index.errors'));
-        }
     }
+}
+
+
 
     public function show(int $id, Request $request, GetUserRepository $getUserRepository){
         $user_id = Auth::user()->id;
@@ -92,7 +76,8 @@ class AcademicYearController extends BaseController
         'code' => AcademicYear::generateRandomCode(),
         'start_year' => $request->start_year,
         'end_year' => $request->end_year,
-        'status' => $request->status,
+        'status' => AcademicTypeEnum::NOT_STARTED_YET->value,
+        'is_deleted' => DeleteEnum::NOT_DELETE->value,
         'created_user_id' => $user_id,
         'created_at' => now(),
     ];
@@ -101,7 +86,7 @@ class AcademicYearController extends BaseController
     $item = $this->academicYearRepository->create($dataInsert);
 
     if($item){
-        return $this->responseSuccess(['data'=> $item],trans('api.academic_year.add.success'));
+        return $this->responseSuccess(['data'=>[]],trans('api.academic_year.add.success'));
     }else{
         return $this->responseError(trans('api.academic_year.add.errors'));
     }

@@ -13,7 +13,7 @@ class AcademicYear extends Model
 
     public $table = "academic_year";
 
-    protected $fillable = ['name', 'start_year', 'end_year', 'status','code','created_user_id','modified_user_id'];
+    protected $fillable = ['name', 'start_year', 'end_year', 'status','code','created_user_id','modified_user_id','is_deleted'];
 
     public static function generateRandomCode()
     {
