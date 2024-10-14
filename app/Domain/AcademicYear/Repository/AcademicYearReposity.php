@@ -33,8 +33,8 @@ class AcademicYearReposity {
             'name' => $academicYear->name,
             'code' => $academicYear->code,
             'status' => $academicYear->status,
-            'start_year' => $academicYear->start_year,
-            'end_year' => $academicYear->end_year,
+            'start_year' => strtotime($academicYear->start_year),
+            'end_year' => strtotime($academicYear->end_year),
             // Sử dụng implode để chuyển thành chuỗi
             'gradeName' => $academicYear->classes->pluck('grade.name')->unique()->implode(', ')
         ];
