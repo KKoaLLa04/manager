@@ -13,12 +13,12 @@ class SchoolYearEditRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => [
+            'schoolYearName' => [
                 'required',
                 'min:5',
                 'max:225'
             ],
-            'status' => [
+            'schoolYearStatus' => [
                 'required'
             ],
         ];

@@ -16,15 +16,15 @@ class SchoolYearAddRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => [
+            'schoolYearName' => [
                 'required',
                 'min:5',
                 'max:225'
             ],
-            'status' => [
+            'schoolYearStatus' => [
                 'required'
             ],
-            'start_date' => [
+            'schoolYearStartDate' => [
                 'required',
                 'date',
                 function ($attribute, $value, $fail) {
@@ -46,11 +46,11 @@ class SchoolYearAddRequest extends FormRequest
                     }
                 },
             ],
-            'end_date' => [
+            'schoolYearEndDate' => [
                 'required',
                 'date',
                 'after_or_equal:now',
-                'after_or_equal:start_year'
+                'after_or_equal:schoolYearStartDate'
             ],
         ];
     }
