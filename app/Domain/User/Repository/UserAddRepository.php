@@ -21,27 +21,27 @@ class UserAddRepository {
 
         $item = new User();
 
-        $item->fullname = $request->fullname;
-        $item->username = $request->username;
-        $item->email = $request->email;
-        $item->password = Hash::make($request->password);
-        $item->phone = $request->phone;
-        $item->address = $request->address;
-        $item->access_type = $request->access_type;
-        $item->dob = $request->dob;
-        $item->status = $request->status;
-        $item->gender = $request->gender;
+        $item->fullname = $request->userName;
+        $item->username = $request->userUsername;
+        $item->email = $request->userEmail;
+        $item->password = Hash::make($request->userPassword);
+        $item->phone = $request->userPhone;
+        $item->address = $request->userAddress;
+        $item->access_type = $request->userAccessType;
+        $item->dob = $request->userDob;
+        $item->status = $request->userStatus;
+        $item->gender = $request->userGender;
         $item->is_deleted = DeleteEnum::NOT_DELETE->value;
         $item->created_user_id = $user_id;
         $item->code = "NV".time();
 
         if($item->save()){
 
-            if(!empty($request->class_id)){
+            if(!empty($request->classId)){
 
                 $CSTNew = new ClassSubjectTeacher();
 
-                $CSTNew->class_id = $request->class_id;
+                $CSTNew->class_id = $request->classId;
                 $CSTNew->user_id = $item->id;
                 $CSTNew->start_date = Carbon::now();
                 $CSTNew->status = StatusEnum::ACTIVE->value;
@@ -57,7 +57,6 @@ class UserAddRepository {
             return true;
 
         }
-
 
         return false;
 
