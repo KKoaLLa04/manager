@@ -11,4 +11,14 @@ class SchoolYear extends Model
 
     public $table = "school_year";
 
+    protected $fillable = [
+        'name',
+        'status',
+        'start_date',
+        'end_date',
+        'created_user_id',
+        'modified_user_id',
+        'created_at',
+        'updated_at',
+    ];
 }

@@ -52,14 +52,6 @@ class SchoolYearAddRequest extends FormRequest
                 'after_or_equal:now',
                 'after_or_equal:start_year'
             ],
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
         ];
     }
 

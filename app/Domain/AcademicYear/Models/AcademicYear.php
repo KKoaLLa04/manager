@@ -2,6 +2,7 @@
 
 namespace App\Domain\AcademicYear\Models;
 
+use App\Models\Classes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -12,12 +13,17 @@ class AcademicYear extends Model
 
     public $table = "academic_year";
 
-    protected $fillable = ['name', 'start_year', 'end_year', 'status','code','created_user_id','modified_user_id'];
+    protected $fillable = ['name', 'start_year', 'end_year', 'status','code','created_user_id','modified_user_id','is_deleted'];
 
     public static function generateRandomCode()
     {
         $randomString = strtoupper(Str::random(6)); 
         return 'KH' . $randomString; 
+    }
+
+    public function classes()
+    {
+        return $this->hasMany(Classes::class, 'academic_year_id');
     }
 
 }

@@ -2,13 +2,16 @@
 
 namespace App\Domain\AcademicYear\Controllers;
 
+use App\Common\Enums\AcademicTypeEnum;
 use App\Common\Enums\AccessTypeEnum;
+use App\Common\Enums\DeleteEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\AcademicYear\Repository\AcademicYearReposity;
 use App\Domain\AcademicYear\Requests\AcademicYearRequest;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Enum;
 
 class AcademicYearController extends BaseController
@@ -23,26 +26,25 @@ class AcademicYearController extends BaseController
     }
 
     
-    public function index(Request $request, GetUserRepository $getUserRepository)
-    {
-        $user_id = $request->user_id;
-        $type = AccessTypeEnum::MANAGER->value;
-        
-        $getUser = $getUserRepository->getUser($user_id, $type); 
-        if (!$getUser) {
-            return $this->responseError(trans('api.error.user_not_permission'));
-        }
-        $academicYears = $this->academicYearRepository->getAcademicYear();
-        
-        
-        return response()->json([
-            'success' => true,
-            'data' => $academicYears,
-        ], 200);
+    public function index(Request $request)
+{
+    $keyword = $request->get('keyword', null);
+    $pageIndex = $request->get('pageIndex', 1);
+    $pageSize = $request->get('pageSize', 10);
+
+    $academicYears = $this->academicYearRepository->getAcademicYear($keyword, $pageIndex, $pageSize);
+
+    if (!empty($academicYears)) {
+        return $this->responseSuccess($academicYears, trans('api.academic_year.index.success'));
+    } else {
+        return $this->responseError(trans('api.academic_year.index.errors'));
     }
+}
+
+
 
     public function show(int $id, Request $request, GetUserRepository $getUserRepository){
-        $user_id = $request->user_id;
+        $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
         $showUser = $getUserRepository->getUser($user_id, $type); 
@@ -51,22 +53,17 @@ class AcademicYearController extends BaseController
         }
         $academicYear = $this->academicYearRepository->findById($id);
 
-        if ($academicYear) {
-            return response()->json([
-               'success' => true,
+        if($academicYear){
+            response()->json([
                 'data' => $academicYear,
-            ], 200);
-        } else {
-            return response()->json([
-               'success' => false,
-               'message' => 'Không tìm thấy niên khóa!',
-            ], 400);
+                'message' => true
+            ]);
         }
     }
     
     public function store(AcademicYearRequest $request, GetUserRepository $getUserRepository)
 {
-    $user_id = $request->user_id;
+    $user_id = Auth::user()->id;
     $type = AccessTypeEnum::MANAGER->value;
     
     $createdUser = $getUserRepository->getUser($user_id, $type); 
@@ -79,7 +76,8 @@ class AcademicYearController extends BaseController
         'code' => AcademicYear::generateRandomCode(),
         'start_year' => $request->start_year,
         'end_year' => $request->end_year,
-        'status' => $request->status,
+        'status' => AcademicTypeEnum::NOT_STARTED_YET->value,
+        'is_deleted' => DeleteEnum::NOT_DELETE->value,
         'created_user_id' => $user_id,
         'created_at' => now(),
     ];
@@ -87,17 +85,10 @@ class AcademicYearController extends BaseController
     
     $item = $this->academicYearRepository->create($dataInsert);
 
-    if ($item) {
-        return response()->json([
-            'success' => true,
-            'message' => 'Thêm niên khóa thành công!',
-            'data' => $item,
-        ], 201);
-    } else {
-        return response()->json([
-            'success' => false,
-            'message' => 'Thêm niên khóa thất bại!',
-        ], 400);
+    if($item){
+        return $this->responseSuccess(['data'=>[]],trans('api.academic_year.add.success'));
+    }else{
+        return $this->responseError(trans('api.academic_year.add.errors'));
     }
 }
 
@@ -105,7 +96,7 @@ class AcademicYearController extends BaseController
 
 public function update(AcademicYearRequest $request, int $id, GetUserRepository $getUserRepository)
     {
-        $user_id = $request->user_id;
+        $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
         $modifiedUser = $getUserRepository->getUser($user_id, $type); 
@@ -124,17 +115,10 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
         
         $item = $this->academicYearRepository->update($id, $dataUpdate);
 
-        if ($item) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Cập nhật niên khóa thành công!',
-                'data' => $item,
-            ], 200);
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Niên khóa đã kết thúc',
-            ], 400);
+        if($item){
+            return $this->responseSuccess(['data'=> $item],trans('api.academic_year.update.success'));
+        }else{
+            return $this->responseError(trans('api.academic_year.update.errors'));
         }
     }
 
@@ -142,7 +126,7 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
     public function delete(Request $request, int $id, GetUserRepository $getUserRepository)
     {
         
-        $user_id = $request->user_id;
+        $user_id = Auth::user()->id;
         
         $type = AccessTypeEnum::MANAGER->value;
     
@@ -156,23 +140,19 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
         // Thực hiện xóa mềm với id niên khóa và user_id
         $deletedAcademicYear = $this->academicYearRepository->softDelete($id, $user_id);
     
-        // Nếu xóa thành công
-        if ($deletedAcademicYear) {
+        if($deletedAcademicYear){
             return response()->json([
-                'success' => true,
-                'message' => 'Xóa niên khóa thành công!',
-                'data' => $deletedAcademicYear,
-            ], 200);
+               'message' => 'Xóa niên khóa thành công'
+            ]);
+        }else{
+            return response()->json([
+                'message' => 'Xóa niên khóa thất bại'
+             ]);
         }
-    
-        // Nếu không thành công, trả về lỗi
-        return response()->json([
-            'success' => false,
-            'message' => 'Niên khóa vẫn còn hoạt động!',
-        ], 400); 
     }
     
 
     
 
 }
+

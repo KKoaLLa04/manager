@@ -21,14 +21,6 @@ class SchoolYearEditRequest extends FormRequest
             'status' => [
                 'required'
             ],
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
         ];
     }
 
