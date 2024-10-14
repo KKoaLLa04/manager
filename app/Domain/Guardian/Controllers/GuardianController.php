@@ -19,38 +19,21 @@ class GuardianController extends BaseController
     {
         $this->guardianRepository = new GuardianRepository();
     }
-    public function index(Request $request, GetUserRepository $getUserRepository)
-    {
-        $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
-        
-        $getUser = $getUserRepository->getUser($user_id, $type); 
-        if (!$getUser) {
-            return $this->responseError(trans('api.error.user_not_permission'));
-        }
+    public function index(Request $request)
+{
+    $keyword = $request->get('keyword', null);
+    $pageIndex = $request->get('pageIndex', 1);
+    $pageSize = $request->get('pageSize', 10);
 
-        $keyword = "";
-        
-        if(!empty($request->keyword)){
-            $keyword = $request->keyword;
-        }
+    $guardians = $this->guardianRepository->getGuardian($keyword, $pageIndex, $pageSize);
 
-       $pageIndex = $request->get('pageIndex',1);
-       $pageSize = $request->input('pageSize',10);
-        $guarDian = $this->guardianRepository->getGuardian($pageSize);
-        
-        if($guarDian){
-        return $this->responseSuccess([
-            'data'=>$guarDian,
-            'total' => $guarDian->total(),
-            'current_page' => $guarDian->currentPage(), 
-            'last_page' => $guarDian->lastPage(),
-            'per_page' => $guarDian->perPage(),
-        ],trans('api.guardian.index.success'));
-        }else{
+    if (!empty($guardians)) {
+        return $this->responseSuccess($guardians, trans('api.guardian.index.success'));
+    } else {
         return $this->responseError(trans('api.guardian.index.errors'));
-        }
     }
+}
+
 
     public function create(GuardianRequest $request, GetUserRepository $getUserRepository){
         $user_id = Auth::user()->id;
@@ -82,7 +65,7 @@ class GuardianController extends BaseController
         $addGuadian = $this->guardianRepository->addGuardian($dataInsert);
 
         if($addGuadian){
-            return $this->responseSuccess(['data' => $addGuadian], trans('api.guardian.add.success'));
+            return $this->responseSuccess(['data' => []], trans('api.guardian.add.success'));
         }else{
             return $this->responseError(trans('api.guardian.add.errors'));
         }
@@ -106,34 +89,33 @@ class GuardianController extends BaseController
         }
     }
 
-    public function getStudent(Request $request, GetUserRepository $getUserRepository){
-        $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
-        
-        $getUser = $getUserRepository->getUser($user_id, $type); 
-        if (!$getUser) {
-            return $this->responseError(trans('api.error.user_not_permission'));
-        }
+    public function getStudent(Request $request)
+{
+    $keyword = $request->get('keyword', null);
+    $pageIndex = $request->get('pageIndex', 1);
+    $pageSize = $request->get('pageSize', 10);
 
-        $student = $this->guardianRepository->getStudent();
-        if($student){
-            return $this->responseSuccess(['data' => $student], 'Lấy dữ liệu thành công');
-        }else{
-            return $this->responseError('Lấy dữ liệu thất bại!');
-        }
-    }
+    // Gọi repository để lấy danh sách học sinh
+    $students = $this->guardianRepository->getStudent($keyword, $pageIndex, $pageSize);
+
+    return response()->json([
+        'msg' => 'Lấy dữ liệu thành công',
+        'data' => $students, // Không lồng thêm 'data' ở đây
+    ]);
+}
+
 
     public function update(int $id, GuardianRequest $request, GetUserRepository $getUserRepository) {
                 $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
-        // Kiểm tra quyền truy cập của người dùng
+        
         $getUser = $getUserRepository->getUser($user_id, $type); 
         if (!$getUser) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
     
-        // Chuẩn bị dữ liệu cập nhật
+        
         $dataUpdate = [
             'fullname' => $request->fullname,
             'phone' => $request->phone,
@@ -161,7 +143,7 @@ class GuardianController extends BaseController
         
         $update = $this->guardianRepository->updateGuardian($id, $dataUpdate);
         if ($update) {
-            return $this->responseSuccess(['data' => $dataUpdate], trans('api.guardian.edit.success'));
+            return $this->responseSuccess(['data' => []], trans('api.guardian.edit.success'));
         } else {
             return $this->responseError(trans('api.guardian.edit.errors'));
         }
@@ -179,7 +161,7 @@ class GuardianController extends BaseController
         
         $lock = $this->guardianRepository->lockGuardian($id);
         if($lock){
-            return $this->responseError( trans('api.guardian.lock.success'));
+            return $this->responseSuccess(['data'=>[]],trans('api.guardian.lock.success'));
         }else{
             return $this->responseError(trans('api.guardian.lock.errors'));
         }
@@ -194,9 +176,9 @@ class GuardianController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-        $lock = $this->guardianRepository->unlockGuardian($id);
-        if($lock){
-            return $this->responseError(trans('api.guardian.unlock.success'));
+        $unlock = $this->guardianRepository->unlockGuardian($id);
+        if($unlock){
+            return $this->responseSuccess(['data'=>[]],trans('api.guardian.unlock.success'));
         }else{
             return $this->responseError(trans('api.guardian.unlock.errors'));
         }
@@ -221,7 +203,7 @@ class GuardianController extends BaseController
         $passwordUpdate = $this->guardianRepository->changePassword($id,$dataUpdate);
 
         if($passwordUpdate){
-            return $this->responseSuccess(['data'=>$passwordUpdate],trans('api.guardian.change_password.success'));
+            return $this->responseSuccess(['data'=>[]],trans('api.guardian.change_password.success'));
         }else{
             return $this->responseError(trans('api.guardian.change_password.errors'));
         }
@@ -244,13 +226,10 @@ class GuardianController extends BaseController
 
         return response()->json([
             'message' => 'Học sinh được gán thành công cho phụ huynh '.$data['guardian']->fullname,
-            'guardian' => $data['guardian'],
-            'assigned_students' => $data['assigned_students'],
-            'already_assigned' => $data['already_assigned']
         ], 200);
     } catch (Exception $e) {
         return response()->json([
-            'message' => $e->getMessage()
+            'message' => 'Học sinh này đã có phụ huynh',
         ], 400);
     }
 }
@@ -275,7 +254,7 @@ public function unassignStudent(Request $request, int $guardianId, GetUserReposi
         ], 200);
     } catch (Exception $e) {
         return response()->json([
-            'message' => 'Gỡ phụ huynh thất bại',
+            'message' => 'Học sinh này đã được gỡ',
         ], 400);
     }
 }
