@@ -26,8 +26,15 @@ class AcademicYearController extends BaseController
     }
 
     
-    public function index(Request $request)
+    public function index(Request $request,GetUserRepository $getUserRepository)
 {
+        $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::MANAGER->value;
+        
+        $showUser = $getUserRepository->getUser($user_id, $type); 
+        if (!$showUser) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
     $keyword = $request->get('keyword', null);
     $pageIndex = $request->get('pageIndex', 1);
     $pageSize = $request->get('pageSize', 10);

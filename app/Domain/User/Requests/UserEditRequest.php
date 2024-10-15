@@ -12,51 +12,51 @@ class UserEditRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'fullname' => [
+            'userName' => [
                 'required',
                 'min:6',
                 'max:255'
             ],
-            'username' => [
-                'required',
-                'min:6',
-                'max:255',
-                'unique:users,username,'.$this->id
-            ],
-            'email' => [
+            // 'username' => [
+            //     'required',
+            //     'min:6',
+            //     'max:255',
+            //     'unique:users,username,'.$this->id
+            // ],
+            'userEmail' => [
                 'required',
                 'email',
                 'unique:users,email,'.$this->id
             ],
-            'password' => [
-                // 'required',
-                // 'min:6',
-                'max:255'
-            ],
-            'confirm' => [
-                // 'required',
-                'same:password'
-            ],
-            'phone' => [
+            // 'password' => [
+            //     // 'required',
+            //     // 'min:6',
+            //     'max:255'
+            // ],
+            // 'confirm' => [
+            //     // 'required',
+            //     'same:password'
+            // ],
+            'userPhone' => [
                 'required',
                 'regex:/^0[0-9]{9}$/',
                 'unique:users,phone,'.$this->id
             ],
-            'address' => [
+            'userAddress' => [
             ],
-            'access_type' => [
+            'userAccessType' => [
                 'required',
                 'integer',
             ],
-            'dob' => [
+            'userDob' => [
                 'required',
                 'date'
             ],
-            'status' => [
+            'userStatus' => [
                 'required',
                 'integer'
             ],
-            'gender' => [
+            'userGender' => [
                 'required',
                 'integer'
             ],
