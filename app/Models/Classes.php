@@ -54,4 +54,14 @@ class Classes extends Model
             ->where('users.status', StatusEnum::ACTIVE->value);
     }
 
+    public function subjectTeachers()
+    {
+        return $this->hasMany(ClassSubject::class, 'class_id');
+    }
+
+    public function teachers()
+    {
+        return $this->hasManyThrough(User::class, ClassSubjectTeacher::class, 'class_id', 'id', 'id', 'user_id');
+    }
+
 }

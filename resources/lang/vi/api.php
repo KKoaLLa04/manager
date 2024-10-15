@@ -84,4 +84,10 @@ return [
         'change_password.errors'=> 'Đổi mật khẩu phụ huynh thất bại',
         'assign_student.success'=> 'Học sinh đã được gán cho phụ huynh này.',
     ],
+
+    'rollcall' => [
+        'index.success'=> 'Lấy danh sách điểm danh thành công',
+        'index.errors'=> 'Lấy danh sách điểm danh thất bại',
+        
+    ]
 ];
