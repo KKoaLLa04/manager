@@ -4,6 +4,7 @@ namespace App\Domain\Guardian\Controllers;
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Repository\GetUserRepository;
+use App\Domain\Guardian\Models\Guardian;
 use App\Domain\Guardian\Repository\GuardianRepository;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
@@ -28,11 +29,12 @@ class GuardianController extends BaseController
     $guardians = $this->guardianRepository->getGuardian($keyword, $pageIndex, $pageSize);
 
     if (!empty($guardians)) {
-        return $this->responseSuccess($guardians, trans('api.guardian.index.success'));
+        return $this->responseSuccess($guardians['data'], trans('api.guardian.index.success'));
     } else {
         return $this->responseError(trans('api.guardian.index.errors'));
     }
 }
+
 
 
     public function create(GuardianRequest $request, GetUserRepository $getUserRepository){
@@ -47,9 +49,9 @@ class GuardianController extends BaseController
         $dataInsert = [
         'fullname' => $request->fullname,
         'phone' => $request->phone,
-        'code' => $request->code,
+        'code' => Guardian::generateRandomCode(),
         'email' => $request->email,
-        'access_type' => $request->access_type,
+        'access_type' => AccessTypeEnum::GUARDIAN->value,
         'dob' => $request->dob,
         'status' => $request->status,
         'gender' => $request->gender,
@@ -71,23 +73,29 @@ class GuardianController extends BaseController
         }
     }
 
-    public function show(int $id, GetUserRepository $getUserRepository, Request $request){
-        $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
-        
-        $getUser = $getUserRepository->getUser($user_id, $type); 
-        if (!$getUser) {
-            return $this->responseError(trans('api.error.user_not_permission'));
-        }
+    public function show(int $id, GetUserRepository $getUserRepository, Request $request)
+{
+    $user_id = Auth::user()->id;
+    $type = AccessTypeEnum::MANAGER->value;
 
-        $showoneGuardian = $this->guardianRepository->getOneGuardian($id);
-
-        if($showoneGuardian){
-            return $this->responseSuccess(['data' => $showoneGuardian], trans('api.guardian.show.success'));
-        }else{
-            return $this->responseError(trans('api.guardian.show.errors'));
-        }
+    
+    $getUser = $getUserRepository->getUser($user_id, $type);
+    if (!$getUser) {
+        return $this->responseError(trans('api.error.user_not_permission'));
     }
+
+    
+    $showoneGuardian = $this->guardianRepository->getOneGuardian($id);
+
+    
+    if ($showoneGuardian['data'] === null) {
+        return $this->responseError(trans('api.guardian.show.errors'));
+    }
+
+    
+    return $this->responseSuccess($showoneGuardian['data'], trans('api.guardian.show.success'));
+}
+
 
     public function getStudent(Request $request)
 {
@@ -95,65 +103,71 @@ class GuardianController extends BaseController
     $pageIndex = $request->get('pageIndex', 1);
     $pageSize = $request->get('pageSize', 10);
 
-    // Gọi repository để lấy danh sách học sinh
+    
     $students = $this->guardianRepository->getStudent($keyword, $pageIndex, $pageSize);
 
-    return response()->json([
-        'msg' => 'Lấy dữ liệu thành công',
-        'data' => $students, // Không lồng thêm 'data' ở đây
-    ]);
+    if (!empty($students)) {
+        return $this->responseSuccess($students['data'], 'Lấy danh sách học sinh thành công');
+    } else {
+        return $this->responseError('Lấy danh sách học sinh thất bại');
+    }
 }
 
 
-    public function update(int $id, GuardianRequest $request, GetUserRepository $getUserRepository) {
-                $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
-        
-        
-        $getUser = $getUserRepository->getUser($user_id, $type); 
-        if (!$getUser) {
-            return $this->responseError(trans('api.error.user_not_permission'));
-        }
+public function update(int $id, GuardianRequest $request, GetUserRepository $getUserRepository) {
+    $user_id = Auth::user()->id;
+    $type = AccessTypeEnum::MANAGER->value;
+
     
-        
-        $dataUpdate = [
-            'fullname' => $request->fullname,
-            'phone' => $request->phone,
-            'email'=> $request->email,
-            'access_type' => $request->access_type,
-            'dob' => $request->dob,
-            'status' => $request->status,
-            'gender' => $request->gender,
-            'address' => $request->address,
-            'career' => $request->career,
-            'username' => $request->username,
-            'modified_user_id' => $user_id,
-            'updated_at' => now(),
-        ];
+    $getUser = $getUserRepository->getUser($user_id, $type); 
+    if (!$getUser) {
+        return $this->responseError(trans('api.error.user_not_permission'));
+    }
+
     
-        
-        if ($request->filled('password')) {
-            if ($request->password === $request->confirm_password) {
-                $dataUpdate['password'] = Hash::make($request->password);
-            } else {
-                return $this->responseError(trans('api.guardian.password_mismatch'));
-            }
-        }
+    $dataUpdate = [
+        'fullname' => $request->fullname,
+        'phone' => $request->phone,
+        'email'=> $request->email,
+        'access_type' => AccessTypeEnum::GUARDIAN->value,
+        'dob' => $request->dob,
+        'status' => $request->status,
+        'gender' => $request->gender,
+        'address' => $request->address,
+        'career' => $request->career,
+        'modified_user_id' => $user_id,
+        'updated_at' => now(),
+    ];
+
     
-        
-        $update = $this->guardianRepository->updateGuardian($id, $dataUpdate);
-        if ($update) {
-            return $this->responseSuccess(['data' => []], trans('api.guardian.edit.success'));
+    if ($request->filled('password')) {
+        if ($request->password === $request->confirm_password) {
+            $dataUpdate['password'] = Hash::make($request->password);
         } else {
-            return $this->responseError(trans('api.guardian.edit.errors'));
+            return $this->responseError(trans('api.guardian.password_mismatch'));
         }
     }
+
+    
+    if ($request->filled('username')) {
+        $dataUpdate['username'] = $request->username;
+    }
+
+    
+    $update = $this->guardianRepository->updateGuardian($id, $dataUpdate);
+    if ($update) {
+        return $this->responseSuccess(['data' => []], trans('api.guardian.edit.success'));
+    } else {
+        return $this->responseError(trans('api.guardian.edit.errors'));
+    }
+}
+
 
     public function LockGuardian(int $id, GetUserRepository $getUserRepository, Request $request){
                 $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
         
-        // Kiểm tra quyền truy cập của người dùng
+        
         $getUser = $getUserRepository->getUser($user_id, $type); 
         if (!$getUser) {
             return $this->responseError(trans('api.error.user_not_permission'));
@@ -161,7 +175,7 @@ class GuardianController extends BaseController
         
         $lock = $this->guardianRepository->lockGuardian($id);
         if($lock){
-            return $this->responseSuccess(['data'=>[]],trans('api.guardian.lock.success'));
+            return $this->responseSuccess([],trans('api.guardian.lock.success'));
         }else{
             return $this->responseError(trans('api.guardian.lock.errors'));
         }
@@ -178,36 +192,41 @@ class GuardianController extends BaseController
 
         $unlock = $this->guardianRepository->unlockGuardian($id);
         if($unlock){
-            return $this->responseSuccess(['data'=>[]],trans('api.guardian.unlock.success'));
+            return $this->responseSuccess([],trans('api.guardian.unlock.success'));
         }else{
             return $this->responseError(trans('api.guardian.unlock.errors'));
         }
     }
 
-    public function ChangePasswordGuardian(int $id, GetUserRepository $getUserRepository, Request $request){
-        $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
-        
-        $getUser = $getUserRepository->getUser($user_id, $type); 
-        if (!$getUser) {
-            return $this->responseError(trans('api.error.user_not_permission'));
-        }
+    public function changePasswordGuardian(int $id, GetUserRepository $getUserRepository, Request $request)
+{
+    $user_id = Auth::user()->id;
+    $type = AccessTypeEnum::MANAGER->value;
 
-        $dataUpdate = [
-            'password' => Hash::make($request->password),
-            'confirm_password'=> $request->confirm_password,
-            'modified_user_id' => $user_id,
-            'updated_at' => now(),
-        ];
-
-        $passwordUpdate = $this->guardianRepository->changePassword($id,$dataUpdate);
-
-        if($passwordUpdate){
-            return $this->responseSuccess(['data'=>[]],trans('api.guardian.change_password.success'));
-        }else{
-            return $this->responseError(trans('api.guardian.change_password.errors'));
-        }
+    
+    $getUser = $getUserRepository->getUser($user_id, $type);
+    if (!$getUser) {
+        return $this->responseError(trans('api.error.user_not_permission'));
     }
+
+    
+    $dataUpdate = [
+        'password' => Hash::make($request->password),
+        'modified_user_id' => $user_id,
+        'updated_at' => now(),
+    ];
+
+   
+    $passwordUpdate = $this->guardianRepository->changePassword($id, $dataUpdate);
+
+    if ($passwordUpdate) {
+        return $this->responseSuccess([],trans('api.guardian.change_password.success'));
+    } else {
+        return $this->responseError(trans('api.guardian.change_password.errors'));
+    }
+}
+
+
 
     public function assignStudent(Request $request, GetUserRepository $getUserRepository, $guardianId)
 {

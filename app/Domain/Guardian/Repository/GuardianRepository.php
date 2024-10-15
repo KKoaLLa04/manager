@@ -14,41 +14,55 @@ class GuardianRepository
     public function __construct() {}
 
     public function getGuardian($keyword = null, $pageIndex = 1, $pageSize = 10)
-    {
-        $query = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
-            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->withCount('students');
+{
+    $query = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->with('students');
 
-        // Filter by keyword if provided
-        if ($keyword) {
-            $query->where('fullname', 'LIKE', '%' . $keyword . '%')
-                ->orWhere('phone', 'LIKE', '%' . $keyword . '%');
-        }
-
-
-        $paginatedResult = $query->paginate($pageSize);
-
-
-        $mappedData = $paginatedResult->getCollection()->map(function ($guardian) {
-            return [
-                'id' => $guardian->id,
-                'fullname' => $guardian->fullname,
-                'phone' => $guardian->phone,
-                'email' => $guardian->email,
-                'code' => $guardian->code,
-                'status' => $guardian->status,
-                'gender' => $guardian->gender,
-                'career' => $guardian->career,
-                'students_count' => $guardian->students_count
-            ];
+    
+    if ($keyword) {
+        $query->where(function ($q) use ($keyword) {
+            $q->where('fullname', 'LIKE', '%' . $keyword . '%')
+              ->orWhere('phone', 'LIKE', '%' . $keyword . '%');
         });
-
-
-        return [
-            'data' => $mappedData,
-            'total' => $paginatedResult->total()
-        ];
     }
+
+    $paginatedResult = $query->paginate($pageSize);
+
+    $mappedData = $paginatedResult->getCollection()->map(function ($guardian) {
+        return [
+            'id' => $guardian->id,
+            'fullname' => $guardian->fullname,
+            'phone' => $guardian->phone,
+            'email' => $guardian->email,
+            'code' => $guardian->code,
+            'status' => $guardian->status,
+            'gender' => $guardian->gender,
+            'career' => $guardian->career,
+            'studentsInfo' => $guardian->students->map(function ($student) {
+                return [
+                    'id' => $student->id,
+                    'code' => $student->code,
+                    'fullname' => $student->fullname,
+                    'email' => $student->email,
+                    'dob' => strtotime($student->dob),
+                    'gender' => $student->gender,
+                    'phone' => $student->phone,
+                    'academicYear' => $student->academic_year,
+                    'username' => $student->username,
+                ];
+            }),
+        ];
+    });
+
+    return [
+        'data' => $mappedData,
+        'total' => $paginatedResult->total(),
+       
+    ];
+}
+
+
 
 
 
@@ -59,95 +73,98 @@ class GuardianRepository
     }
 
     public function getOneGuardian(int $id)
-    {
-        // Lấy dữ liệu phụ huynh cùng với học sinh
-        $one = Guardian::with('students')
-            ->where('access_type', AccessTypeEnum::GUARDIAN->value)
-            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->find($id);
+{
+    
+    $one = Guardian::with('students')
+        ->where('access_type', AccessTypeEnum::GUARDIAN->value)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->find($id);
 
-        // Kiểm tra phụ huynh có tồn tại không
-        if (!$one) {
-            return response()->json([
-                'message' => 'Phụ huynh không tồn tại'
-            ], 404);
-        }
-
-        // Kiểm tra trạng thái phụ huynh
-        if ($one->status == StatusEnum::UN_ACTIVE->value) {
-            return response()->json([
-                'message' => 'Phụ huynh đang bị khoá'
-            ], 403);
-        }
-
-        // Map lại dữ liệu phụ huynh
-        $guardianData = [
-            'id' => $one->id,
-            'fullname' => $one->fullname,
-            'phone' => $one->phone,
-            'email' => $one->email,
-            'code' => $one->code,
-            'dob' => $one->dob,
-            'status' => $one->status,
-            'address' => $one->address,
-            'students' => $one->students->map(function ($student) {
-                return [
-                    'id' => $student->id,
-                    'student_code' => $student->student_code,
-                    'fullname' => $student->fullname,
-                    'email' => $student->email,
-                    'gender' => $student->gender,
-                    'dob' => $student->dob,
-                    'phone' => $student->phone,
-                    'academicYear' => $student->academic,
-                    'username' => $student->username
-                ];
-            })
+    
+    if (!$one) {
+        return [
+            'msg' => 'Phụ huynh không tồn tại',
+            'data' => null,
         ];
-
-
-        return response()->json([
-            'data' => $guardianData,
-        ]);
     }
+
+    
+    if ($one->status == StatusEnum::UN_ACTIVE->value) {
+        return [
+            'msg' => 'Phụ huynh đang bị khoá',
+            'data' => null,
+        ];
+    }
+
+    
+    $guardianData = [
+        'id' => $one->id,
+        'fullname' => $one->fullname,
+        'phone' => $one->phone,
+        'email' => $one->email,
+        'code' => $one->code,
+        'dob' => strtotime($one->dob),
+        'status' => $one->status,
+        'address' => $one->address,
+        'usernames' => $one->username,
+        'students' => $one->students->map(function ($student) {
+            return [
+                'id' => $student->id,
+                'student_code' => $student->student_code,
+                'fullname' => $student->fullname,
+                'email' => $student->email,
+                'gender' => $student->gender,
+                'dob' => strtotime($student->dob),
+                'phone' => $student->phone,
+                'academicYear' => $student->academic,
+                'username' => $student->username,
+            ];
+        }),
+    ];
+
+    return [
+        'data' => $guardianData,
+    ];
+}
+
 
 
     public function getStudent($keyword = null, $pageIndex = 1, $pageSize = 10)
-{
-    // Tạo query để lấy danh sách học sinh
-    $query = Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)
-        ->where('status', StatusEnum::ACTIVE->value);
+    {
+        
+        $query = Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('status', StatusEnum::ACTIVE->value);
 
-    // Tìm kiếm theo từ khóa nếu có
-    if ($keyword) {
-        $query->where('fullname', 'LIKE', '%' . $keyword . '%')
-              ->orWhere('student_code', 'LIKE', '%' . $keyword . '%');
-    }
+        
+        if ($keyword) {
+            $query->where('fullname', 'LIKE', '%' . $keyword . '%')
+                ->orWhere('student_code', 'LIKE', '%' . $keyword . '%');
+        }
 
-    // Paginate với số lượng học sinh mỗi trang
-    $students = $query->paginate($pageSize, ['*'], 'page', $pageIndex);
+        
+        $students = $query->paginate($pageSize, ['*'], 'page', $pageIndex);
 
-    // Sử dụng map để lược bỏ các trường không cần thiết
-    $data = $students->map(function ($student) {
+       
+        $data = $students->map(function ($student) {
+            return [
+                'id' => $student->id,
+                'student_code' => $student->student_code,
+                'fullname' => $student->fullname,
+                'email' => $student->email,
+                'phone' => $student->phone,
+                'gender' => $student->gender,
+                'dob' => strtotime($student->dob),
+                'username' => $student->username,
+                'academicYear' => $student->academicYear,
+            ];
+        });
+
+        
         return [
-            'id' => $student->id,
-            'student_code' => $student->student_code,
-            'fullname' => $student->fullname,
-            'email' => $student->email,
-            'phone' => $student->phone,
-            'gender' => $student->gender,
-            'dob' => $student->dob,
-            'username' => $student->username,
-            'academicYear' => $student->academicYear, // Nếu cần, hoặc có thể bỏ
+            'data' => $data,
+            'total' => $students->total()
         ];
-    });
-
-    // Trả về dữ liệu bao gồm cả total và bỏ lớp lồng "data"
-    return [
-        'data' => $data,
-        'total' => $students->total()
-    ];
-}
+    }
 
 
 
@@ -230,27 +247,37 @@ class GuardianRepository
     }
 
     public function changePassword(int $id, array $data)
-    {
-        $one = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
-            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->find($id);
+{
+    
+    $guardian = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->find($id);
 
-        if (!$one) {
-            return response()->json([
-                'message' => 'Phụ huynh không tồn tại'
-            ], 404);
-        }
-
-        if ($one->is_deleted == DeleteEnum::DELETED->value) {
-            return response()->json([
-                'message' => 'Phụ huynh đang bị xóa'
-            ], 403);
-        }
-
-        $one->fill($data);
-        $one->save();
-        return $one;
+    
+    if (!$guardian) {
+        return response()->json([
+            'message' => 'Phụ huynh không tồn tại'
+        ], 404);
     }
+
+    
+    if ($guardian->is_deleted == DeleteEnum::DELETED->value) {
+        return response()->json([
+            'message' => 'Phụ huynh đang bị xóa'
+        ], 403);
+    }
+
+   
+    $guardian->fill($data);
+    $guardian->save();
+
+    
+    return [
+        'data' => [] 
+    ];
+}
+
+
 
     public function assignStudent(int $guardianId, array $studentIds, int $createdUserId, int $deletedUser = 0)
     {
