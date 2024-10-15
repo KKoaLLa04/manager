@@ -33,6 +33,7 @@ class UserDeleteRepository {
 
                     $itemTearchMainHasClass->end_date = Carbon::now();
                     $itemTearchMainHasClass->status = StatusEnum::UN_ACTIVE->value;
+                    $itemTearchMainHasClass->is_deleted = DeleteEnum::DELETED->value;
                     $itemTearchMainHasClass->modified_user_id = Auth::user()->id;
 
                     $itemTearchMainHasClass->save();
