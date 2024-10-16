@@ -16,10 +16,10 @@ class SchoolYearAddRepository {
 
         $item = new SchoolYear();
 
-        $item->name = $request->name;
-        $item->status = $request->status;
-        $item->start_date = $request->start_date;
-        $item->end_date = $request->end_date;
+        $item->name = $request->schoolYearName;
+        $item->status = $request->schoolYearStatus;
+        $item->start_date = $request->schoolYearStartDate;
+        $item->end_date = $request->schoolYearEndDate;
         $item->created_user_id = $user_id;
         $item->is_deleted = DeleteEnum::NOT_DELETE->value;
 

@@ -14,6 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Common\Enums\StatusTeacherEnum;
+use App\Models\Classes;
 
 
 
@@ -106,17 +107,43 @@ class User extends Authenticatable implements JWTSubject
 
             $class = Classes::find($itemTearchMainHasClass->class_id);
 
-            return array_merge(
-                $this->toArray(),
-                ['class' => $class->toArray()]
-            );
+            // return array_merge(
+            //     $this->toArray(),
+            //     ['class' => $class->toArray()]
+            // );
+
+            return [
+                "userId" => $this->id,
+                "userName" => $this->fullname,
+                "userCode" => $this->code,
+                "userEmail" => $this->email,
+                "userPhone" => $this->phone,
+                "userMainClassName" => $class->name,
+                "userMainClassId" => $class->id,
+                "userAccessType" => $this->access_type,
+                "userStatus" => $this->status,
+                "userDob" => strtotime($this->dob),
+            ];
 
         }else{
 
-            return array_merge(
-                $this->toArray(),
-                ['class' => []]
-            );
+            // return array_merge(
+            //     $this->toArray(),
+            //     ['class' => []]
+            // );
+
+            return [
+                "userId" => $this->id,
+                "userName" => $this->fullname,
+                "userCode" => $this->code,
+                "userEmail" => $this->email,
+                "userPhone" => $this->phone,
+                "userMainClassName" => "",
+                "userMainClassId" => "",
+                "userAccessType" => $this->access_type,
+                "userStatus" => $this->status,
+                "userDob" => strtotime($this->dob),
+            ];
 
         }
 
