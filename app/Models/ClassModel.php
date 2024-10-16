@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Domain\AcademicYear\Models\AcademicYear;
+use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ClassModel extends Model
 {
@@ -33,4 +35,13 @@ class ClassModel extends Model
     // {
     //     return $this->belongsTo(AcademicYear::class, 'academicyear_id');
     // }
+    public function schoolYearName(): BelongsTo
+    {
+        return $this->belongsTo(SchoolYear::class, 'school_year_id','id'); 
+    }
+    public function academicYear()
+    {
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id'); 
+    }
+
 }

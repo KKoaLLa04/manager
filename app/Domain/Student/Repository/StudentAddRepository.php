@@ -21,7 +21,7 @@ class StudentAddRepository {
     
             $student->fullname = $request->fullname;
             $student->address = $request->address; 
-            $student->student_code = $request->student_code; 
+            // $student->phone = $request->phone; //comment
             $student->dob = $request->dob; 
             $student->status = $request->status; 
             $student->gender = $request->gender; 
@@ -32,19 +32,8 @@ class StudentAddRepository {
                 DB::rollBack();
                 return false; 
             }
-
-            // Lấy class_id từ bảng classes dựa trên tên lớp
-            // $class = ClassModel::where('name', $request->class_name)->first();
             $class_id = $request->class_id;
-            // $class = ClassModel::where('status', 1)->first();
-            
-            // if (!$class) {
-            //     DB::rollBack(); // Hủy nếu không tìm thấy lớp
-            //     return false; 
-            // }
-    
-            // $class_id = $class->id;
-
+          
             // Thêm lịch sử lớp học vào bảng student_class_history
             $studentClassHistory = new StudentClassHistory();
             $studentClassHistory->student_id = $student->id; // Lưu ID của học sinh vừa tạo

@@ -6,6 +6,7 @@ use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\Student\Repository\StudentAddRepository;
+use App\Domain\Student\Repository\StudentandParensRepository;
 use App\Domain\Student\Repository\StudentDeleteRepository;
 use App\Domain\Student\Repository\StudentIndexClassByYearRepository;
 use App\Domain\Student\Repository\StudentRepository;
@@ -47,21 +48,23 @@ class StudentController extends BaseController
 
         // Lấy kích thước trang
         $pageSize = $request->input('pageSize', 10);
-
+        if (!is_numeric($pageSize) || $pageSize <= 0) {
+            // $pageSize = 10; // Mặc định về 10 bản ghi
+            return response()->json(['message' => 'yêu cầu nhập số lượng lớn hơn 1']);
+        }
+    
         $studentRepository = new StudentRepository();
 
         // Lấy danh sách sinh viên
         $students = $studentRepository->paginateStudents($pageSize);
-
-        // Kiểm tra nếu có sinh viên
         if ($students->count() > 0) {
             return response()->json([
                 'status' => 'success',
                 'data' => $students->items(), // Thay items() bằng all() ở đây
                 'total' => $students->total(), // Tổng số bản ghi
-                'current_page' => $students->currentPage(), // Trang hiện tại
-                'last_page' => $students->lastPage(), // Trang cuối cùng
-                'per_page' => $students->perPage(), // Số bản ghi mỗi trang
+                'page_index' => $students->currentPage(), // Trang hiện tại
+                // 'page' => $students->lastPage(), // Trang cuối cùng
+                'page_size' => $students->perPage(), // Số bản ghi mỗi trang
             ]);
         } else {
             return response()->json(['status' => 'error', 'data' => []]);
@@ -86,12 +89,13 @@ class StudentController extends BaseController
                       }]);
             }])->where('student_code', $request->student_code)->first(); 
     
-            $studentArray = $student->toArray();
+          
     
             return response()->json([
                 'message' => 'Thêm học sinh thành công',
                 'status' => 'success',
-                'data' => $studentArray 
+                'data' => []
+              
             ]);
         } else {
             return response()->json([
@@ -137,29 +141,34 @@ class StudentController extends BaseController
 
 
 
-    public function update(int $id, StudentUpdateRequest $request){
+   
 
+    public function update(int $id, StudentUpdateRequest $request)
+    {
         $StudentUpdateRepository = new StudentUpdateRepository();
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
+    
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-
+    
+        // Thực hiện cập nhật thông qua repository
         $check = $StudentUpdateRepository->handle($id, $user_id, $request);
+    
         if ($check) {
             $data = Student::find($id);
-
+    
             // Chuyển đổi đối tượng thành mảng
             $studentArray = $data->toArray();
-            $studentArray['class_id'] = optional($data->classHistory)->class_id;
-
+            
+            // Không tạo bản ghi mới nếu class_id không thay đổi
+            $studentArray['class_id'] = optional($data->classHistory->last())->class_id;
+    
             return response()->json([
                 'message' => 'Sửa học sinh ' . $studentArray['fullname'] . ' thành công',
                 'status' => 'success',
-                'data' => [
-                    'student' => $studentArray
-                ]
+                'data' => []
             ]);
         } else {
             return response()->json([
@@ -169,32 +178,20 @@ class StudentController extends BaseController
             ]);
         }
     }
+    
 
     public function show($id)
     {
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-
-        // Kiểm tra quyền truy cập của người dùng
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-        $student = Student::with(['classHistory' => function($query) {
-            // Chỉ lấy các trường cần thiết từ StudentClassHistory và lấy thêm thông tin lớp học
-            $query->select('student_id', 'class_id', 'start_date', 'end_date', 'status')
-                  ->with(['class' => function($q) {
-                      // Chỉ lấy class_id và name của lớp
-                      $q->select('id', 'name');
-                  }]);
-        }, 'parents' => function($query) {
-            // Chỉ lấy các trường cần thiết từ phụ huynh
-            $query->select('users.id', 'fullname', 'phone', 'code', 'gender', 'email', 'dob')
-                  ->where('users.access_type', AccessTypeEnum::GUARDIAN->value)
-                  ->where('users.is_deleted', DeleteEnum::NOT_DELETE->value);
-        }])
-        ->where('is_deleted', DeleteEnum::NOT_DELETE->value) // Kiểm tra xem học sinh có bị xóa không
-        ->find($id);
-
+    
+        // Gọi phương thức từ repository
+        $student = $this->studentRepository->getStudentWithDetails($id);
+        
+        // Kiểm tra nếu không tìm thấy học sinh
         if (!$student) {
             return response()->json([
                 'message' => 'Học sinh này không tồn tại',
@@ -202,39 +199,60 @@ class StudentController extends BaseController
                 'data' => []
             ]);
         }
-
+    
+        // Chuyển đổi dữ liệu học sinh thành mảng
         $studentArray = $student->toArray();
-
-        // Thêm thông tin cần thiết từ classHistory
-        $classHistory = $student->classHistory;
-        $studentArray['start_date'] = optional($classHistory)->start_date;
-        $studentArray['end_date'] = optional($classHistory)->end_date;
-        $studentArray['class_history_status'] = optional($classHistory)->status;
-
-        // Kiểm tra xem classHistory có tồn tại không trước khi lấy class_id và class_name
-        if ($classHistory) {
-            $studentArray['class_id'] = optional($classHistory->class)->id;  // class có thể null
-            $studentArray['class_name'] = optional($classHistory->class)->name; // class có thể null
+    
+        // Nhóm lịch sử lớp học theo school_year_name
+        $classHistories = $student->classHistory;
+    
+        if ($classHistories && $classHistories->isNotEmpty()) {
+            $groupedClassHistories = [];
+    
+            foreach ($classHistories as $history) {
+                $schoolYearName = optional($history->class->schoolYearName)->name;
+    
+                if (!isset($groupedClassHistories[$schoolYearName])) {
+                    $groupedClassHistories[$schoolYearName] = [
+                        'school_year_name' => $schoolYearName,
+                        'classes' => []
+                    ];
+                }
+    
+                $groupedClassHistories[$schoolYearName]['classes'][] = [
+                    'start_date' => $history->start_date,
+                    'end_date' => $history->end_date,
+                    'status' => $history->status,
+                    'class_name' => optional($history->class)->name, // class có thể null
+                ];
+            }
+    
+            $studentArray['class_history'] = array_values($groupedClassHistories);
         } else {
-            $studentArray['class_id'] = null;
-            $studentArray['class_name'] = null;
+            $studentArray['class_history'] = [];
         }
-
-        // Thêm thông tin phụ huynh vào mảng học sinh
-        $studentArray['parents'] = $student->parents ?? []; // Đảm bảo có giá trị mặc định là mảng rỗng nếu không có phụ huynh
-
+    
+        // Lọc thông tin phụ huynh để chỉ lấy các trường cần thiết
+        $studentArray['parents'] = $student->parents->map(function($parent) {
+            return [
+                'id' => $parent->id,
+                'fullname' => $parent->fullname,
+                'username' => $parent->username,
+                'phone' => $parent->phone,
+                'code' => $parent->code,
+                'gender' => $parent->gender,
+                'email' => $parent->email,
+                'dob' => $parent->dob,
+            ];
+        });
+    
         return response()->json([
             'message' => 'Lấy thông tin học sinh thành công',
             'status' => 'success',
             'data' => $studentArray
         ]);
     }
-
-
-
-
-
-
+    
 
     public function assignParent(int $student_id, AssignParentRequest $request)
     {
@@ -258,9 +276,9 @@ class StudentController extends BaseController
             'message' => 'Gán phụ huynh thành công',
             'status' => 'success',
             'data' => [
-                'student' => $result['student'],
-                'parent' => $result['parent'],
-                'children_count' => $result['children_count'],
+                // 'student' => $result['student'],
+                // 'parent' => $result['parent'],
+                // 'children_count' => $result['children_count'],
             ],
         ]);
     }
@@ -291,11 +309,7 @@ class StudentController extends BaseController
         return response()->json([
             'message' => 'Hủy gán phụ huynh thành công',
             'status' => 'success',
-            'data' => [
-                'student' => $result['student'],
-                'parent_id' => $result['parent_id'],
-                'children_count' => $result['children_count'],
-            ],
+            'data' => [],
         ]);
 
     }
@@ -389,8 +403,41 @@ class StudentController extends BaseController
     }
 
 
+    public function showParents(Request $request)
+    {
+        $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::MANAGER->value;
+    
+        if (!$this->user->getUser($user_id, $type)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+    
+        $pageSize = $request->input('pageSize', 10);
+        if (!is_numeric($pageSize) || $pageSize <= 0) {
+            return response()->json(['message' => 'Yêu cầu nhập số lượng lớn hơn 0']);
+        }
+    
+        // Gọi phương thức từ repository để lấy danh sách phụ huynh
+        $parents = $this->studentRepository->getAllParentsWithChildrenCount($pageSize);
+    
+        if ($parents->count() > 0) {
+            return response()->json([
+                'message' => 'Lấy danh sách phụ huynh thành công',
+                'status' => 'success',
+                'data' => $parents->items(), // Lấy danh sách phụ huynh
+                'total' => $parents->total(), // Tổng số bản ghi
+                'page_index' => $parents->currentPage(), // Trang hiện tại
+                'page_size' => $parents->perPage(), // Số bản ghi mỗi trang
+            ]);
+        } else {
+            return response()->json(['status' => 'error', 'data' => []]);
+        }
+    }
+    
+    
 
-
+    
+   
 
 
 
