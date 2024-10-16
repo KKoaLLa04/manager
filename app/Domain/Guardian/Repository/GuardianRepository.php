@@ -14,57 +14,52 @@ class GuardianRepository
     public function __construct() {}
 
     public function getGuardian($keyword = null, $pageIndex = 1, $pageSize = 10)
-{
-    $query = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
-        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-        ->with('students');
-
+    {
+        $query = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->with(['students.classHistories']);
     
-    if ($keyword) {
-        $query->where(function ($q) use ($keyword) {
-            $q->where('fullname', 'LIKE', '%' . $keyword . '%')
-              ->orWhere('phone', 'LIKE', '%' . $keyword . '%');
+        if ($keyword) {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('fullname', 'LIKE', '%' . $keyword . '%')
+                  ->orWhere('phone', 'LIKE', '%' . $keyword . '%');
+            });
+        }
+    
+        $paginatedResult = $query->paginate($pageSize);
+    
+        $mappedData = $paginatedResult->getCollection()->map(function ($guardian) {
+            return [
+                'id' => $guardian->id,
+                'fullname' => $guardian->fullname,
+                'phone' => $guardian->phone,
+                'email' => $guardian->email,
+                'code' => $guardian->code,
+                'status' => $guardian->status,
+                'gender' => $guardian->gender,
+                'career' => $guardian->career,
+                'studentsInfo' => $guardian->students->map(function ($student) {
+                    return [
+                        'id' => $student->id,
+                        'code' => $student->code,
+                        'fullname' => $student->fullname,
+                        'email' => $student->email,
+                        'dob' => strtotime($student->dob),
+                        'gender' => $student->gender,
+                        'phone' => $student->phone,
+                        'academicYear' => $student->classHistories->first()->class->academicYear->name,
+                        'username' => $student->username,
+                    ];
+                }),
+            ];
         });
-    }
-
-    $paginatedResult = $query->paginate($pageSize);
-
-    $mappedData = $paginatedResult->getCollection()->map(function ($guardian) {
+    
         return [
-            'id' => $guardian->id,
-            'fullname' => $guardian->fullname,
-            'phone' => $guardian->phone,
-            'email' => $guardian->email,
-            'code' => $guardian->code,
-            'status' => $guardian->status,
-            'gender' => $guardian->gender,
-            'career' => $guardian->career,
-            'studentsInfo' => $guardian->students->map(function ($student) {
-                return [
-                    'id' => $student->id,
-                    'code' => $student->code,
-                    'fullname' => $student->fullname,
-                    'email' => $student->email,
-                    'dob' => strtotime($student->dob),
-                    'gender' => $student->gender,
-                    'phone' => $student->phone,
-                    'academicYear' => $student->academic_year,
-                    'username' => $student->username,
-                ];
-            }),
+            'data' => $mappedData,
+            'total' => $paginatedResult->total(),
         ];
-    });
-
-    return [
-        'data' => $mappedData,
-        'total' => $paginatedResult->total(),
-       
-    ];
-}
-
-
-
-
+    }
+    
 
 
     public function addGuardian(array $data)
@@ -116,7 +111,7 @@ class GuardianRepository
                 'gender' => $student->gender,
                 'dob' => strtotime($student->dob),
                 'phone' => $student->phone,
-                'academicYear' => $student->academic,
+                'academicYear' => $student->classHistories->first()->class->academicYear->name,
                 'username' => $student->username,
             ];
         }),
@@ -129,46 +124,44 @@ class GuardianRepository
 
 
 
-    public function getStudent($keyword = null, $pageIndex = 1, $pageSize = 10)
-    {
-        
-        $query = Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->where('status', StatusEnum::ACTIVE->value);
+public function getStudent($keyword = null, $pageIndex = 1, $pageSize = 10)
+{
+    // Truy vấn dữ liệu từ bảng student và liên kết với classHistories
+    $query = Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->where('status', StatusEnum::ACTIVE->value);
 
-        
-        if ($keyword) {
-            $query->where('fullname', 'LIKE', '%' . $keyword . '%')
-                ->orWhere('student_code', 'LIKE', '%' . $keyword . '%');
-        }
-
-        
-        $students = $query->paginate($pageSize, ['*'], 'page', $pageIndex);
-
-       
-        $data = $students->map(function ($student) {
-            return [
-                'id' => $student->id,
-                'student_code' => $student->student_code,
-                'fullname' => $student->fullname,
-                'email' => $student->email,
-                'phone' => $student->phone,
-                'gender' => $student->gender,
-                'dob' => strtotime($student->dob),
-                'username' => $student->username,
-                'academicYear' => $student->academicYear,
-            ];
-        });
-
-        
-        return [
-            'data' => $data,
-            'total' => $students->total()
-        ];
+    // Tìm kiếm theo từ khóa nếu có
+    if ($keyword) {
+        $query->where('fullname', 'LIKE', '%' . $keyword . '%')
+            ->orWhere('student_code', 'LIKE', '%' . $keyword . '%');
     }
 
+    // Lấy dữ liệu sinh viên phân trang
+    $students = $query->paginate($pageSize, ['*'], 'page', $pageIndex);
 
+    $data = $students->map(function ($student) {
+        return [
+            'id' => $student->id,
+            'student_code' => $student->student_code,
+            'fullname' => $student->fullname,
+            'email' => $student->email,
+            'phone' => $student->phone,
+            'gender' => $student->gender,
+            'dob' => strtotime($student->dob),
+            'username' => $student->username,
+            'academicYear' => $student->classHistories->first()->class->academicYear->name
+        ];
+    });
+    
+    
+    
 
-
+    // Trả về kết quả dạng API
+    return [
+        'data' => $data,
+        'total' => $students->total()
+    ];
+}
 
     public function updateGuardian(int $id, array $data)
     {

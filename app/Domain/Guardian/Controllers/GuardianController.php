@@ -20,8 +20,16 @@ class GuardianController extends BaseController
     {
         $this->guardianRepository = new GuardianRepository();
     }
-    public function index(Request $request)
+    public function index(Request $request,GetUserRepository $getUserRepository)
 {
+    $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::MANAGER->value;
+        
+        $getUser = $getUserRepository->getUser($user_id, $type); 
+        if (!$getUser) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
     $keyword = $request->get('keyword', null);
     $pageIndex = $request->get('pageIndex', 1);
     $pageSize = $request->get('pageSize', 10);
@@ -29,7 +37,7 @@ class GuardianController extends BaseController
     $guardians = $this->guardianRepository->getGuardian($keyword, $pageIndex, $pageSize);
 
     if (!empty($guardians)) {
-        return $this->responseSuccess($guardians['data'], trans('api.guardian.index.success'));
+        return $this->responseSuccess($guardians, trans('api.guardian.index.success'));
     } else {
         return $this->responseError(trans('api.guardian.index.errors'));
     }
