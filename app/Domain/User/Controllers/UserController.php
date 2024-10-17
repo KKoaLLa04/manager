@@ -5,6 +5,7 @@ use App\Common\Enums\AccessTypeEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\User\Repository\ChooseClassToMainTearchRepository;
 use App\Domain\User\Repository\UserAddRepository;
+use App\Domain\User\Repository\UserChangePasswordRepository;
 use App\Domain\User\Repository\UserDeleteRepository;
 use App\Domain\User\Repository\UserDetailRepository;
 use App\Domain\User\Repository\UserEditRepository;
@@ -209,6 +210,37 @@ class UserController extends BaseController
             return $this->responseSuccess($check, trans('api.alert.together.index_success'));
         } else {
             return $this->responseError(trans('api.alert.together.index_failed'));
+        }
+
+    }
+
+
+
+    public function changePassword(int $id, Request $request)
+    {
+
+        $user_id = Auth::user()->id;
+
+        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $request->validate([
+            'userPassword' => 'required|min:3|max:255'
+        ], [
+            'min' => trans('api.error.min'),
+            'max' => trans('api.error.max'),
+            'required' => trans('api.error.required'),
+        ]);
+
+        $repository = new UserChangePasswordRepository();
+
+        $check = $repository->handle($id, $user_id, $request);
+
+        if ($check) {
+            return $this->responseSuccess([], trans('api.alert.together.edit_success'));
+        } else {
+            return $this->responseError(trans('api.alert.together.edit_failed'));
         }
 
     }
