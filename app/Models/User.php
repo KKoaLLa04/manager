@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Common\Enums\StatusTeacherEnum;
+use App\Models\Classes;
 
 
 
@@ -83,6 +86,16 @@ class User extends Authenticatable implements JWTSubject
             ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->withTimestamps()
             ->where('students.status', StatusEnum::ACTIVE->value);
+        }
+
+
+    public function assign_relationship(): BelongsToMany
+    {
+        return $this->belongsToMany(Student::class, 'user_student', 'user_id', 'student_id')
+            ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('access_type', AccessTypeEnum::GUARDIAN->value) // Điều kiện chỉ lấy phụ huynh
+            ->withTimestamps()
+            ->where('students.status', StatusEnum::ACTIVE->value);
     }
 
     public function classSubjectTeachers()
@@ -98,20 +111,52 @@ class User extends Authenticatable implements JWTSubject
 
             $class = Classes::find($itemTearchMainHasClass->class_id);
 
-            return array_merge(
-                $this->toArray(),
-                ['class' => $class->toArray()]
-            );
+            // return array_merge(
+            //     $this->toArray(),
+            //     ['class' => $class->toArray()]
+            // );
+
+            return [
+                "userId" => $this->id,
+                "userName" => $this->fullname,
+                "userCode" => $this->code,
+                "userEmail" => $this->email,
+                "userPhone" => $this->phone,
+                "userMainClassName" => $class->name,
+                "userMainClassId" => $class->id,
+                "userAccessType" => $this->access_type,
+                "userStatus" => $this->status,
+                "userDob" => strtotime($this->dob),
+            ];
 
         }else{
 
-            return array_merge(
-                $this->toArray(),
-                ['class' => []]
-            );
+            // return array_merge(
+            //     $this->toArray(),
+            //     ['class' => []]
+            // );
+
+            return [
+                "userId" => $this->id,
+                "userName" => $this->fullname,
+                "userCode" => $this->code,
+                "userEmail" => $this->email,
+                "userPhone" => $this->phone,
+                "userMainClassName" => "",
+                "userMainClassId" => "",
+                "userAccessType" => $this->access_type,
+                "userStatus" => $this->status,
+                "userDob" => strtotime($this->dob),
+            ];
 
         }
 
     }
 
-}
+
+ 
+
+    }
+
+
+

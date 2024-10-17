@@ -3,6 +3,8 @@ namespace App\Domain\SchoolYear\Repository;
 use App\Domain\SchoolYear\Requests\SchoolYearEditRequest;
 use App\Domain\SchoolYear\Models\SchoolYear;
 
+use function PHPUnit\Framework\returnSelf;
+
 class SchoolYearEditRepository {
 
 
@@ -12,8 +14,10 @@ class SchoolYearEditRepository {
 
         $item = SchoolYear::find($id);
 
-        $item->name = $request->name;
-        $item->status = $request->status;
+        if (!$item) return false;
+
+        $item->name = $request->schoolYearName;
+        $item->status = $request->schoolYearStatus;
         $item->modified_user_id = $user_id;
 
         if($item->save()) return true;

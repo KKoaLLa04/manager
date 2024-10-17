@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class StudentClassHistory extends Model
 {
-    protected $table = 'student_class_history';
+    use HasFactory;
+    protected $table = 'student_class_history'; // Tên bảng
 
     protected $fillable = [
         'student_id',
@@ -24,13 +26,12 @@ class StudentClassHistory extends Model
 
     public function student()
     {
-        return $this->belongsTo(Student::class, 'student_id', 'id');
+        return $this->belongsTo(Student::class, 'student_id'); // Quan hệ với bảng Student
     }
 
-    // Khóa ngoại tới bảng classes
     public function class()
     {
-        return $this->belongsTo(Classes::class, 'class_id', 'id');
+        return $this->belongsTo(ClassModel::class, 'class_id'); 
     }
 
 }
