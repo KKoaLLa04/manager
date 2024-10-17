@@ -22,4 +22,15 @@ class StudentClassHistory extends Model
         'id'
     ];
 
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'student_id', 'id');
+    }
+
+    // Khóa ngoại tới bảng classes
+    public function class()
+    {
+        return $this->belongsTo(Classes::class, 'class_id', 'id');
+    }
+
 }

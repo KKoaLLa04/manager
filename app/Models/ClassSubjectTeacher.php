@@ -26,7 +26,7 @@ class ClassSubjectTeacher extends Model
         'created_at',
         'updated_at'
     ];
-    
+
     public function user(): HasOne
     {
         return $this->hasOne(User::class, 'id', 'user_id')
@@ -36,4 +36,8 @@ class ClassSubjectTeacher extends Model
     }
 
 
+    public function class()
+    {
+        return $this->belongsTo(Classes::class, 'class_id', 'id');
+    }
 }

@@ -18,24 +18,32 @@ class RollCallController extends BaseController
     {   
         $this->rollCallRepository = $rollCallRepository;
     }
-    public function index()
-    {
-        // Gọi phương thức từ repository để lấy danh sách roll_call
-        $rollCalls = $this->rollCallRepository->getAllRollCalls();
+    public function index(Request $request, GetUserRepository $getUserRepository)
+{
+    $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::MANAGER->value;
+        
+        $showUser = $getUserRepository->getUser($user_id, $type); 
+        if (!$showUser) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+    
+    $timestamp = $request->input('timestamp');
 
-        // Tính toán tổng số lớp đã điểm danh và chưa điểm danh
-        $totalClassAttendanced = $rollCalls->count(); // Tổng số lớp đã điểm danh
-        $totalClassNoAttendance = RollCall::where('status', 0)->count(); // Tổng số lớp chưa điểm danh
+   $keyword = $request->input('keyword');
+    $pageIndex = $request->input('pageIndex', 1);
+    $pageSize = $request->input('pageSize', 10);
 
-        // Trả về dữ liệu dưới dạng JSON
-        return response()->json([
-            'msg' => 'api.rollcall.index.success',
-            'data' => [
-                'totalClassAttendanced' => $totalClassAttendanced,
-                'totalClassNoAttendance' => $totalClassNoAttendance,
-                'rollCalls' => $rollCalls // Danh sách roll_calls
-            ]
-        ]);
+    
+    $rollCalls = $this->rollCallRepository->getAllRollCalls($keyword,$timestamp, $pageIndex, $pageSize);
+
+    
+    if ($rollCalls) {
+        return $this->responseSuccess($rollCalls, trans('api.rollcall.index.success'));
+    } else {
+        return $this->responseError(trans('api.rollcall.index.error'));
     }
+}
+
 }
             

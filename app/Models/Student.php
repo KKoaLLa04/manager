@@ -22,4 +22,9 @@ class Student extends Model
         'created_at',
         'updated_at',
     ];
+
+    public function classHistories()
+    {
+        return $this->hasMany(StudentClassHistory::class, 'student_id', 'id');
+    }
 }
