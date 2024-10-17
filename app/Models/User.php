@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -84,6 +86,16 @@ class User extends Authenticatable implements JWTSubject
             ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->withTimestamps()
             ->where('students.status', StatusEnum::ACTIVE->value);
+        }
+
+
+    public function assign_relationship(): BelongsToMany
+    {
+        return $this->belongsToMany(Student::class, 'user_student', 'user_id', 'student_id')
+            ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('access_type', AccessTypeEnum::GUARDIAN->value) // Điều kiện chỉ lấy phụ huynh
+            ->withTimestamps()
+            ->where('students.status', StatusEnum::ACTIVE->value);
     }
 
 
@@ -137,4 +149,10 @@ class User extends Authenticatable implements JWTSubject
 
     }
 
-}
+
+ 
+
+    }
+
+
+

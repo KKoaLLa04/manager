@@ -52,9 +52,6 @@ class Classes extends Model
             ->wherePivot('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
             ->withTimestamps()
             ->where('users.status', StatusEnum::ACTIVE->value);
-    public function grade()
-    {
-        return $this->belongsTo(Grades::class, 'grade_id');
     }
 
 }
