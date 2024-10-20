@@ -56,8 +56,8 @@ class ClassController extends BaseController
             return $this->responseError(trans('api.error.not_found'));
         }
 
-        list($totalPage, $page, $size, $classes) = $this->classRepository->getClasses($request);
-        return $this->responseSuccess($this->classRepository->transform($page, $totalPage, $size, $classes));
+        list($totalPage, $page, $pageSize, $totalItems,$classes) = $this->classRepository->getClasses($request);
+        return $this->responseSuccess($this->classRepository->transform($page, $totalPage, $pageSize,$totalItems, $classes));
     }
 
     public function detail(DetailClassRequest $request)
