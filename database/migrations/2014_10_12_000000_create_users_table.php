@@ -21,11 +21,11 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('address')->nullable();
             $table->string('code')->nullable();
-            $table->integer('access_type')->comment('1: QT; 2: TC; 3: GV');
-            $table->date('dob');
-            $table->string('gender');
+            $table->integer('access_type')->comment('1: QT; 2: GV; 3: PH');
+            $table->date('dob')->nullable();
+            $table->string('gender')->nullable();
             $table->integer('status')->default(1)->comment('1: Active; 0: Un Active');
-            $table->integer('is_deleted')->default(1)->comment('0: Deleted; 1: Active');
+            $table->integer('is_deleted')->default(0)->comment('0: NOT DELETE, 1: DELETED');
             $table->integer('created_user_id')->nullable();
             $table->integer('modified_user_id')->nullable();
             $table->rememberToken();

@@ -9,10 +9,12 @@ class UserIndexRepository {
 
     public function handle ($keyword = "") {
 
-        $school_years = User::where('is_deleted', DeleteEnum::NOT_DELETE->value)->where("fullname", "like", "%".$keyword."%")->get();
+        $list = User::where('is_deleted', DeleteEnum::NOT_DELETE->value)->where("fullname", "like", "%".$keyword."%")->get();
 
-        if($school_years->count() > 0){
-            return $school_years;
+        if($list->count() > 0){
+            return $list->map(function ($item) {
+                return $item->infoMainTearchWithClass();
+            });
         }
 
         return [];

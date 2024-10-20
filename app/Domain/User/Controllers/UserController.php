@@ -1,8 +1,11 @@
 <?php
 namespace App\Domain\User\Controllers;
 
+use App\Common\Enums\AccessTypeEnum;
 use App\Common\Repository\GetUserRepository;
+use App\Domain\User\Repository\ChooseClassToMainTearchRepository;
 use App\Domain\User\Repository\UserAddRepository;
+use App\Domain\User\Repository\UserChangePasswordRepository;
 use App\Domain\User\Repository\UserDeleteRepository;
 use App\Domain\User\Repository\UserDetailRepository;
 use App\Domain\User\Repository\UserEditRepository;
@@ -12,6 +15,10 @@ use App\Domain\User\Requests\UserEditRequest;
 use App\Http\Controllers\BaseController;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+
+
 
 class UserController extends BaseController
 {
@@ -20,6 +27,8 @@ class UserController extends BaseController
 
     public function __construct(Request $request)
     {
+
+        // dd(Auth::user());
 
         $this->user = new GetUserRepository();
 
@@ -30,16 +39,11 @@ class UserController extends BaseController
     public function index(Request $request)
     {
 
-        $request->validate([
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
-        ]);
+        $user_id = Auth::user()->id;
+
+        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
 
         $keyword = "";
 
@@ -63,34 +67,28 @@ class UserController extends BaseController
 
         $check = $IndexRepository->handle($keyword);
 
-        if ($check) {
-            return $this->responseSuccess(['data' => $check->forPage($pageIndex, $pageSize)], trans('api.alert.together.index_success'));
-        } else {
-            return $this->responseError(trans('api.alert.together.index_failed'));
-        }
+        // if ($check) {
+        //     return $this->responseSuccess(['data' => $check->forPage($pageIndex, $pageSize)], trans('api.alert.together.index_success'));
+        // } else {
+        //     return $this->responseError(trans('api.alert.together.index_failed'));
+        // }
+
+        return response()->json([
+            'msg' => trans('api.alert.together.index_success'),
+            'data' => $check->forPage($pageIndex, $pageSize),
+            'total' => $check->count()
+        ], ResponseAlias::HTTP_OK);
 
     }
+
 
 
     public function detail(int $id, Request $request)
     {
 
+        $user_id = Auth::user()->id;
 
-        $request->validate([
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
-        ]);
-
-        $user_id = $request->user_id;
-        $type = $request->type;
-
-        if (!$this->user->getUser($user_id, $type)) {
+        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -99,7 +97,7 @@ class UserController extends BaseController
         $check = $DetailRepository->handle($id);
 
         if ($check) {
-            return $this->responseSuccess(['data' => $check->toArray()], trans('api.alert.together.detail_success'));
+            return $this->responseSuccess(['data' => $check], trans('api.alert.together.detail_success'));
         } else {
             return $this->responseError(trans('api.alert.together.detail_failed'));
         }
@@ -109,23 +107,30 @@ class UserController extends BaseController
 
     public function add(UserAddRequest $request)
     {
+        $user_id = Auth::user()->id;
 
-        $AddRepository = new UserAddRepository();
-        $user_id = $request->user_id;
-        $type = $request->type;
-
-        if (!$this->user->getUser($user_id, $type)) {
+        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
             return $this->responseError(trans('api.error.user_not_permission'));
         }
+
+        $AddRepository = new UserAddRepository();
 
         $check = $AddRepository->handle($user_id, $request);
 
         if ($check) {
-            $data = User::all();
-            $data = $data->last();
-            return $this->responseSuccess(['data' => $data->toArray()], trans('api.alert.together.add_success'));
+            // $data = User::all();
+            // $data = $data->last();
+            // return $this->responseSuccess(['data' => $data->infoMainTearchWithClass()], trans('api.alert.together.add_success'));
+            return response()->json([
+                'msg' => trans('api.alert.together.add_success'),
+                'data' => [],
+            ], ResponseAlias::HTTP_OK);
         } else {
-            return $this->responseError(trans('api.alert.together.add_failed'));
+            // return $this->responseError(trans('api.alert.together.add_failed'));
+            return response()->json([
+                'msg' => trans('api.alert.together.add_failed'),
+                'data' => [],
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
 
     }
@@ -134,20 +139,29 @@ class UserController extends BaseController
     public function edit(int $id, UserEditRequest $request)
     {
 
-        $EditRepository = new UserEditRepository();
-        $user_id = $request->user_id;
-        $type = $request->type;
-        if (!$this->user->getUser($user_id, $type)) {
+        $user_id = Auth::user()->id;
+
+        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
             return $this->responseError(trans('api.error.user_not_permission'));
         }
+
+        $EditRepository = new UserEditRepository();
 
         $check = $EditRepository->handle($id, $user_id, $request);
 
         if ($check) {
-            $data = User::find($id);
-            return $this->responseSuccess(['data' => $data->toArray()], trans('api.alert.together.edit_success'));
+            // $data = User::find($id);
+            // return $this->responseSuccess(['data' => $data->infoMainTearchWithClass()], trans('api.alert.together.edit_success'));
+            return response()->json([
+                'msg' => trans('api.alert.together.edit_success'),
+                'data' => [],
+            ], ResponseAlias::HTTP_OK);
         } else {
-            return $this->responseError(trans('api.alert.together.edit_failed'));
+            // return $this->responseError(trans('api.alert.together.edit_failed'));
+            return response()->json([
+                'msg' => trans('api.alert.together.edit_failed'),
+                'data' => [],
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
 
 
@@ -157,21 +171,9 @@ class UserController extends BaseController
     public function delete(int $id, Request $request)
     {
 
-        $request->validate([
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
-        ]);
+        $user_id = Auth::user()->id;
 
-        $user_id = $request->user_id;
-        $type = $request->type;
-
-        if (!$this->user->getUser($user_id, $type)) {
+        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -185,11 +187,63 @@ class UserController extends BaseController
             return $this->responseError(trans('api.alert.together.delete_failed'));
         }
 
+    }
 
+
+    public function chooseClassToMainTearch (Request $request) {
+
+        $request->validate([
+            'schoolYearId' => 'required'
+        ]);
+
+        $user_id = Auth::user()->id;
+
+        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $ChooseClassToMainTearchRepository = new ChooseClassToMainTearchRepository();
+
+        $check = $ChooseClassToMainTearchRepository->handle($request->schoolYearId);
+
+        if ($check) {
+            return $this->responseSuccess($check, trans('api.alert.together.index_success'));
+        } else {
+            return $this->responseError(trans('api.alert.together.index_failed'));
+        }
 
     }
 
 
+
+    public function changePassword(int $id, Request $request)
+    {
+
+        $user_id = Auth::user()->id;
+
+        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $request->validate([
+            'userPassword' => 'required|min:3|max:255'
+        ], [
+            'min' => trans('api.error.min'),
+            'max' => trans('api.error.max'),
+            'required' => trans('api.error.required'),
+        ]);
+
+        $repository = new UserChangePasswordRepository();
+
+        $check = $repository->handle($id, $user_id, $request);
+
+        if ($check) {
+            return $this->responseSuccess([], trans('api.alert.together.edit_success'));
+        } else {
+            return $this->responseError(trans('api.alert.together.edit_failed'));
+        }
+
+    }
 
 
 }

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('dob');
             $table->string('gender');
             $table->integer('status')->default(1)->comment('1: Active; 0: Un Active');
-            $table->integer('is_deleted')->default(1)->comment('0: Deleted; 1: Active');
+            $table->integer('is_deleted')->default(0)->comment('0: NOT DELETE, 1: DELETED');
             $table->integer('created_user_id')->nullable();
             $table->integer('modified_user_id')->nullable();
             $table->timestamps();

@@ -12,51 +12,51 @@ class UserAddRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'fullname' => [
+            'userName' => [
                 'required',
                 'min:6',
                 'max:255'
             ],
-            'username' => [
+            'userUsername' => [
                 'required',
                 'min:6',
                 'max:255',
                 'unique:users,username'
             ],
-            'email' => [
+            'userEmail' => [
                 'required',
                 'email',
                 'unique:users,email'
             ],
-            'password' => [
+            'userPassword' => [
                 'required',
                 'min:6',
                 'max:255'
             ],
-            'confirm' => [
-                'required',
-                'same:password'
-            ],
-            'phone' => [
+            // 'confirm' => [
+            //     'required',
+            //     'same:userPassword'
+            // ],
+            'userPhone' => [
                 'required',
                 'regex:/^0[0-9]{9}$/',
                 'unique:users,phone'
             ],
-            'address' => [
+            'userAddress' => [
             ],
-            'access_type' => [
+            'userAccessType' => [
                 'required',
                 'integer',
             ],
-            'dob' => [
+            'userDob' => [
                 'required',
                 'date'
             ],
-            'status' => [
+            'userStatus' => [
                 'required',
                 'integer'
             ],
-            'gender' => [
+            'userGender' => [
                 'required',
                 'integer'
             ],
@@ -64,14 +64,6 @@ class UserAddRequest extends FormRequest
             //     'required',
             //     'integer'
             // ],
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
         ];
     }
 
@@ -85,6 +77,8 @@ class UserAddRequest extends FormRequest
             'same' => trans('api.error.same'),
             'unique' => trans('api.error.unique'),
             'email' => trans('api.error.email'),
+            'min' => trans('api.error.min'),
+            'max' => trans('api.error.max'),
         ];
     }
 

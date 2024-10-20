@@ -2,6 +2,7 @@
 
 namespace App\Domain\SchoolYear\Controllers;
 
+use App\Common\Enums\AccessTypeEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use App\Http\Controllers\BaseController;
@@ -14,6 +15,10 @@ use App\Domain\SchoolYear\Repository\SchoolYearDeleteRepository;
 use App\Domain\SchoolYear\Requests\SchoolYearAddRequest;
 use App\Domain\SchoolYear\Requests\SchoolYearEditRequest;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+
+
 
 class SchoolYearController extends BaseController
 {
@@ -32,16 +37,6 @@ class SchoolYearController extends BaseController
     public function index(Request $request)
     {
 
-        $request->validate([
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
-        ]);
 
         $keyword = "";
 
@@ -61,43 +56,37 @@ class SchoolYearController extends BaseController
             $pageSize = $request->pageSize;
         }
 
-        // $user_id = $request->user_id;
-        // $type = $request->type;
+        $user_id = Auth::user()->id;
 
-        // if (!$this->user->getUser($user_id, $type)) {
-        //     return $this->responseError(trans('api.error.user_not_permission'));
-        // }
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
 
         $SchoolYearIndexRepository = new SchoolYearIndexRepository();
 
         $check = $SchoolYearIndexRepository->handle($keyword);
 
-        if ($check) {
-            return $this->responseSuccess(['data' => $check->forPage($pageIndex, $pageSize)], trans('api.alert.school_year.index_success'));
-        } else {
-            return $this->responseError(trans('api.alert.school_year.index_failed'));
-        }
+        // if ($check) {
+            // return $this->responseSuccess(['data' => $check->forPage($pageIndex, $pageSize)], trans('api.alert.school_year.index_success'));
+        // } else {
+            // return $this->responseError(trans('api.alert.school_year.index_failed'));
+        // }
+
+        return response()->json([
+            'msg' => trans('api.alert.school_year.index_success'),
+            'data' => $check->forPage($pageIndex, $pageSize),
+            'total' => $check->count()
+        ], ResponseAlias::HTTP_OK);
+
     }
 
 
     public function detail(int $id, Request $request)
     {
 
-        $request->validate([
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
-        ]);
+        $user_id = Auth::user()->id;
 
-        $user_id = $request->user_id;
-        $type = $request->type;
-
-        if (!$this->user->getUser($user_id, $type)) {
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -106,10 +95,19 @@ class SchoolYearController extends BaseController
         $check = $SchoolYearDetailRepository->handle($id);
 
         if ($check) {
-            return $this->responseSuccess(['data' => $check->toArray()], trans('api.alert.school_year.detail_success'));
+            // return $this->responseSuccess(['data' => $check->toArray()], trans('api.alert.school_year.detail_success'));
+            return response()->json([
+                'msg' => trans('api.alert.school_year.detail_success'),
+                'data' => $check,
+            ], ResponseAlias::HTTP_OK);
         } else {
-            return $this->responseError(trans('api.alert.school_year.detail_failed'));
+            // return $this->responseError(trans('api.alert.school_year.detail_failed'));
+            return response()->json([
+                'msg' => trans('api.alert.school_year.detail_failed'),
+            ], ResponseAlias::HTTP_NOT_FOUND);
         }
+
+
 
     }
 
@@ -117,21 +115,9 @@ class SchoolYearController extends BaseController
     public function delete(int $id, Request $request)
     {
 
-        $request->validate([
-            'user_id' => [
-                'required',
-                'integer'
-            ],
-            'type' => [
-                'required',
-                'integer'
-            ],
-        ]);
+        $user_id = Auth::user()->id;
 
-        $user_id = $request->user_id;
-        $type = $request->type;
-
-        if (!$this->user->getUser($user_id, $type)) {
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -140,9 +126,17 @@ class SchoolYearController extends BaseController
         $check = $SchoolYearDeleteRepository->handle($id, $user_id);
 
         if ($check) {
-            return $this->responseSuccess([], trans('api.alert.school_year.delete_success'));
+            // return $this->responseSuccess([], trans('api.alert.school_year.delete_success'));
+            return response()->json([
+                'msg' => trans('api.alert.school_year.delete_success'),
+                'data' => []
+            ], ResponseAlias::HTTP_OK);
         } else {
-            return $this->responseError(trans('api.alert.school_year.delete_failed'));
+            // return $this->responseError(trans('api.alert.school_year.delete_failed'));
+            return response()->json([
+                'msg' => trans('api.alert.school_year.delete_failed'),
+                'data' => []
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
 
     }
@@ -152,22 +146,29 @@ class SchoolYearController extends BaseController
     public function add(SchoolYearAddRequest $request)
     {
 
-        $SchoolYearAddRepository = new SchoolYearAddRepository();
-        $user_id = $request->user_id;
-        $type = $request->type;
+        $user_id = Auth::user()->id;
 
-        if (!$this->user->getUser($user_id, $type)) {
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
+        $SchoolYearAddRepository = new SchoolYearAddRepository();
         $check = $SchoolYearAddRepository->handle($user_id, $request);
 
         if ($check) {
-            $data = SchoolYear::all();
-            $data = $data->last();
-            return $this->responseSuccess(['data' => $data->toArray()], trans('api.alert.school_year.add_success'));
+            // $data = SchoolYear::all();
+            // $data = $data->last();
+            // return $this->responseSuccess(['data' => $data->toArray()], trans('api.alert.school_year.add_success'));
+            return response()->json([
+                'msg' => trans('api.alert.school_year.add_success'),
+                'data' => []
+            ], ResponseAlias::HTTP_OK);
         } else {
-            return $this->responseError(trans('api.alert.school_year.add_failed'));
+            // return $this->responseError(trans('api.alert.school_year.add_failed'));
+            return response()->json([
+                'msg' => trans('api.alert.school_year.add_failed'),
+                'data' => []
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
 
     }
@@ -175,20 +176,29 @@ class SchoolYearController extends BaseController
     public function edit(int $id, SchoolYearEditRequest $request)
     {
 
+        $user_id = Auth::user()->id;
+
         $SchoolYearEditRepository = new SchoolYearEditRepository();
-        $user_id = $request->user_id;
-        $type = $request->type;
-        if (!$this->user->getUser($user_id, $type)) {
+
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
         $check = $SchoolYearEditRepository->handle($id, $user_id, $request);
 
         if ($check) {
-            $data = SchoolYear::find($id);
-            return $this->responseSuccess(['data' => $data->toArray()], trans('api.alert.school_year.edit_success'));
+            // $data = SchoolYear::find($id);
+            // return $this->responseSuccess(['data' => $data->toArray()], trans('api.alert.school_year.edit_success'));
+            return response()->json([
+                'msg' => trans('api.alert.school_year.edit_success'),
+                'data' => []
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         } else {
-            return $this->responseError(trans('api.alert.school_year.edit_failed'));
+            // return $this->responseError(trans('api.alert.school_year.edit_failed'));
+            return response()->json([
+                'msg' => trans('api.alert.school_year.edit_failed'),
+                'data' => []
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
 
     }
