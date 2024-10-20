@@ -115,6 +115,30 @@ class ClassRepository
             ->get();
     }
 
+    public function getTeachersPaginate(Request $request): array
+    {
+        $page = isset($request->page) ? $request->page : PaginateEnum::PAGE->value;
+        $size = isset($request->size) ? $request->size : PaginateEnum::MAX_SIZE->value;
+        $search = isset($request->search) ? $request->search : '';
+
+        $classSubjectTeacherMain = ClassSubjectTeacher::query()
+            ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->pluck('user_id')->unique()->toArray();
+        $query = User::query()->where('access_type', AccessTypeEnum::TEACHER->value)
+            ->whereNotIn('id', $classSubjectTeacherMain)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('fullname', 'like', '%' . $search . '%');
+        $totalItems = $query->count();
+        $totalPage = ceil($query->count() / $size);
+        $teachers = $query->offset(($page - 1) * $size)
+            ->limit($size)
+            ->get();
+        return [$totalPage, $page, $size,$totalItems, $teachers];
+    }
+
     public function transformDataCreate(
         Collection $grades,
         Collection $academicYear,
@@ -154,18 +178,26 @@ class ClassRepository
         return $dataReturn;
     }
 
-    public function transformDataAssign(Collection $teachers): array
+    public function transformDataAssign(int $totalPage,int $page,int $pageSize,int $totalItems,Collection $teachers): array
     {
-        return $teachers->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'name' => is_null($item->fullname) ? '' : $item->fullname,
-                'email' => $item->email,
-                'gender' => is_null($item->gender) ? "1" : $item->gender,
-                'dob' => is_null($item->dob) ? now()->timestamp : Carbon::parse($item->dob)->timestamp,
-                'phone' => is_null($item->phone) ? "" : $item->phone,
-            ];
-        })->toArray();
+        return [
+            "teachers" => $teachers->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'code' => is_null($item->code) ? "" : $item->code,
+                    'name' => is_null($item->fullname) ? '' : $item->fullname,
+                    'email' => $item->email,
+                    'gender' => is_null($item->gender) ? "1" : $item->gender,
+                    'dob' => is_null($item->dob) ? now()->timestamp : Carbon::parse($item->dob)->timestamp,
+                    'phone' => is_null($item->phone) ? "" : $item->phone,
+                ];
+            })->toArray(),
+            "totalPage" => $totalPage,
+            "page" => $page,
+            "pageSize" => $pageSize,
+            "totalItems" => $totalItems,
+
+        ];
     }
 
     public function detailClass(int $class_id): ?Classes
