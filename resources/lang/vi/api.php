@@ -92,6 +92,7 @@ return [
     'rollcall' => [
         'index.success'=> 'Lấy danh sách điểm danh thành công',
         'index.errors'=> 'Lấy danh sách điểm danh thất bại',
-        
+        'show.success'=> 'Lấy thông tin điểm danh thành công',
+        'show.errors'=> 'Lấy thông tin điểm danh thất bại',
     ]
 ];

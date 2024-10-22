@@ -30,7 +30,7 @@ class RollCallController extends BaseController
     
     $timestamp = $request->input('timestamp');
 
-   $keyword = $request->input('keyword');
+    $keyword = $request->input('keyword');
     $pageIndex = $request->input('pageIndex', 1);
     $pageSize = $request->input('pageSize', 10);
 
@@ -44,6 +44,19 @@ class RollCallController extends BaseController
         return $this->responseError(trans('api.rollcall.index.error'));
     }
 }
+
+public function show($classId)
+{
+    
+    $one = $this->rollCallRepository->getStudentClassDetails($classId);
+
+    if ($one) {
+        return $this->responseSuccess($one, trans('api.rollcall.index.success'));
+    } else {
+        return $this->responseError(trans('api.rollcall.index.error'));
+    }
+}
+
 
 }
             

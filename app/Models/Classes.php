@@ -6,6 +6,7 @@ use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\AcademicYear\Models\AcademicYear;
+use App\Domain\RollCall\Models\RollCall;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -70,5 +71,9 @@ class Classes extends Model
         return $this->hasMany(StudentClassHistory::class, 'class_id', 'id');
     }
     
+    public function rollCalls()
+    {
+        return $this->hasMany(RollCall::class, 'class_id'); // Quan hệ với bảng roll_call
+    }
 
 }

@@ -2,7 +2,7 @@
 
 namespace App\Common\Enums;
 
-enum statusClassAttendance: int
+enum StatusClassAttendance: int
 {
     case HAS_CHECKED = 1;
 

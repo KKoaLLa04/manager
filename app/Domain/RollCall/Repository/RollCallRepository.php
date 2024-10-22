@@ -2,8 +2,10 @@
 
 namespace App\Domain\RollCall\Repository;
 
+use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\statusClassAttendance;
 use App\Domain\RollCall\Models\RollCall;
+use App\Models\StudentClassHistory;
 use Carbon\Carbon;
 
 class RollCallRepository
@@ -12,11 +14,11 @@ class RollCallRepository
     {
         $query = RollCall::with(['student', 'class.studentClassHistories', 'class.user']);
 
-        $totalClassAttendanced = RollCall::where('status', statusClassAttendance::HAS_CHECKED->value)
+        $totalClassAttendanced = RollCall::where('status', StatusClassAttendance::HAS_CHECKED->value)
         ->distinct('class_id')
         ->count('class_id');
     
-        $totalClassNoAttendance = RollCall::where('status', statusClassAttendance::NOT_YET_CHECKED->value)
+        $totalClassNoAttendance = RollCall::where('status', StatusClassAttendance::NOT_YET_CHECKED->value)
         ->distinct('class_id')
         ->count('class_id');
         if ($timestamp) {
@@ -45,7 +47,7 @@ class RollCallRepository
 
         
         $mappedData = collect($paginatedResult->items())->map(function ($rollCall) {
-            $studentAttendanced = RollCall::where('status', statusClassAttendance::HAS_CHECKED->value)
+            $studentAttendanced = RollCall::where('status', StatusClassAttendance::HAS_CHECKED->value)
                 ->where('class_id', $rollCall->class_id)
                 ->count('student_id');
 
@@ -54,7 +56,7 @@ class RollCallRepository
                 'className' => $rollCall->class->name,
                 'grade' => $rollCall->class->grade->name,
                 'totalStudent' => $rollCall->class->studentClassHistories()->count(),
-                'dateAttendanced' => strtotime($rollCall->date),
+                'dateAttendanced' => Carbon::parse($rollCall->date)->translatedFormat('l, d/m/Y'),
                 'teacherName' => $rollCall->class->user->first()->fullname ?? 'N/A',
                 'teacherEmail' => $rollCall->class->user->first()->email ?? 'N/A',
                 'time' => $rollCall->time,
@@ -73,4 +75,46 @@ class RollCallRepository
             'total' => $paginatedResult->total(),
         ];
     }
+
+    public function getStudentClassDetails($classId)
+    {
+        // Đếm tổng số học sinh trong lớp
+        $totalStudent = StudentClassHistory::where('class_id', $classId)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->count();
+    
+        // Lấy tất cả học sinh trong lớp
+        $studentClasses = StudentClassHistory::with(['student', 'class.rollCalls'])
+            ->where('class_id', $classId)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->get();
+    
+        // Map dữ liệu
+        $one =  $studentClasses->map(function ($studentClass) use ($totalStudent) {
+            // Lấy ghi chú cho học sinh tương ứng
+            $note = $studentClass->class->rollCalls
+                ->where('student_id', $studentClass->student_id)
+                ->pluck('note')
+                ->first();
+    
+            return [
+                'className' => $studentClass->class->name ?? 'N/A',
+                'fullname' => $studentClass->student->fullname ?? 'N/A',
+                'studentDOB' => $studentClass->student->dob ?? 'N/A',
+                
+                'note' => $note ?: 'N/A',
+            ];
+        });
+
+        return [
+            'data' => $one,
+            'totalStudent' => $totalStudent,
+        ];
+    }
+    
+
+
+
+
+    
 }
