@@ -1,22 +1,21 @@
 <?php
-
 namespace App\Domain\Class\Requests;
 
-use App\Common\Enums\StatusClassEnum;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class DeleteClassRequest extends FormRequest
+class FormAssignMainTeacherForClassRequest extends BaseRequest
 {
     public function __construct()
     {
-        parent::__construct();
     }
 
     public function rules(): array
     {
         return [
-            "class_id"        => ["required", 'integer', "exists:classes,id"],
+            "page"   => "integer|nullable",
+            "size"   => "integer|nullable",
+            "search" => "string|nullable",
         ];
     }
 
@@ -25,4 +24,5 @@ class DeleteClassRequest extends FormRequest
         return [
         ];
     }
+
 }

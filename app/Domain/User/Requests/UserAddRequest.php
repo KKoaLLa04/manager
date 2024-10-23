@@ -77,6 +77,8 @@ class UserAddRequest extends FormRequest
             'same' => trans('api.error.same'),
             'unique' => trans('api.error.unique'),
             'email' => trans('api.error.email'),
+            'min' => trans('api.error.min'),
+            'max' => trans('api.error.max'),
         ];
     }
 
