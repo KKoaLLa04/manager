@@ -9,6 +9,7 @@ use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Classes extends Model
@@ -44,6 +45,7 @@ class Classes extends Model
     {
         return $this->hasOne(AcademicYear::class,'id','academic_year_id');
     }
+    
 
     public function user(): BelongsToMany
     {
@@ -52,9 +54,22 @@ class Classes extends Model
             ->wherePivot('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
             ->withTimestamps()
             ->where('users.status', StatusEnum::ACTIVE->value);
-    public function grade()
-    {
-        return $this->belongsTo(Grades::class, 'grade_id');
     }
 
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'student_class', 'class_id', 'student_id')
+                    ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value);
+    }
+    public function classSubjectTeacher()
+    {
+        return $this->hasMany(ClassSubjectTeacher::class, 'class_id', 'id')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+    }
+
+    public function classHistory()
+    {
+        return $this->hasMany(StudentClassHistory::class, 'class_id', 'id')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+    }
 }
