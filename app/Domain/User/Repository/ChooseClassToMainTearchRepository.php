@@ -31,7 +31,14 @@ class ChooseClassToMainTearchRepository {
 
         $classeNoHasMainTearch = Classes::whereNotIn('id', $arrIdClassHasMainTearch)->get();
 
-        if($classeNoHasMainTearch->toArray()) return $classeNoHasMainTearch->toArray();
+        if($classeNoHasMainTearch->toArray()){
+            return $classeNoHasMainTearch->map(function ($item) {
+                return [
+                    "className" => $item->name,
+                    "classId" => $item->id,
+                ];
+            });
+        }
 
         return [];
 

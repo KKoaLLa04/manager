@@ -2,7 +2,11 @@
 
 namespace App\Models;
 
+use App\Common\Enums\DeleteEnum;
+use App\Common\Enums\StatusEnum;
+use App\Common\Enums\StatusTeacherEnum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ClassSubjectTeacher extends Model
 {
@@ -22,4 +26,13 @@ class ClassSubjectTeacher extends Model
         'created_at',
         'updated_at'
     ];
+    
+    public function user(): HasOne
+    {
+        return $this->hasOne(User::class, 'id', 'user_id')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
+            ->where('status', StatusEnum::ACTIVE->value);
+    }
+    
 }
