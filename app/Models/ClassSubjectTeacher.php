@@ -34,4 +34,5 @@ class ClassSubjectTeacher extends Model
             ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
             ->where('status', StatusEnum::ACTIVE->value);
     }
+    
 }

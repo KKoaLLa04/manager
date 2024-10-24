@@ -2,6 +2,8 @@
 
 namespace App\Domain\Student\Repository;
 
+use App\Common\Enums\DeleteEnum;
+use App\Common\Enums\StatusEnum;
 use App\Domain\Student\Requests\StudentUpdateRequest;
 use App\Models\Student as ModelsStudent;
 use App\Models\StudentClassHistory;
@@ -97,6 +99,7 @@ class StudentUpdateRepository {
             if ($studentClassHistory) {
                 // Cập nhật end_date cho lịch sử lớp hiện tại
                 $studentClassHistory->end_date = now(); 
+                $studentClassHistory->status = StatusEnum::UN_ACTIVE->value;
                 $studentClassHistory->modified_user_id = $user_id;
                 $studentClassHistory->save(); 
             }
@@ -107,8 +110,8 @@ class StudentUpdateRepository {
             $newStudentClassHistory->class_id = $request->class_id;
             $newStudentClassHistory->start_date = now(); // Gán ngày bắt đầu
             $newStudentClassHistory->end_date = null; // Lớp hiện tại chưa kết thúc
-            $newStudentClassHistory->status = 1; 
-            $newStudentClassHistory->is_deleted = 0; 
+            $newStudentClassHistory->status = StatusEnum::ACTIVE->value;
+            $newStudentClassHistory->is_deleted = DeleteEnum::NOT_DELETE->value; 
             $newStudentClassHistory->created_user_id = $user_id; // Ghi lại người tạo
 
             // Lưu đối tượng class history mới
