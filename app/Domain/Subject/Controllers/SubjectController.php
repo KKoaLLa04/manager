@@ -4,6 +4,8 @@ namespace App\Domain\Subject\Controllers;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use App\Common\Repository\GetUserRepository;
+use App\Domain\Subject\Repository\SubjectClassNoHasSubjectRepository;
+use App\Domain\Subject\Repository\SubjectCurrentClassRepository;
 use App\Domain\Subject\Repository\SubjectIndexRepository;
 use App\Domain\Subject\Repository\SubjectMixSubjectForClassReqository;
 use App\Models\ClassSubject;
@@ -21,6 +23,8 @@ class SubjectController extends BaseController
         $this->user = new GetUserRepository();
         parent::__construct($request);
     }
+
+
     public function index(Request $request)
     {
 
@@ -34,14 +38,32 @@ class SubjectController extends BaseController
 
         $check = $IndexRepository->handle();
 
+        // if ($check) {
+        //     return $this->responseSuccess(['data' => $check->toArray()], trans('api.alert.together.index_success'));
+        // } else {
+        //     return $this->responseError(trans('api.alert.together.index_failed'));
+        // }
+
         if ($check) {
-            return $this->responseSuccess(['data' => $check->toArray()], trans('api.alert.together.index_success'));
-        } else {
-            return $this->responseError(trans('api.alert.together.index_failed'));
+
+            return response()->json([
+                'msg' => trans('api.alert.together.index_success'),
+                'data' => $check->toArray(),
+                'total' => $check->count()
+            ]);
+
+        }else{
+
+            return response()->json([
+                'msg' => trans('api.alert.together.index_success'),
+                'data' => [],
+                'total' => 0
+            ]);
+
         }
 
-
     }
+
 
     public function mixSubjectForClass (Request $request) {
 
@@ -52,7 +74,7 @@ class SubjectController extends BaseController
         }
 
         $validator = Validator::make($request->all(), [
-            'class_id' => 'required|integer',
+            'classId' => 'required|integer',
         ], [
             'integer' => trans('api.error.integer'),
             'required' => trans('api.error.required'),
@@ -68,9 +90,9 @@ class SubjectController extends BaseController
             ];
             $checkError = true;
         }else{
-            if(!empty($request->class_id)){
+            if(!empty($request->classId)){
                 foreach ($request->subjects as $sub) {
-                    $exists = ClassSubject::where('class_id', $request->class_id)->where('subject_id', $sub)->first();
+                    $exists = ClassSubject::where('class_id', $request->classId)->where('subject_id', $sub)->first();
                     if($exists){
                         $errors['subjects'] = [
                             trans('api.error.subject.have_subject_class')
@@ -110,6 +132,88 @@ class SubjectController extends BaseController
 
 
     }
+
+
+    public function currentClass (Request $request) {
+
+        $user_id = Auth::user()->id;
+
+        if (!$this->user->getManager($user_id)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $request->validate([
+            "schoolYearId" => 'required'
+        ], [
+            'required' => trans('api.error.required')
+        ]);
+
+        $reqository = new SubjectCurrentClassRepository();
+
+        $check = $reqository->handle($request->schoolYearId);
+
+        if ($check) {
+
+            return response()->json([
+                'msg' => trans('api.alert.together.index_success'),
+                'data' => $check->toArray(),
+                'total' => $check->count()
+            ]);
+
+        }else{
+
+            return response()->json([
+                'msg' => trans('api.alert.together.index_success'),
+                'data' => [],
+                'total' => 0
+            ]);
+
+        }
+
+    }
+
+
+    public function classNoHasSubject (Request $request) {
+
+        $user_id = Auth::user()->id;
+
+        if (!$this->user->getManager($user_id)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $request->validate([
+            "classId" => 'required'
+        ], [
+            'required' => trans('api.error.required')
+        ]);
+
+
+        $reqository = new SubjectClassNoHasSubjectRepository();
+
+        $check = $reqository->handle($request->classId);
+
+
+        if ($check) {
+
+            return response()->json([
+                'msg' => trans('api.alert.together.index_success'),
+                'data' => array_filter($check->toArray()),
+                'total' => $check->count()
+            ]);
+
+        }else{
+
+            return response()->json([
+                'msg' => trans('api.alert.together.index_success'),
+                'data' => [],
+                'total' => 0
+            ]);
+
+        }
+
+
+    }
+
 
 
 }

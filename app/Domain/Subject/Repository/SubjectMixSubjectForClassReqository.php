@@ -18,7 +18,7 @@ class SubjectMixSubjectForClassReqository {
 
                 $classSubject = new ClassSubject();
 
-                $classSubject->class_id = $request->class_id;
+                $classSubject->class_id = $request->classId;
                 $classSubject->subject_id = $value;
                 $classSubject->status = StatusEnum::ACTIVE->value;
                 $classSubject->is_deleted = DeleteEnum::NOT_DELETE->value;
