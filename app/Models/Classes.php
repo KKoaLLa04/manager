@@ -61,10 +61,11 @@ class Classes extends Model
         return $this->hasMany(ClassSubject::class, 'class_id');
     }
 
-    public function teachers()
-    {
-        return $this->hasManyThrough(User::class, ClassSubjectTeacher::class, 'class_id', 'id', 'id', 'user_id');
-    }
+    public function creator()
+{
+    return $this->belongsTo(ClassSubjectTeacher::class, 'user_id');
+}
+
 
     public function studentClassHistories()
     {
@@ -73,7 +74,7 @@ class Classes extends Model
     
     public function rollCalls()
     {
-        return $this->hasMany(RollCall::class, 'class_id'); // Quan hệ với bảng roll_call
+        return $this->hasMany(RollCall::class, 'class_id');
     }
 
 }
