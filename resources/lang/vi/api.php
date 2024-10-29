@@ -8,6 +8,7 @@ return [
         'user_not_permission' => 'Người dùng không có quyền truy cập',
 
         'required' => ' trường này là bắt buộc.',
+        'type_required' => 'Loại người dùng là bắt buộc.',
         'string' => ' phải là một chuỗi ký tự.',
         'min' => ' phải có ít nhất :min ký tự.',
         'max' => ' không được vượt quá :max ký tự.',
@@ -24,6 +25,9 @@ return [
         'school_year' => [
             'start_date_before_end_date' => 'Thời gian bắt đầu phải lớn hơn hoặc bằng thời gian hiện tại',
             'start_date_not_equal_end_date_before' => 'Năm bắt đầu không được bằng năm kết thúc của năm học trước đó'
+        ],
+        'student' => [
+            'students_array_required' => 'Bắt buộc phải nhập và phải là một mảng',
         ]
     ],
 
@@ -82,5 +86,6 @@ return [
         'unlock.errors'=> 'Mở tài khoản thất bại',
         'change_password.success'=> 'Đổi mật khẩu phụ huynh thành công',
         'change_password.errors'=> 'Đổi mật khẩu phụ huynh thất bại',
+        'assign_student.success'=> 'Học sinh đã được gán cho phụ huynh này.',
     ],
 ];

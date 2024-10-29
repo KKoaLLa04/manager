@@ -1,11 +1,15 @@
 <?php
+
 namespace App\Domain\Guardian\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Student;
+use Illuminate\Support\Str;
 
-class Guardian extends Model{
+
+class Guardian extends Model
+{
     use HasFactory;
 
     public $table = 'users';
@@ -31,10 +35,13 @@ class Guardian extends Model{
     ];
 
     public function students()
-{
-    return $this->belongsToMany(Student::class, 'user_student', 'user_id', 'student_id');
+    {
+        return $this->belongsToMany(Student::class, 'user_student', 'user_id', 'student_id');
+    }
+
+    public static function generateRandomCode()
+    {
+        $randomString = strtoupper(Str::random(6));
+        return 'PH' . $randomString;
+    }
 }
-
-}
-
-
