@@ -102,32 +102,37 @@ class AcademicYearController extends BaseController
 
 
 public function update(AcademicYearRequest $request, int $id, GetUserRepository $getUserRepository)
-    {
-        $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
-        
-        $modifiedUser = $getUserRepository->getUser($user_id, $type); 
-        if (!$modifiedUser) {
-            return $this->responseError(trans('api.error.user_not_permission'));
-        }
-        $dataUpdate = [
-            'name' => $request->name,
-            'status' => $request->status,
-            'start_year'=> $request->start_year,
-            'end_year'=> $request->end_year,
-            'modified_user_id' => $user_id,
-            'updated_at' => now(),
-        ];
-
-        
-        $item = $this->academicYearRepository->update($id, $dataUpdate);
-
-        if($item){
-            return $this->responseSuccess(['data'=> $item],trans('api.academic_year.update.success'));
-        }else{
-            return $this->responseError(trans('api.academic_year.update.errors'));
-        }
+{
+    $user_id = Auth::user()->id;
+    $type = AccessTypeEnum::MANAGER->value;
+    
+    $modifiedUser = $getUserRepository->getUser($user_id, $type); 
+    if (!$modifiedUser) {
+        return $this->responseError(trans('api.error.user_not_permission'));
     }
+
+    
+    $currentItem = $this->academicYearRepository->findById($id);
+
+    
+    $dataUpdate = [
+        'name' => $request->name,
+        'status' => $request->status,
+        'start_year' => $request->filled('start_year') ? $request->start_year : $currentItem->start_year,
+        'end_year' => $request->filled('end_year') ? $request->end_year : $currentItem->end_year,
+        'modified_user_id' => $user_id,
+        'updated_at' => now(),
+    ];
+
+    $item = $this->academicYearRepository->update($id, $dataUpdate);
+
+    if ($item) {
+        return $this->responseSuccess(['data' => $item], trans('api.academic_year.update.success'));
+    } else {
+        return $this->responseError(trans('api.academic_year.update.errors'));
+    }
+}
+
 
 
     public function delete(Request $request, int $id, GetUserRepository $getUserRepository)
