@@ -10,6 +10,7 @@ use App\Domain\RollCall\Models\RollCall;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Classes extends Model
@@ -45,6 +46,7 @@ class Classes extends Model
     {
         return $this->hasOne(AcademicYear::class,'id','academic_year_id');
     }
+    
 
     public function user(): BelongsToMany
     {
@@ -55,26 +57,20 @@ class Classes extends Model
             ->where('users.status', StatusEnum::ACTIVE->value);
     }
 
-
-    public function subjectTeachers()
+    public function students()
     {
-        return $this->hasMany(ClassSubject::class, 'class_id');
+        return $this->belongsToMany(Student::class, 'student_class', 'class_id', 'student_id')
+                    ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value);
+    }
+    public function classSubjectTeacher()
+    {
+        return $this->hasMany(ClassSubjectTeacher::class, 'class_id', 'id')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
 
-    public function creator()
-{
-    return $this->belongsTo(ClassSubjectTeacher::class, 'user_id');
-}
-
-
-    public function studentClassHistories()
+    public function classHistory()
     {
-        return $this->hasMany(StudentClassHistory::class, 'class_id', 'id');
+        return $this->hasMany(StudentClassHistory::class, 'class_id', 'id')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
-    
-    public function rollCalls()
-    {
-        return $this->hasMany(RollCall::class, 'class_id');
-    }
-
 }

@@ -1,9 +1,9 @@
 <?php
-namespace App\Domain\User\Requests;
+namespace App\Domain\RollCallHistory\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UserRequest extends FormRequest 
+class RollCallHistoryRequest extends FormRequest 
 {
     public function __construct()
     {
