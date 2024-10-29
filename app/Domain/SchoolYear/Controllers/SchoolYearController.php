@@ -192,7 +192,7 @@ class SchoolYearController extends BaseController
             return response()->json([
                 'msg' => trans('api.alert.school_year.edit_success'),
                 'data' => []
-            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+            ], ResponseAlias::HTTP_OK);
         } else {
             // return $this->responseError(trans('api.alert.school_year.edit_failed'));
             return response()->json([
