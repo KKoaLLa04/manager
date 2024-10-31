@@ -15,9 +15,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Common\Enums\StatusTeacherEnum;
 use App\Models\Classes;
-
-
-
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -148,8 +146,11 @@ class User extends Authenticatable implements JWTSubject
         }
 
     }
-
-
+//tai khoan
+    public function classSubjectTeacher(): HasMany
+    {
+        return $this->hasMany(ClassSubjectTeacher::class, 'user_id', 'id');
+    }
  
 
     }
