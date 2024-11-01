@@ -147,9 +147,9 @@ class ClassRepository
     ): array
     {
         return [
-            'grades' => $this->toArray($grades),
-            'academics' => $this->toArray($academicYear),
-            'schoolYears' => $this->toArray($schoolYear),
+            'grades' => $this->toArrayGrades($grades),
+            'academics' => $this->toArrayAcademic($academicYear),
+            'schoolYears' => $this->toArraySchoolYear($schoolYear),
             'teachers' => $this->dataTeaches($teachers),
         ];
     }
@@ -424,5 +424,41 @@ class ClassRepository
                 'modified_user_id' => Auth::id(),
             ]
         );
+    }
+
+    private function toArrayGrades(Collection $grades)
+    {
+        return $grades->map(function ($item){
+            return [
+                'id' => $item->id,
+                'name' => is_null($item->name) ? "" : $item->name,
+            ];
+        })->toArray();
+
+
+    }
+
+    private function toArrayAcademic(Collection $grades)
+    {
+        return $grades->map(function ($item){
+            return [
+                'id' => $item->id,
+                'name' => is_null($item->name) ? "" : $item->name,
+            ];
+        })->toArray();
+
+
+    }
+
+    private function toArraySchoolYear(Collection $grades)
+    {
+        return $grades->map(function ($item){
+            return [
+                'id' => $item->id,
+                'name' => is_null($item->name) ? "" : $item->name,
+            ];
+        })->toArray();
+
+
     }
 }
