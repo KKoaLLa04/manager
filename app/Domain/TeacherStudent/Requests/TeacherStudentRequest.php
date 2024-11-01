@@ -3,7 +3,7 @@ namespace App\Domain\Student\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StudentRequest extends FormRequest
+class TeacherStudentRequest extends FormRequest
 {
     public function __construct()
     {
@@ -17,7 +17,7 @@ class StudentRequest extends FormRequest
             'dob' => 'required|date|before:today',
             'status' => 'required',
             'gender' => 'required',
-            'class_id' => 'required|integer|exists:classes,id',
+            // 'class_id' => 'required|integer|exists:classes,id',
             // 'phone' => [
             //     'nullable',
             //     'digits:10',
