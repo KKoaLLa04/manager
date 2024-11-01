@@ -84,8 +84,8 @@ class ClassRepository
                 "grade" => is_null($class->grade->name) ? "" : $class->grade->name,
                 "academic_name" => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
                 "academic_code" => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
-                "teacher_name" => is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname,
-                "teacher_email" => is_null($class->user->first()->email) ? "" : $class->user->first()->email,
+                "teacher_name" => is_null($class->user->first()) ? "" : (is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname),
+                "teacher_email" => is_null($class->user->first()) ? "" :(is_null($class->user->first()->email) ? "" : $class->user->first()->email),
                 "status" => is_null($class->status) ? "1" : $class->status,
             ];
         })->toArray();
