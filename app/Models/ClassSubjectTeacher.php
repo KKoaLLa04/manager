@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusTeacherEnum;
+use App\Domain\Subject\Models\Subject;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -40,4 +41,12 @@ class ClassSubjectTeacher extends Model
     {
         return $this->belongsTo(Classes::class, 'class_id', 'id');
     }
+    
+    //tai khoan
+    public function subject(): HasOne
+    {
+        return $this->hasOne(Subject::class, 'id', 'class_subject_id')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+    }
+    
 }
