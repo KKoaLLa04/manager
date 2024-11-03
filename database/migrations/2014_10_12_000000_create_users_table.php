@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('fullname');
             $table->string('phone')->nullable();
             $table->string('address')->nullable();
+            $table->string('career')->nullable();
             $table->string('code')->nullable();
             $table->integer('access_type')->comment('1: QT; 2: GV; 3: PH');
             $table->date('dob')->nullable();

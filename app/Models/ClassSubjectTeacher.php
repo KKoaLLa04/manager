@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusTeacherEnum;
+use App\Domain\Subject\Models\Subject;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -34,4 +35,12 @@ class ClassSubjectTeacher extends Model
             ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
             ->where('status', StatusEnum::ACTIVE->value);
     }
+    
+    //tai khoan
+    public function subject(): HasOne
+    {
+        return $this->hasOne(Subject::class, 'id', 'class_subject_id')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+    }
+    
 }

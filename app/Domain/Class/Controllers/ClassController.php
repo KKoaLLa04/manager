@@ -17,6 +17,7 @@ use App\Domain\Class\Requests\CreateSubjectOfClassRequest;
 use App\Domain\Class\Requests\DeleteClassRequest;
 use App\Domain\Class\Requests\DeleteSubjectOfClassRequest;
 use App\Domain\Class\Requests\DetailClassRequest;
+use App\Domain\Class\Requests\FormAssignMainTeacherForClassRequest;
 use App\Domain\Class\Requests\FormCreateSubjectForClassRequest;
 use App\Domain\Class\Requests\GetClassRequest;
 use App\Domain\Class\Requests\UpdateClassRequest;
@@ -56,8 +57,8 @@ class ClassController extends BaseController
             return $this->responseError(trans('api.error.not_found'));
         }
 
-        list($totalPage, $page, $size, $classes) = $this->classRepository->getClasses($request);
-        return $this->responseSuccess($this->classRepository->transform($page, $totalPage, $size, $classes));
+        list($totalPage, $page, $pageSize, $totalItems,$classes) = $this->classRepository->getClasses($request);
+        return $this->responseSuccess($this->classRepository->transform($page, $totalPage, $pageSize,$totalItems, $classes));
     }
 
     public function detail(DetailClassRequest $request)
@@ -176,15 +177,14 @@ class ClassController extends BaseController
         return $this->responseError();
     }
 
-    public function formAssignMainTeacher()
+    public function formAssignMainTeacher(FormAssignMainTeacherForClassRequest $request)
     {
         if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
-        $teachers = $this->classRepository->getTeachers();
-
-        return $this->responseSuccess($this->classRepository->transformDataAssign($teachers));
+        list($totalPage, $page, $pageSize, $totalItems,$teachers) = $this->classRepository->getTeachersPaginate($request);
+        return $this->responseSuccess($this->classRepository->transformDataAssign($totalPage, $page, $pageSize, $totalItems,$teachers));
     }
 
     public function assignMainTeacher(AssignMainTeacherRequest $request)
