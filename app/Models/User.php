@@ -96,6 +96,10 @@ class User extends Authenticatable implements JWTSubject
             ->where('students.status', StatusEnum::ACTIVE->value);
     }
 
+    public function classSubjectTeachers()
+    {
+        return $this->hasMany(ClassSubjectTeacher::class, 'user_id');
+    }
 
     public function infoMainTearchWithClass () {
 
