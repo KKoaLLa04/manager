@@ -66,17 +66,21 @@ class SchoolYearController extends BaseController
 
         $check = $SchoolYearIndexRepository->handle($keyword);
 
-        // if ($check) {
+        if ($check) {
             // return $this->responseSuccess(['data' => $check->forPage($pageIndex, $pageSize)], trans('api.alert.school_year.index_success'));
-        // } else {
+            return response()->json([
+                'msg' => trans('api.alert.school_year.index_success'),
+                'data' => $check->forPage($pageIndex, $pageSize),
+                'total' => $check->count()
+            ], ResponseAlias::HTTP_OK);
+        } else {
             // return $this->responseError(trans('api.alert.school_year.index_failed'));
-        // }
-
-        return response()->json([
-            'msg' => trans('api.alert.school_year.index_success'),
-            'data' => $check->forPage($pageIndex, $pageSize),
-            'total' => $check->count()
-        ], ResponseAlias::HTTP_OK);
+            return response()->json([
+                'msg' => trans('api.alert.school_year.index_success'),
+                'data' => [],
+                'total' => 0
+            ], ResponseAlias::HTTP_OK);
+        }
 
     }
 
