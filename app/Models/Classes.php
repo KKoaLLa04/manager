@@ -73,4 +73,8 @@ class Classes extends Model
         return $this->hasMany(StudentClassHistory::class, 'class_id', 'id')
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
+
+    public function rollCalls(){
+        return $this->hasMany(RollCall::class, 'class_id', 'id');
+    }
 }
