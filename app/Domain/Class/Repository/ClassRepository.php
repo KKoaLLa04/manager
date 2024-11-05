@@ -155,9 +155,9 @@ class ClassRepository
         Collection $teachers
     ): array {
         return [
-            'grades'      => $this->toArray($grades),
-            'academics'   => $this->toArray($academicYear),
-            'schoolYears' => $this->toArray($schoolYear),
+            'grades'      => $this->toArrayGrades($grades),
+            'academics'   => $this->toArrayAcademic($academicYear),
+            'schoolYears' => $this->toArraySchoolYear($schoolYear),
             'teachers'    => $this->dataTeaches($teachers),
         ];
     }
