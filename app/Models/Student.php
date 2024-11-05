@@ -16,6 +16,7 @@ class Student extends Model
     protected $fillable = [       
         'fullname','address','student_code','dob','status','gender','is_deleted','created_user_id','modified_user_id','created_at','updated_at',
     ];
+
     public function classHistory()
     {
         return $this->hasMany(StudentClassHistory::class, 'student_id')->where('is_deleted', DeleteEnum::NOT_DELETE->value);
@@ -54,4 +55,9 @@ class Student extends Model
 
 
     
+
+
+    public function classHistories(){
+        return $this->hasMany(StudentClassHistory::class, 'student_id', 'id');
+    }
 }

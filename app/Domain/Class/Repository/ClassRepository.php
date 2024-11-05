@@ -437,4 +437,40 @@ class ClassRepository
             ]
         );
     }
+
+    private function toArrayGrades(Collection $grades)
+    {
+        return $grades->map(function ($item){
+            return [
+                'id' => $item->id,
+                'name' => is_null($item->name) ? "" : $item->name,
+            ];
+        })->toArray();
+
+
+    }
+
+    private function toArrayAcademic(Collection $grades)
+    {
+        return $grades->map(function ($item){
+            return [
+                'id' => $item->id,
+                'name' => is_null($item->name) ? "" : $item->name,
+            ];
+        })->toArray();
+
+
+    }
+
+    private function toArraySchoolYear(Collection $grades)
+    {
+        return $grades->map(function ($item){
+            return [
+                'id' => $item->id,
+                'name' => is_null($item->name) ? "" : $item->name,
+            ];
+        })->toArray();
+
+
+    }
 }

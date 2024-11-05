@@ -67,17 +67,21 @@ class UserController extends BaseController
 
         $check = $IndexRepository->handle($keyword);
 
-        // if ($check) {
-        //     return $this->responseSuccess(['data' => $check->forPage($pageIndex, $pageSize)], trans('api.alert.together.index_success'));
-        // } else {
-        //     return $this->responseError(trans('api.alert.together.index_failed'));
-        // }
-
-        return response()->json([
-            'msg' => trans('api.alert.together.index_success'),
-            'data' => $check->forPage($pageIndex, $pageSize),
-            'total' => $check->count()
-        ], ResponseAlias::HTTP_OK);
+        if ($check) {
+            // return $this->responseSuccess(['data' => $check->forPage($pageIndex, $pageSize)], trans('api.alert.together.index_success'));
+            return response()->json([
+                'msg' => trans('api.alert.together.index_success'),
+                'data' => $check->forPage($pageIndex, $pageSize),
+                'total' => $check->count()
+            ], ResponseAlias::HTTP_OK);
+        } else {
+            // return $this->responseError(trans('api.alert.together.index_failed'));
+            return response()->json([
+                'msg' => trans('api.alert.together.index_success'),
+                'data' => [],
+                'total' => 0
+            ], ResponseAlias::HTTP_OK);
+        }
 
     }
 

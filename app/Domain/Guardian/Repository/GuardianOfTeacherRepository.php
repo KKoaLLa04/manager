@@ -9,7 +9,7 @@ use App\Domain\Guardian\Models\Guardian;
 use App\Models\Student;
 use Exception;
 
-class GuardianRepository
+class GuardianOfTeacherRepository
 {
     public function __construct() {}
 
