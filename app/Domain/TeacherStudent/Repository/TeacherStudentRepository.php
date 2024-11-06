@@ -9,7 +9,9 @@ use App\Models\ClassModel;
 use App\Models\Student;
 use App\Models\StudentClassHistory;
 use App\Models\User;
+use App\Models\UserStudent;
 use Illuminate\Support\Facades\Auth;
+use SebastianBergmann\Type\StaticType;
 
 class TeacherStudentRepository {
 
@@ -52,6 +54,7 @@ class TeacherStudentRepository {
         // Lấy tất cả lớp và chuyển đổi thành mảng với key là id
         $classes = ClassModel::with('academicYear')->get()->keyBy('id'); // Lấy thông tin lớp cùng với thông tin niên khóa
 
+
         // Sử dụng map để lấy dữ liệu và thêm thông tin lớp
         $students->transform(function ($student) use ($classes) {
             // Lấy thông tin lớp học gần nhất (hoặc theo cách bạn muốn)
@@ -60,26 +63,37 @@ class TeacherStudentRepository {
             $classId = optional($classHistory)->class_id; // Lấy class_id từ lớp học
             $class = $classes->get($classId); // Lấy thông tin lớp từ mảng đã tạo
 
+            $parent = null;
+
+            $userStudent =  UserStudent::where('student_id', $student->id)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
+
+            if ($userStudent) {
+                $parent = User::find($userStudent->id);
+            }
+
             return [
                 'id' => $student->id,
                 'student_code' => $student->student_code,
                 'fullname' => $student->fullname,
-                // 'address' => $student->address,
-                // 'dob' => $student->dob ? strtotime($student->dob) : null,
+                'address' => $student->address,
+                'dob' => $student->dob ? strtotime($student->dob) : null,
                 'status' => $student->status,
-                'phone' => $student->phone,
+                // 'phone' => $student->phone,
                 'gender' => $student->gender,
                 // 'created_at' => $student->created_at ? strtotime($student->created_at) : null,
                 // 'updated_at' => $student->updated_at ? strtotime($student->updated_at) : null,
                 'class_id' => $classId,
                 'class_name' => $class->name ?? null,
                 'academic_year_name' => $class->academicYear->name ?? null, // Lấy tên niên khóa
+                'parent_name' => $parent ? $parent->fullname : "",
+                'parent_phone' => $parent ? $parent->phone : "",
+                'parent_code' => $parent ? $parent->code : "",
+                'parent_status' => $parent ? $parent->status : "",
             ];
         });
 
         return $students;
     }
-
 
 
     // Phương thức gán phụ huynh cho học sinh
@@ -220,8 +234,6 @@ class TeacherStudentRepository {
     }
 
 
-
-
     public function getAllParentsWithChildrenCount($pageSize)
     {
         $parents = User::where('access_type', AccessTypeEnum::GUARDIAN->value)
@@ -274,7 +286,6 @@ class TeacherStudentRepository {
 
         return $parents;
     }
-
 
 
 

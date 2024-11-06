@@ -3,7 +3,7 @@ namespace App\Domain\TeacherStudent\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class TeacherStudentRequest extends FormRequest
+class TeacherStudentUpdateRequest extends FormRequest
 {
     public function __construct()
     {
@@ -17,7 +17,6 @@ class TeacherStudentRequest extends FormRequest
             'dob' => 'required|date|before:today',
             'status' => 'required',
             'gender' => 'required',
-            'class_id' => 'required|integer|exists:classes,id',
         ];
     }
 
@@ -41,10 +40,6 @@ class TeacherStudentRequest extends FormRequest
 
             'status.required' => 'Trường trạng thái là bắt buộc.',
             'gender.required' => 'Trường giới tính là bắt buộc.',
-
-            'class_id.required' => 'Lớp học là bắt buộc.',
-            'class_id.exists' => 'Lớp học không tồn tại.',
-            'class_id.integer' => 'Lớp học phải là số nguyên.',
 
             // 'phone.digits' => 'Số điện thoại phải có 10 chữ số.',
             // 'phone.regex' => 'Số điện thoại phải bắt đầu bằng các đầu số hợp lệ của Việt Nam (03, 05, 07, 08, 09)',
