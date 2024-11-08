@@ -4,6 +4,7 @@ namespace App\Domain\Student\Controllers;
 use App\Common\Enums\AcademicTypeEnum;
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
+use App\Common\Enums\StatusClassStudentEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\Student\Repository\StudentAddRepository;
 use App\Domain\Student\Repository\StudentandParensRepository;
@@ -80,6 +81,11 @@ class StudentController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
     
+        // Gán giá trị mặc định cho status nếu không nhập
+        $request->merge([
+            'status' => $request->status ?? StatusClassStudentEnum::NOT_YET_CLASS->value,
+        ]);
+    
         $check = $StudentAddRepository->handle($user_id, $request);
         if ($check) {
             $student = Student::with(['classHistory' => function($query) {
@@ -89,13 +95,10 @@ class StudentController extends BaseController
                       }]);
             }])->where('student_code', $request->student_code)->first(); 
     
-          
-    
             return response()->json([
                 'message' => 'Thêm học sinh thành công',
                 'status' => 'success',
-                'data' => []
-              
+                'data' => $student // Trả về dữ liệu học sinh nếu cần thiết
             ]);
         } else {
             return response()->json([
@@ -105,6 +108,7 @@ class StudentController extends BaseController
             ]);
         }
     }
+    
     
     
     
@@ -143,52 +147,99 @@ class StudentController extends BaseController
 
    
 
+    // public function update(int $id, StudentUpdateRequest $request)
+    // {
+    //     $StudentUpdateRepository = new StudentUpdateRepository();
+    //     $user_id = Auth::user()->id;
+    //     $type = AccessTypeEnum::MANAGER->value;
+    
+    //     if (!$this->user->getUser($user_id, $type)) {
+    //         return $this->responseError(trans('api.error.user_not_permission'));
+    //     }
+    
+    //     // Thực hiện cập nhật thông qua repository
+    //     $check = $StudentUpdateRepository->handle($id, $user_id, $request);
+    
+    //     if ($check) {
+    //         $data = Student::find($id);
+    
+    //         // Chuyển đổi đối tượng thành mảng
+    //         $studentArray = $data->toArray();
+            
+    //         // Không tạo bản ghi mới nếu class_id không thay đổi
+    //         $studentArray['class_id'] = optional($data->classHistory->last())->class_id;
+    
+    //         return response()->json([
+    //             'message' => 'Sửa học sinh ' . $studentArray['fullname'] . ' thành công',
+    //             'status' => 'success',
+    //             'data' => []
+    //         ]);
+    //     } else {
+    //         return response()->json([
+    //             'message' => 'Sửa học sinh thất bại',
+    //             'status' => 'error',
+    //             'data' => []
+    //         ]);
+    //     }
+    // }
+    
     public function update(int $id, StudentUpdateRequest $request)
     {
         $StudentUpdateRepository = new StudentUpdateRepository();
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
     
+        // Kiểm tra quyền người dùng
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
     
-        // Thực hiện cập nhật thông qua repository
-        $check = $StudentUpdateRepository->handle($id, $user_id, $request);
+        try {
+            // Thực hiện cập nhật thông qua repository
+            $check = $StudentUpdateRepository->handle($id, $user_id, $request);
     
-        if ($check) {
-            $data = Student::find($id);
-    
-            // Chuyển đổi đối tượng thành mảng
-            $studentArray = $data->toArray();
-            
-            // Không tạo bản ghi mới nếu class_id không thay đổi
-            $studentArray['class_id'] = optional($data->classHistory->last())->class_id;
-    
+            if ($check) {
+                // Lấy dữ liệu học sinh
+                $data = Student::find($id);
+                if (!$data) {
+                    return response()->json([
+                        'message' => 'Không tìm thấy học sinh.',
+                        'status' => 'error',
+                        'data' => []
+                    ]);
+                }
+                return response()->json([
+                    'message' => 'Sửa học sinh ' . $data->fullname . ' thành công',
+                    'status' => 'success',
+                    'data' => []
+                ]);
+            } else {
+                return response()->json([
+                    'message' => 'Sửa học sinh thất bại',
+                    'status' => 'error',
+                    'data' => []
+                ]);
+            }
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Sửa học sinh ' . $studentArray['fullname'] . ' thành công',
-                'status' => 'success',
-                'data' => []
-            ]);
-        } else {
-            return response()->json([
-                'message' => 'Sửa học sinh thất bại',
+                'message' => 'Không được phép: ' . $e->getMessage(),
                 'status' => 'error',
                 'data' => []
             ]);
         }
     }
     
-
     public function show($id)
     {
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
+    
+        // Kiểm tra quyền truy cập của người dùng
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
     
-        // Gọi phương thức từ repository
+        // Gọi phương thức từ repository để lấy thông tin học sinh
         $student = $this->studentRepository->getStudentWithDetails($id);
         
         // Kiểm tra nếu không tìm thấy học sinh
@@ -210,7 +261,8 @@ class StudentController extends BaseController
             $groupedClassHistories = [];
     
             foreach ($classHistories as $history) {
-                $schoolYearName = optional($history->class->schoolYearName)->name;
+                // Lấy tên năm học từ quan hệ schoolYear
+                $schoolYearName = optional($history->class->schoolYear)->name;
     
                 if (!isset($groupedClassHistories[$schoolYearName])) {
                     $groupedClassHistories[$schoolYearName] = [
@@ -246,12 +298,15 @@ class StudentController extends BaseController
             ];
         });
     
+        // Trả về kết quả
         return response()->json([
             'message' => 'Lấy thông tin học sinh thành công',
             'status' => 'success',
             'data' => $studentArray
         ]);
     }
+    
+
     
 
     public function assignParent(int $student_id, AssignParentRequest $request)
