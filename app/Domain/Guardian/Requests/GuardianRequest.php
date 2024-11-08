@@ -11,20 +11,28 @@ class GuardianRequest extends FormRequest
 
     // Quy tắc xác thực
     public function rules(): array
-    {
-        return [
-            'fullname' => ['required'],
-            'username' => ['required', 'min:6', 'max:50', 'unique:users,username'],
-            'code' => ['unique:users,code'],
-            'password' => ['nullable', 'min:6', 'max:50'],
-            'confirm_password' => ['nullable', 'min:6', 'max:255', 'same:password'],
-            'dob' => ['nullable', 'date'],
-            'phone' => ['regex:/^0[0-9]{9}$/'],
-            'status' => ['required', 'integer'],
-            'gender' => ['required', 'integer'],
-            'email' => ['email', 'unique:users,email'],
-        ];
+{
+    $rules = [
+        'fullname' => ['required'],
+        'username' => ['required', 'min:6', 'max:50', 'unique:users,username', 'nullable'],
+        'code' => ['unique:users,code'],
+        'password' => ['nullable', 'min:6', 'max:50'],
+        'confirm_password' => ['nullable', 'min:6', 'max:255', 'same:password'],
+        'dob' => ['nullable', 'date'],
+        'phone' => ['regex:/^0[0-9]{9}$/'],
+        'status' => ['required', 'integer'],
+        'gender' => ['required', 'integer'],
+        'email' => ['email', 'unique:users,email'],
+    ];
+
+    // Nếu đây là yêu cầu cập nhật (update), bỏ qua quy tắc cho 'username'
+    if ($this->isMethod('put') || $this->isMethod('patch')) {
+        $rules['username'] = ['nullable', 'min:6', 'max:50', 'unique:users,username,' . $this->id]; // Bỏ qua khi cập nhật
     }
+
+    return $rules;
+}
+
 
     // Thông báo lỗi
     public function messages(): array
