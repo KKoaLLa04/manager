@@ -42,11 +42,11 @@ class ClassRepository
         $size         = isset($request->size) ? $request->size : PaginateEnum::MAX_SIZE->value;
         $search       = isset($request->search) ? $request->search : '';
 
-        $query = Classes::query()->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        $query      = Classes::query()->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->where('school_year_id', $schoolYearId)
             ->where('name', 'like', '%'.$search.'%');
-
-        $totalPage = ceil($query->count() / $size);
+        $totalItems = $query->count();
+        $totalPage  = ceil($query->count() / $size);
 
         $classes = $query->offset(($page - 1) * $size)
             ->with(
@@ -60,16 +60,22 @@ class ClassRepository
             ->limit($size)
             ->get();
 
-        return [$totalPage, $page, $size, $classes];
+        return [$totalPage, $page, $size, $totalItems, $classes];
     }
 
-    public function transform(mixed $page, mixed $totalPage, mixed $size, Collection $classes): array
-    {
+    public function transform(
+        mixed      $page,
+        mixed      $totalPage,
+        mixed      $pageSize,
+        int        $totalItems,
+        Collection $classes
+    ): array {
         return [
-            "page"      => $page,
-            "totalPage" => $totalPage,
-            "size"      => $size,
-            "classes"   => $this->transformClass($classes)
+            "page"       => $page,
+            "totalPage"  => $totalPage,
+            "pageSize"   => $pageSize,
+            "totalItems" => $totalItems,
+            "classes"    => $this->transformClass($classes)
         ];
     }
 
@@ -77,15 +83,19 @@ class ClassRepository
     {
         return $classes->map(function ($class) {
             return [
-                "id"            => $class->id,
-                "name"          => is_null($class->name) ? "" : $class->name,
-                "schoolYear"    => is_null($class->schoolYear->name) ? "" : $class->schoolYear->name,
-                "grade"         => is_null($class->grade->name) ? "" : $class->grade->name,
-                "academic_name" => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
-                "academic_code" => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
-                "teacher_name"  => is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname,
-                "teacher_email" => is_null($class->user->first()->email) ? "" : $class->user->first()->email,
-                "status"        => is_null($class->status) ? "1" : $class->status,
+                "id"             => $class->id,
+                "name"           => is_null($class->name) ? "" : $class->name,
+                "schoolYear"     => is_null($class->schoolYear->name) ? "" : $class->schoolYear->name,
+                "school_year_id" => is_null($class->schoolYear) ? 0 : $class->schoolYear->id,
+                "grade"          => is_null($class->grade->name) ? "" : $class->grade->name,
+                "grade_id"       => is_null($class->grade) ? 0 : $class->grade->id,
+                "academic_name"  => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
+                "academic_id"    => is_null($class->academicYear) ? 0 : $class->academicYear->id,
+                "academic_code"  => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
+                "teacher_id"     => is_null($class->user->first()) ? 0 : $class->user->first()->id,
+                "teacher_name"   => is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname,
+                "teacher_email"  => is_null($class->user->first()->email) ? "" : $class->user->first()->email,
+                "status"         => is_null($class->status) ? "1" : $class->status,
             ];
         })->toArray();
     }
@@ -114,6 +124,30 @@ class ClassRepository
             ->get();
     }
 
+    public function getTeachersPaginate(Request $request): array
+    {
+        $page   = isset($request->page) ? $request->page : PaginateEnum::PAGE->value;
+        $size   = isset($request->size) ? $request->size : PaginateEnum::MAX_SIZE->value;
+        $search = isset($request->search) ? $request->search : '';
+
+        $classSubjectTeacherMain = ClassSubjectTeacher::query()
+            ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->pluck('user_id')->unique()->toArray();
+        $query                   = User::query()->where('access_type', AccessTypeEnum::TEACHER->value)
+            ->whereNotIn('id', $classSubjectTeacherMain)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('fullname', 'like', '%'.$search.'%');
+        $totalItems              = $query->count();
+        $totalPage               = ceil($query->count() / $size);
+        $teachers                = $query->offset(($page - 1) * $size)
+            ->limit($size)
+            ->get();
+        return [$totalPage, $page, $size, $totalItems, $teachers];
+    }
+
     public function transformDataCreate(
         Collection $grades,
         Collection $academicYear,
@@ -121,9 +155,9 @@ class ClassRepository
         Collection $teachers
     ): array {
         return [
-            'grades'      => $this->toArray($grades),
-            'academics'   => $this->toArray($academicYear),
-            'schoolYears' => $this->toArray($schoolYear),
+            'grades'      => $this->toArrayGrades($grades),
+            'academics'   => $this->toArrayAcademic($academicYear),
+            'schoolYears' => $this->toArraySchoolYear($schoolYear),
             'teachers'    => $this->dataTeaches($teachers),
         ];
     }
@@ -152,18 +186,31 @@ class ClassRepository
         return $dataReturn;
     }
 
-    public function transformDataAssign(Collection $teachers): array
-    {
-        return $teachers->map(function ($item) {
-            return [
-                'id'     => $item->id,
-                'name'   => is_null($item->fullname) ? '' : $item->fullname,
-                'email'  => $item->email,
-                'gender' => is_null($item->gender) ? "1" : $item->gender,
-                'dob'    => is_null($item->dob) ? now()->timestamp : Carbon::parse($item->dob)->timestamp,
-                'phone'  => is_null($item->phone) ? "" : $item->phone,
-            ];
-        })->toArray();
+    public function transformDataAssign(
+        int        $totalPage,
+        int        $page,
+        int        $pageSize,
+        int        $totalItems,
+        Collection $teachers
+    ): array {
+        return [
+            "teachers"   => $teachers->map(function ($item) {
+                return [
+                    'id'     => $item->id,
+                    'code'   => is_null($item->code) ? "" : $item->code,
+                    'name'   => is_null($item->fullname) ? '' : $item->fullname,
+                    'email'  => $item->email,
+                    'gender' => is_null($item->gender) ? "1" : $item->gender,
+                    'dob'    => is_null($item->dob) ? now()->timestamp : Carbon::parse($item->dob)->timestamp,
+                    'phone'  => is_null($item->phone) ? "" : $item->phone,
+                ];
+            })->toArray(),
+            "totalPage"  => $totalPage,
+            "page"       => $page,
+            "pageSize"   => $pageSize,
+            "totalItems" => $totalItems,
+
+        ];
     }
 
     public function detailClass(int $class_id): ?Classes
@@ -367,7 +414,7 @@ class ClassRepository
     public function deleteSubjectForClass(int $classId, int $classSubjectId): bool
     {
         $deletedClassSubject = $this->deleteClassSubject($classSubjectId);
-        if ($deletedClassSubject){
+        if ($deletedClassSubject) {
             return ClassSubjectTeacher::where('class_id', $classId)
                 ->where('class_subject_id', $classSubjectId)
                 ->update([
@@ -380,7 +427,7 @@ class ClassRepository
         return false;
     }
 
-    private function deleteClassSubject(int $classSubjectId):bool
+    private function deleteClassSubject(int $classSubjectId): bool
     {
         return ClassSubject::where('id', $classSubjectId)->update(
             [
@@ -389,5 +436,41 @@ class ClassRepository
                 'modified_user_id' => Auth::id(),
             ]
         );
+    }
+
+    private function toArrayGrades(Collection $grades)
+    {
+        return $grades->map(function ($item){
+            return [
+                'id' => $item->id,
+                'name' => is_null($item->name) ? "" : $item->name,
+            ];
+        })->toArray();
+
+
+    }
+
+    private function toArrayAcademic(Collection $grades)
+    {
+        return $grades->map(function ($item){
+            return [
+                'id' => $item->id,
+                'name' => is_null($item->name) ? "" : $item->name,
+            ];
+        })->toArray();
+
+
+    }
+
+    private function toArraySchoolYear(Collection $grades)
+    {
+        return $grades->map(function ($item){
+            return [
+                'id' => $item->id,
+                'name' => is_null($item->name) ? "" : $item->name,
+            ];
+        })->toArray();
+
+
     }
 }

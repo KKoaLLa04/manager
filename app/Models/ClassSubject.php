@@ -27,4 +27,5 @@ class ClassSubject extends Model
         return $this->hasOne(Subject::class, 'id', 'subject_id')
             ->where("is_deleted", DeleteEnum::NOT_DELETE->value);
     }
+    
 }

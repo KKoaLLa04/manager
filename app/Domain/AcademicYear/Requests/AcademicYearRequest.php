@@ -18,7 +18,7 @@ class AcademicYearRequest extends FormRequest
                 $startYear = \Carbon\Carbon::parse($this->start_year)->year;
                 $endYear = \Carbon\Carbon::parse($value)->year;
                 if (($endYear - $startYear) != 4) {
-                    $fail('Năm kết thúc phải cách năm bắt đầu 4 năm.');
+                    $fail('Năm kết thúc phải cách năm bắt đầu đúng 4 năm.');
                 }
             }],
             'status' => ['required']
