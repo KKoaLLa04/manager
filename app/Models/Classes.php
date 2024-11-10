@@ -56,6 +56,10 @@ class Classes extends Model
             ->withTimestamps()
             ->where('users.status', StatusEnum::ACTIVE->value);
     }
+    // public function grade()
+    // {
+    //     return $this->belongsTo(Grades::class, 'grade_id');
+    // }
 
     public function students()
     {
@@ -78,3 +82,4 @@ class Classes extends Model
         return $this->hasMany(RollCall::class, 'class_id', 'id');
     }
 }
+
