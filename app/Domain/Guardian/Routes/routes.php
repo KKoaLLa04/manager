@@ -2,6 +2,7 @@
 <?php
 
 use App\Domain\Guardian\Controllers\GuardianController;
+use App\Domain\Guardian\Controllers\GuardianOfGuardianController;
 use App\Domain\Guardian\Controllers\GuardianOfTeacherController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,4 +24,9 @@ Route::group(['prefix' => 'teacher/guardian', 'middleware' => 'auth:api'], funct
     Route::put('lock/{id}',[GuardianOfTeacherController::class,'LockGuardian']);
     Route::put('unlock/{id}',[GuardianOfTeacherController::class,'UnLockGuardian']);
     Route::put('change/{id}',[GuardianOfTeacherController::class,'ChangePasswordGuardian']);
+});
+
+Route::group(['prefix' => 'guardian/guardian','middleware' => 'auth:api'] ,function (){
+    Route::get('show/{id}',[GuardianOfGuardianController::class,'show']);
+    Route::put('update/{id}',[GuardianOfGuardianController::class,'update']);
 });

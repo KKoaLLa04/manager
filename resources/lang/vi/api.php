@@ -96,5 +96,13 @@ return [
         'attendaced.errors'=> 'Điểm danh thất bại',
         'attendaced_updated.success'=> 'Cập nhập điểm danh thành công',
         'attendaced_updated.errors'=> 'Cập nhập điểm danh thất bại'
+    ],
+
+    'guardianofguardian' => [
+        'show.success'=> 'Lấy thông tin phụ huynh thành công!',
+        'show.errors'=> 'Lấy thông tin phụ huynh thất bại!',
+        'show.access_denied' => 'Đây không phải là trang tài khoản của bạn',
+        'update.success'=> 'Cập nhập thông tin thành công!',
+        'update.errors'=> 'Cập nhập thông tin thất bại!'
     ]
 ];
