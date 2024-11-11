@@ -27,13 +27,19 @@ class ClassSubjectTeacher extends Model
         'created_at',
         'updated_at'
     ];
-    
+
     public function user(): HasOne
     {
         return $this->hasOne(User::class, 'id', 'user_id')
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
             ->where('status', StatusEnum::ACTIVE->value);
+    }
+
+
+    public function class()
+    {
+        return $this->belongsTo(Classes::class, 'class_id', 'id');
     }
     
     //tai khoan

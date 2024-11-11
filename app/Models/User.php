@@ -96,6 +96,10 @@ class User extends Authenticatable implements JWTSubject
             ->where('students.status', StatusEnum::ACTIVE->value);
     }
 
+    public function classSubjectTeachers()
+    {
+        return $this->hasMany(ClassSubjectTeacher::class, 'user_id');
+    }
 
     public function infoMainTearchWithClass () {
 
@@ -113,6 +117,7 @@ class User extends Authenticatable implements JWTSubject
             return [
                 "userId" => $this->id,
                 "userName" => $this->fullname,
+                "userUserName" => $this->username,
                 "userCode" => $this->code,
                 "userEmail" => $this->email,
                 "userPhone" => $this->phone,
@@ -120,6 +125,8 @@ class User extends Authenticatable implements JWTSubject
                 "userMainClassId" => $class->id,
                 "userAccessType" => $this->access_type,
                 "userStatus" => $this->status,
+                "gender" => $this->gender,
+                "address" => $this->address,
                 "userDob" => strtotime($this->dob),
             ];
 
@@ -133,6 +140,7 @@ class User extends Authenticatable implements JWTSubject
             return [
                 "userId" => $this->id,
                 "userName" => $this->fullname,
+                "userUserName" => $this->username,
                 "userCode" => $this->code,
                 "userEmail" => $this->email,
                 "userPhone" => $this->phone,
@@ -140,6 +148,8 @@ class User extends Authenticatable implements JWTSubject
                 "userMainClassId" => "",
                 "userAccessType" => $this->access_type,
                 "userStatus" => $this->status,
+                "gender" => $this->gender,
+                "address" => $this->address,
                 "userDob" => strtotime($this->dob),
             ];
 
@@ -151,7 +161,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(ClassSubjectTeacher::class, 'user_id', 'id');
     }
- 
+
 
     }
 

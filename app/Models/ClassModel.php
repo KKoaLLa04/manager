@@ -35,9 +35,9 @@ class ClassModel extends Model
     // {
     //     return $this->belongsTo(AcademicYear::class, 'academicyear_id');
     // }
-    public function schoolYearName(): BelongsTo
+    public function schoolYear()
     {
-        return $this->belongsTo(SchoolYear::class, 'school_year_id','id'); 
+        return $this->belongsTo(SchoolYear::class, 'school_year_id', 'id');
     }
     public function academicYear()
     {
