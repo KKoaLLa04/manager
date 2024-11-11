@@ -19,7 +19,6 @@ return new class extends Migration
             $table->integer('created_user_id');
             $table->integer('modified_user_id')->nullable();
             $table->integer('status')->default(1)->comment('1: Chưa diễn ra; 2: Đang diễn ra; 3: Đã kết thúc');
-            $table->integer('is_deleted')->default(0)->comment('0: Active; 1: Deleted');
             $table->timestamps();
         });
     }

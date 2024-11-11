@@ -19,7 +19,7 @@ class UpdateClassRequest extends FormRequest
         return [
             "class_id"        => ["required", 'integer', "exists:classes,id"],
             "name"           => ["required","string","max:255"],
-            "teacher_id"     => ["required", "integer", "exists:users,id"],
+            "teacher_id"     => ["nullable", "integer", "exists:users,id"],
             "status"         => ["required", "integer", Rule::in($status)],
             "grade_id"       => ["required", "integer", "exists:grades,id"],
         ];
