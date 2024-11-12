@@ -12,7 +12,7 @@ class AcademicYearRequest extends FormRequest
     public function rules(): array
 {
     $rules = [
-        'name' => ['required', 'min:6', 'max:255', 'unique:academic_year,name'],
+        'name' => ['required', 'min:6', 'max:255', 'unique:academic_year,name,' . $this->route('id')],
         'status' => ['required'],
     ];
 
