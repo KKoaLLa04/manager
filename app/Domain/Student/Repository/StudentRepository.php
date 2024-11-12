@@ -5,6 +5,7 @@ use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Models\ClassModel;
 use App\Models\Student;
+use App\Models\StudentClassHistory;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,45 +23,65 @@ class StudentRepository {
         return [];
 
     }
-
     public function paginateStudents($pageSize)
     {
-        // Lấy danh sách sinh viên không bị xóa
+        // Lấy danh sách sinh viên không bị xóa cùng với phụ huynh
         $students = Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)
-                            ->paginate($pageSize);
-    
+            ->with([
+                'parents' => function($query) {
+                    $query->select('users.id', 'fullname', 'phone', 'code', 'status')
+                          ->where('users.access_type', AccessTypeEnum::GUARDIAN->value)
+                          ->where('users.is_deleted', DeleteEnum::NOT_DELETE->value);
+                }
+            ])
+            ->paginate($pageSize);
+        
         // Lấy tất cả lớp và chuyển đổi thành mảng với key là id
-        $classes = ClassModel::with('academicYear')->get()->keyBy('id'); // Lấy thông tin lớp cùng với thông tin niên khóa
-    
-        // Sử dụng map để lấy dữ liệu và thêm thông tin lớp
+        $classes = ClassModel::all()->keyBy('id'); // Lấy thông tin tất cả lớp
+        
         $students->transform(function ($student) use ($classes) {
-            // Lấy thông tin lớp học gần nhất (hoặc theo cách bạn muốn)
-            $classHistory = $student->classHistory->first(); // Lấy lớp học đầu tiên
-    
-            $classId = optional($classHistory)->class_id; // Lấy class_id từ lớp học
-            $class = $classes->get($classId); // Lấy thông tin lớp từ mảng đã tạo
+            // Lấy phụ huynh đầu tiên, nếu không có thì thêm thông báo
+            $parent = $student->parents->first();
+        
+            // Tạo mảng thông tin phụ huynh
+            $parentInfo = $parent ? [
+                'name' => $parent->fullname,
+                'phone' => $parent->phone,
+                'code' => $parent->code,
+                'status' => $parent->status,
+            ] : 'Học sinh chưa được gán phụ huynh';
+        
+            // Lấy bản ghi lịch sử lớp gần nhất mà chưa kết thúc (end_date là null)
+            $currentClassHistory = StudentClassHistory::where('student_id', $student->id)
+                ->whereNull('end_date') // Lấy lớp chưa kết thúc (end_date là null)
+                ->orderBy('start_date', 'desc') // Lấy lớp gần nhất theo ngày bắt đầu
+                ->orderBy('id', 'desc')
+                ->first();
+            
+            // Kiểm tra nếu tồn tại lớp gần nhất
+            if ($currentClassHistory) {
+                $classId = $currentClassHistory->class_id;
+                // Lấy tên lớp từ danh sách lớp đã tải sẵn
+                $className = $classes->get($classId)->name ?? null;
+            } else {
+                $classId = null;
+                $className = null;
+            }
     
             return [
                 'id' => $student->id,
                 'student_code' => $student->student_code,
                 'fullname' => $student->fullname,
-                // 'address' => $student->address,
-                // 'dob' => $student->dob ? strtotime($student->dob) : null,
                 'status' => $student->status,
-                'phone' => $student->phone,
                 'gender' => $student->gender,
-                // 'created_at' => $student->created_at ? strtotime($student->created_at) : null,
-                // 'updated_at' => $student->updated_at ? strtotime($student->updated_at) : null,
                 'class_id' => $classId,
-                'class_name' => $class->name ?? null, 
-                'academic_year_name' => $class->academicYear->name ?? null, // Lấy tên niên khóa
+                'class_name' => $className,
+                'parents' => $parentInfo,
             ];
         });
     
-        return $students; 
+        return $students;
     }
-    
-
     
     // Phương thức gán phụ huynh cho học sinh
     public function assignParentToStudent(int $student_id, int $parent_id)
@@ -148,10 +169,11 @@ class StudentRepository {
     {
         // Kiểm tra xem học sinh có bị xóa không
         $student = Student::with(['classHistory' => function($query) {
-            $query->select('student_id', 'class_id', 'start_date', 'end_date', 'status')
+            $query->whereNotNull('class_id') // Bỏ qua các bản ghi có `class_id` là null
+                  ->select('student_id', 'class_id', 'start_date', 'end_date', 'status')
                   ->with(['class' => function($q) {
-                      $q->select('id', 'name', 'academic_year_id') // Thêm 'academic_year_id' nếu cần
-                        ->with('academicYear:id,name'); // Gọi tới quan hệ academicYear
+                      $q->select('id', 'name', 'school_year_id', 'academic_year_id')
+                        ->with(['schoolYear:id,name', 'academicYear:id,name']);
                   }]);
         }, 'parents' => function($query) {
             $query->select('users.id', 'fullname', 'username', 'phone', 'code', 'gender', 'email', 'dob')
@@ -167,8 +189,8 @@ class StudentRepository {
         }
     
         // Ẩn các trường không mong muốn
-        $student->makeHidden(['is_deleted', 'created_user_id', 'modified_user_id', 'created_at', 'updated_at']);
-      
+        $student->makeHidden(['is_deleted', 'phone', 'created_user_id', 'modified_user_id', 'created_at', 'updated_at']);
+    
         // Chuyển đổi `dob` của học sinh sang timestamp
         $student->dob = strtotime($student->dob);
     
@@ -176,6 +198,12 @@ class StudentRepository {
         $student->classHistory->map(function($history) {
             $history->start_date = strtotime($history->start_date);
             $history->end_date = $history->end_date ? strtotime($history->end_date) : null;
+    
+            // Nếu `class_id` không phải null, lấy thông tin liên quan đến lớp
+            $history->class_name = optional($history->class)->name;
+            $history->school_year_name = optional($history->class->schoolYear)->name;
+            $history->academic_year_name = optional($history->class->academicYear)->name;
+    
             return $history;
         });
     
@@ -190,14 +218,17 @@ class StudentRepository {
         
         if ($currentClass) {
             $student->current_class_name = optional($currentClass->class)->name;
-            $student->current_academic_year_name = optional($currentClass->class->academicYear)->name; // Lấy tên academic_year
+            $student->current_academic_year_name = optional($currentClass->class->academicYear)->name;
         } else {
-            $student->current_class_name = null;
+            $student->current_class_name =  'Học sinh hiện tại chưa vào lớp';
             $student->current_academic_year_name = null;
         }
     
         return $student; // Trả về đối tượng student đã được xử lý
     }
+    
+    
+    
     
     
  
