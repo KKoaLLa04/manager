@@ -83,7 +83,7 @@ class AcademicYearController extends BaseController
         'code' => AcademicYear::generateRandomCode(),
         'start_year' => $request->start_year,
         'end_year' => $request->end_year,
-        'status' => AcademicTypeEnum::NOT_STARTED_YET->value,
+        'status' => $request->status,
         'is_deleted' => DeleteEnum::NOT_DELETE->value,
         'created_user_id' => $user_id,
         'created_at' => now(),
@@ -135,33 +135,35 @@ public function update(AcademicYearRequest $request, int $id, GetUserRepository 
 
 
 
-    public function delete(Request $request, int $id, GetUserRepository $getUserRepository)
-    {
-        
-        $user_id = Auth::user()->id;
-        
-        $type = AccessTypeEnum::MANAGER->value;
-    
-        
-        $deleteUser = $getUserRepository->getUser($user_id, $type); 
-        if (!$deleteUser) {
-            
-            return $this->responseError(trans('api.error.user_not_permission'));
-        }
-    
-        // Thực hiện xóa mềm với id niên khóa và user_id
-        $deletedAcademicYear = $this->academicYearRepository->softDelete($id, $user_id);
-    
-        if($deletedAcademicYear){
-            return response()->json([
-               'message' => 'Xóa niên khóa thành công'
-            ]);
-        }else{
-            return response()->json([
-                'message' => 'Xóa niên khóa thất bại'
-             ]);
-        }
+public function delete(Request $request, int $id, GetUserRepository $getUserRepository)
+{
+    $user_id = Auth::user()->id;
+    $type = AccessTypeEnum::MANAGER->value;
+
+    // Kiểm tra quyền của người dùng
+    $deleteUser = $getUserRepository->getUser($user_id, $type);
+    if (!$deleteUser) {
+        return response()->json([
+            'success' => false,
+            'message' => trans('api.error.user_not_permission')
+        ], 403);
     }
+
+    
+    $deletedAcademicYear = $this->academicYearRepository->softDelete($id, $user_id);
+
+    
+    if ($deletedAcademicYear['success']) {
+        return response()->json([
+            'message' => $deletedAcademicYear['message'],
+            'data' => []]);
+    } else {
+        return response()->json([
+            'message' => $deletedAcademicYear['message']
+        ], $deletedAcademicYear['status']);
+    }
+}
+
     
 
     
