@@ -35,7 +35,7 @@ class RollCallController extends BaseController
         $date = $request->input('date', null); // Ngày điểm danh
 
         $rollCalls = $this->rollCallRepository->getClass($pageIndex, $pageSize, $keyWord, $date);
-
+        
         if ($rollCalls) {
             return $this->responseSuccess($rollCalls, trans('api.rollcall.index.success'));
         } else {
@@ -97,7 +97,6 @@ class RollCallController extends BaseController
         ]);
 
         [$totalStudent, $totalStudentAttendaced, $totalStudentNotAttendaced, $rollCalls] = $this->rollCallRepository->updateByClass($class_id, $validatedData['students'], $user_id);
-
         $data = [
             'total_student' => $totalStudent,
             'total_student_attended' => $totalStudentAttendaced,
