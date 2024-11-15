@@ -35,7 +35,7 @@ class RollCallController extends BaseController
         $date = $request->input('date', null); // Ngày điểm danh
 
         $rollCalls = $this->rollCallRepository->getClass($pageIndex, $pageSize, $keyWord, $date);
-        
+
         if ($rollCalls) {
             return $this->responseSuccess($rollCalls, trans('api.rollcall.index.success'));
         } else {
@@ -45,10 +45,8 @@ class RollCallController extends BaseController
 
     public function rollCall(Request $request, $classId, GetUserRepository $getUserRepository)
     {
-        // Lấy ID người dùng từ Auth
-        $user = Auth::user();
 
-        // Kiểm tra xem người dùng có đang đăng nhập hay không
+        $user = Auth::user();
         if (!$user) {
             return $this->responseError(trans('api.error.user_not_logged_in'));
         }
@@ -56,28 +54,22 @@ class RollCallController extends BaseController
         $user_id = $user->id;
         $type = AccessTypeEnum::MANAGER->value;
 
-        // Kiểm tra quyền truy cập của người dùng
+
         $showUser = $getUserRepository->getUser($user_id, $type);
         if (!$showUser) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-        // Xác thực dữ liệu đầu vào
-        $rollCallData = $request->input('rollCallData', []);
+        $rollCallData = $request->input('rollcallData', []);
 
-        // Gọi phương thức với $user_id
         $studentClassDetails = $this->rollCallRepository->getStudentClassDetails($classId, $rollCallData, $user_id);
 
-        // Trả về phản hồi
         if (is_array($studentClassDetails) && !empty($studentClassDetails['insert_roll_call'])) {
-            return $this->responseSuccess($studentClassDetails, trans('api.rollcall.attendaced.success'));
+            return $this->responseSuccess([], trans('api.rollcall.attendaced.success'));
         } else {
             return $this->responseError(trans('api.rollcall.attendaced.errors'));
         }
     }
-
-
-
 
     public function updateByClass(Request $request, $class_id, GetUserRepository $getUserRepository)
     {
@@ -101,7 +93,7 @@ class RollCallController extends BaseController
             'total_student' => $totalStudent,
             'total_student_attended' => $totalStudentAttendaced,
             'total_student_not_attended' => $totalStudentNotAttendaced,
-            'updated_roll_calls' => $rollCalls, // Trả về thông tin đã cập nhật
+            'updated_roll_calls' => $rollCalls,
         ];
 
         return $this->responseSuccess($data, trans('api.rollcall.attendaced_updated.success'));
