@@ -43,7 +43,7 @@ class SendNotification extends Command
             $dataConvert = [];
             foreach ($notifications as $notification) {
                 $userDeviceOfNotification = $userDevices->get($notification->user_id);
-                if (!$userDeviceOfNotification->isEmpty()) {
+                if (isset($userDeviceOfNotification)) {
                     foreach ($userDeviceOfNotification as $userDevice) {
                         if ($userDevice->device_type == WebAppTypeEnum::WEB->value){
                             $this->sendNotificationWeb($userDevice, $notification);
