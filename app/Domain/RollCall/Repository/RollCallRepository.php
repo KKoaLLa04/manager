@@ -6,6 +6,8 @@ use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\statusClassAttendance;
 use App\Common\Enums\StatusStudentEnum;
 use App\Domain\RollCall\Models\RollCall;
+use App\Jobs\CreateNotification;
+use App\jobs\NotificationJob;
 use App\Models\Classes;
 use App\Models\StudentClassHistory;
 use Carbon\Carbon;
@@ -123,7 +125,7 @@ class RollCallRepository
                 $status = $data['status'];
                 $note = $data['note'] ?? null;
 
-                
+
                 $studentClass = $studentClasses->firstWhere('student_id', $studentID);
 
                 if (!$studentClass) {
@@ -135,7 +137,7 @@ class RollCallRepository
                 }
 
                 if ($studentClass) {
-                    
+
                     $rollCall = RollCall::create([
                         'student_id' => $studentClass->student_id,
                         'class_id' => $classId,
@@ -145,8 +147,9 @@ class RollCallRepository
                         'note' => $note,
                         'created_user_id' => $user_id,
                     ]);
+                    CreateNotification::dispatch($rollCall);
 
-                    
+
                     $insertedRollCalls[] = [
                         'className' => $studentClass->class->name ?? 'N/A',
                         'fullname' => $studentClass->student->fullname ?? 'N/A',
@@ -204,6 +207,7 @@ class RollCallRepository
                     'status' => $student['status'],
                     'modified_user_id' => $user_id,
                 ]);
+                CreateNotification::dispatch($rollCall);
                 // Thêm thông tin bản ghi đã cập nhật vào danh sách
                 $updatedRollCalls[] = [
                     'fullname' => $rollCall->student->fullname,
