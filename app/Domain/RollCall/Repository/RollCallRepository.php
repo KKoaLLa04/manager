@@ -13,74 +13,84 @@ use Carbon\Carbon;
 class RollCallRepository
 {
     public function getClass($pageIndex = 1, $pageSize = 10, $keyWord = null, $date = null)
-    {
-        // Đếm số lớp đã điểm danh và chưa điểm danh
-        $totalClassAttendanced = StudentClassHistory::where('status', StatusClassAttendance::HAS_CHECKED->value)
-            ->distinct('class_id')
-            ->count('class_id');
+{
+    // Đếm số lớp đã điểm danh và chưa điểm danh
+    $totalClassAttendanced = StudentClassHistory::where('status', StatusClassAttendance::HAS_CHECKED->value)
+        ->distinct('class_id')
+        ->count('class_id');
 
-        $totalClassNoAttendance = StudentClassHistory::where('status', StatusClassAttendance::NOT_YET_CHECKED->value)
-            ->distinct('class_id')
+    $totalClassNoAttendance = StudentClassHistory::where('status', StatusClassAttendance::NOT_YET_CHECKED->value)
+        ->distinct('class_id')
+        ->count();
+
+    // Truy vấn danh sách các lớp học
+    $classesQuery = Classes::with(['user', 'rollCalls.attendanceBy']);  // eager load attendanceBy
+
+    // Tìm kiếm theo từ khóa nếu có
+    if ($keyWord) {
+        $classesQuery->where('name', 'LIKE', '%' . $keyWord . '%');
+    }
+
+    // Lọc theo ngày nếu có
+    if ($date) {
+        $classesQuery->whereHas('rollCalls', function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        });
+    }
+
+    // Phân trang
+    $classes = $classesQuery->paginate($pageSize, ['*'], 'page', $pageIndex);
+
+    // Xử lý dữ liệu trả về
+    $data = $classes->map(function ($class) {
+        $teacher = optional($class->user->first());  // Lấy giáo viên dạy lớp
+        
+        // Đếm tổng số học sinh trong lớp
+        $totalStudent = StudentClassHistory::where('class_id', $class->id)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->count();
     
-        // Truy vấn danh sách các lớp học
-        $classesQuery = Classes::with(['user', 'rollCalls']);
+        // Lấy lần điểm danh đầu tiên
+        $rollCall = optional($class->rollCalls)->first();
     
-        // Tìm kiếm theo từ khóa nếu có
-        if ($keyWord) {
-            $classesQuery->where('name', 'LIKE', '%' . $keyWord . '%');
-        }
+        // Lấy tên giáo viên điểm danh từ quan hệ attendanceBy
+        $attendanceBy = optional($class->rollCalls)->first()->attendanceBy->fullname ?? null;
+        
     
-        // Lọc theo ngày nếu có
-        if ($date) {
-            $classesQuery->whereHas('rollCalls', function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            });
-        }
+        // Đếm số học sinh đã điểm danh
+        $studentAttendanced = RollCall::where('class_id', $class->id)
+            ->where('status', StatusStudentEnum::PRESENT->value)
+            ->count();
     
-        // Phân trang
-        $classes = $classesQuery->paginate($pageSize, ['*'], 'page', $pageIndex);
+        // Thời gian điểm danh và ngày điểm danh
+        $attendanceAt = optional($rollCall)->time ? strtotime($rollCall->time) : null;
+        $dateAttendanced = optional($rollCall)->date ? Carbon::parse($rollCall->date)->translatedFormat('l, d/m/Y') : null;
     
-        // Xử lý dữ liệu trả về
-        $data = $classes->map(function ($class) {
-            $teacher = optional($class->user->first());
-    
-            $totalStudent = StudentClassHistory::where('class_id', $class->id)
-                ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-                ->count();
-    
-            $rollCall = optional($class->rollCalls)->first();
-    
-            $studentAttendanced = RollCall::where('class_id', $class->id)
-                ->where('status', StatusStudentEnum::PRESENT->value)
-                ->count();
-    
-            $attendanceAt = optional($rollCall)->time ? strtotime($rollCall->time) : null;
-            $dateAttendanced = optional($rollCall)->date ? strtotime($rollCall->date) : null;
-            return [
-                'classId' => $class->id,
-                'className' => $class->name,
-                'grade' => optional($class->grade)->name,
-                'totalStudent' => $totalStudent,
-                'dateAttendanced' => $dateAttendanced,
-                'attendanceAt' => $attendanceAt,
-                'fullname' => $teacher->fullname,
-                'email' => $teacher->email,
-                'status' => $class->status,
-                'studentAttendanced' => $studentAttendanced,
-                'attendanceBy' => optional($rollCall)->created_user_id,
-            ];
-        });
-    
-        // Trả về kết quả
         return [
-            'totalClassAttendanced' => $totalClassAttendanced,
-            'totalClassNoAttendance' => $totalClassNoAttendance,
-            'data' => $data,
-            'total' => $classes->total(),
+            'classId' => $class->id,
+            'className' => $class->name,
+            'grade' => optional($class->grade)->name,
+            'totalStudent' => $totalStudent,
+            'dateAttendanced' => $dateAttendanced,
+            'attendanceAt' => $attendanceAt,
+            'fullname' => $teacher->fullname,
+            'email' => $teacher->email,
+            'status' => $class->status,
+            'studentAttendanced' => $studentAttendanced,
+            'attendanceBy' => $attendanceBy,  // Trả về tên giáo viên điểm danh
         ];
-    }
-    
+    });
+
+    // Trả về kết quả
+    return [
+        'totalClassAttendanced' => $totalClassAttendanced,
+        'totalClassNoAttendance' => $totalClassNoAttendance,
+        'data' => $data,
+        'total' => $classes->total(),
+    ];
+}
+
+
 
     public function getStudentClassDetails($classId, $rollCallData = [], $user_id)
     {
@@ -103,25 +113,40 @@ class RollCallRepository
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->get();
 
-        // Danh sách roll call mới được thêm vào
+        
         $insertedRollCalls = [];
 
-        // Xử lý điểm danh nếu có dữ liệu
+        
         if (!empty($rollCallData)) {
-            foreach ($studentClasses as $studentClass) {
-                if (isset($rollCallData[$studentClass->student_id])) {
-                    // Ghi dữ liệu điểm danh
+            foreach ($rollCallData as $data) {
+                $studentID = $data['studentID'];
+                $status = $data['status'];
+                $note = $data['note'] ?? null;
+
+                
+                $studentClass = $studentClasses->firstWhere('student_id', $studentID);
+
+                if (!$studentClass) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Niên khóa không tồn tại cho học sinh với ID: ' . $studentID,
+                        'status' => 400
+                    ], 400);
+                }
+
+                if ($studentClass) {
+                    
                     $rollCall = RollCall::create([
                         'student_id' => $studentClass->student_id,
                         'class_id' => $classId,
-                        'status' => $rollCallData[$studentClass->student_id]['status'],
+                        'status' => $status,
                         'date' => now()->format('Y-m-d'),
                         'time' => now()->format('H:i:s'),
-                        'note' => $rollCallData[$studentClass->student_id]['note'] ?? null,
+                        'note' => $note,
                         'created_user_id' => $user_id,
                     ]);
 
-                    // Thêm vào danh sách roll call mới
+                    
                     $insertedRollCalls[] = [
                         'className' => $studentClass->class->name ?? 'N/A',
                         'fullname' => $studentClass->student->fullname ?? 'N/A',
@@ -130,6 +155,7 @@ class RollCallRepository
                         'status' => $rollCall->status ?? 'N/A',
                     ];
                 }
+
             }
         }
 
@@ -137,9 +163,10 @@ class RollCallRepository
             'totalStudent' => $totalStudent,
             'totalStudentNotAttendaced' => $totalStudentNotAttendaced,
             'totalStudentAttendaced' => $totalStudentAttendaced,
-            'insert_roll_call' => $insertedRollCalls, // Chỉ trả về các bản ghi đã thêm
+            'insert_roll_call' => $insertedRollCalls,
         ];
     }
+
 
 
 
