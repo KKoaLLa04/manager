@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Common\Enums\ConvertEnum;
 use App\Common\Enums\StatusEnum;
+use App\Common\Enums\WebAppTypeEnum;
 use App\Models\ConvertUserNotification;
 use App\Models\UserDevice;
 use App\Models\UserNotification;
@@ -44,7 +45,9 @@ class SendNotification extends Command
                 $userDeviceOfNotification = $userDevices->get($notification->user_id);
                 if (!$userDeviceOfNotification->isEmpty()) {
                     foreach ($userDeviceOfNotification as $userDevice) {
-                        $this->sendNotification($userDevice, $notification);
+                        if ($userDevice->device_type == WebAppTypeEnum::WEB->value){
+                            $this->sendNotificationWeb($userDevice, $notification);
+                        }
                         $dataConvert[] = [
                             'user_id'         => $userDevice->user_id,
                             'device_token'    => $userDevice->device_token,
@@ -67,7 +70,7 @@ class SendNotification extends Command
     {
         return UserNotification::query()
             ->where('is_convert', ConvertEnum::NOT_CONVERT->value)
-            ->where('created_at', '>=', Carbon::today()->startOfDay()->toDateTimeString())
+            ->where('date', '>=', Carbon::today()->startOfDay()->toDateTimeString())
             ->take(500)
             ->get();
     }
@@ -95,7 +98,7 @@ class SendNotification extends Command
         }
     }
 
-    private function sendNotification(mixed $userDevice, mixed $notification)
+    private function sendNotificationWeb(mixed $userDevice, mixed $notification)
     {
         $credentials = new ServiceAccountCredentials("https://www.googleapis.com/auth/firebase.messaging",
             json_decode(file_get_contents('pvk.json'), true));

@@ -1,5 +1,7 @@
 <?php
 
+use App\Jobs\CreateNotification;
+use App\jobs\NotificationJob;
 use Illuminate\Support\Facades\Route;
 use GuzzleHttp\Client;
 
@@ -15,25 +17,27 @@ use GuzzleHttp\Client;
 */
 
 Route::get('/test', function () {
-    $dataSendNoti = [
-        "title"    => "Học sinh Huy đã đến lớp rồi mẹ nhé",
-        "title_en" => "Học sinh Huy đã đến lớp rồi mẹ nhé",
-        "class_id" => 1,
-        "time"     => now()
-    ];
-    $data         = [
-        [
-            'user_id'      => 1,
-            'item_id'      => 1,
-            'type'         => 1,
-            'is_read'      => 0,
-            'is_send'      => 0,
-            'is_convert' => \App\Common\Enums\ConvertEnum::NOT_CONVERT->value,
-            'data'         => json_encode($dataSendNoti),
-            'date'         => now(),
-            'created_at'   => now(),
-            'updated_at'   => now()
-       ]
-    ];
-    event(new \App\Events\CreateNotification($data));
+//    $dataSendNoti = [
+//        "title"    => "Học sinh Huy đã đến lớp rồi mẹ nhé",
+//        "title_en" => "Học sinh Huy đã đến lớp rồi mẹ nhé",
+//        "class_id" => 1,
+//        "time"     => now()
+//    ];
+//    $data         = [
+//        [
+//            'user_id'      => 1,
+//            'item_id'      => 1,
+//            'type'         => 1,
+//            'is_read'      => 0,
+//            'is_send'      => 0,
+//            'is_convert' => \App\Common\Enums\ConvertEnum::NOT_CONVERT->value,
+//            'data'         => json_encode($dataSendNoti),
+//            'date'         => now(),
+//            'created_at'   => now(),
+//            'updated_at'   => now()
+//       ]
+//    ];
+//    event(new \App\Events\CreateNotification($data));
+    $rollCall = \App\Domain\RollCall\Models\RollCall::query()->first();
+    CreateNotification::dispatch($rollCall);
 });
