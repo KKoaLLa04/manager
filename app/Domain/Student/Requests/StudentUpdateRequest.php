@@ -18,7 +18,7 @@ class StudentUpdateRequest extends FormRequest
             'address' => 'required|min:5|max:255',
             'dob' => 'required|date|before:today',
             'status' => 'required|in:0,1,2',
-            'gender' => 'required|in:0,1',
+            'gender' => 'required|in:1,2',
             'class_id' => [
                     'nullable',
                     'integer',
