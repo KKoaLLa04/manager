@@ -37,10 +37,9 @@ class StudentRepository {
             ->paginate($pageSize);
         
         // Lấy tất cả lớp và chuyển đổi thành mảng với key là id
-        $classes = ClassModel::all()->keyBy('id'); // Lấy thông tin tất cả lớp
+        $classes = ClassModel::with('academicYear:id,name')->get()->keyBy('id');
         
         $students->transform(function ($student) use ($classes) {
-            // Lấy phụ huynh đầu tiên, nếu không có thì thêm thông báo
             $parent = $student->parents->first();
         
             // Tạo mảng thông tin phụ huynh
@@ -57,15 +56,18 @@ class StudentRepository {
                 ->orderBy('start_date', 'desc') // Lấy lớp gần nhất theo ngày bắt đầu
                 ->orderBy('id', 'desc')
                 ->first();
+                
             
             // Kiểm tra nếu tồn tại lớp gần nhất
             if ($currentClassHistory) {
                 $classId = $currentClassHistory->class_id;
-                // Lấy tên lớp từ danh sách lớp đã tải sẵn
-                $className = $classes->get($classId)->name ?? null;
+                $class = $classes->get($classId);
+                $className = $class->name ?? null;
+                $academic_yearName = $class ? optional($class->academicYear)->name : 'chưa có niên khóa';
             } else {
                 $classId = null;
-                $className = null;
+                $className = 'Chưa có lớp học';
+                $academic_yearName = 'Chưa có niên khóa';
             }
     
             return [
@@ -73,9 +75,12 @@ class StudentRepository {
                 'student_code' => $student->student_code,
                 'fullname' => $student->fullname,
                 'status' => $student->status,
+                'dob' => $student->dob ? strtotime($student->dob) : null,
+                'address'=> $student->address,
                 'gender' => $student->gender,
                 'class_id' => $classId,
                 'class_name' => $className,
+                'academic_year_Name' => $academic_yearName,
                 'parents' => $parentInfo,
             ];
         });
