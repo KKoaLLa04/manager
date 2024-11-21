@@ -4,13 +4,16 @@ namespace App\Domain\RollCall\Repository;
 
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\statusClassAttendance;
+use App\Common\Enums\StatusClassStudentEnum;
 use App\Common\Enums\StatusStudentEnum;
 use App\Domain\RollCall\Models\RollCall;
 use App\Jobs\CreateNotification;
 use App\jobs\NotificationJob;
 use App\Models\Classes;
+use App\Models\Student;
 use App\Models\StudentClassHistory;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class RollCallRepository
 {
@@ -224,5 +227,50 @@ class RollCallRepository
             $totalStudentNotAttendaced,
             $updatedRollCalls // Trả về danh sách bản ghi đã cập nhật
         ];
+    }
+
+    public function getStudentClass(int $classId, string $keyWord = null): array
+    {
+        $studentIds = StudentClassHistory::query()
+            ->where('class_id', $classId)
+            ->whereNull('end_date')
+            ->where('status', StatusClassStudentEnum::STUDYING->value)
+            ->get()->pluck('student_id')->toArray();
+
+        $query = Student::query()
+            ->whereIn('id', $studentIds)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+        if(!is_null($keyWord)){
+            $query->where('fullname', 'like', '%'.$keyWord.'%');
+        }
+        return [$query->get(),count($studentIds)];
+    }
+
+    public function getRollCall(int $classId, Collection $students, Carbon $date): array
+    {
+        $studentIds = $students->pluck('id')->toArray();
+        $rollCalls = RollCall::query()
+            ->where('class_id', $classId)
+            ->whereIn('student_id', $studentIds)
+            ->where('date',$date->toDateString())
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->get();
+        return $students->map(function ($student) use ($rollCalls) {
+            $status = StatusStudentEnum::PRESENT->value;
+            $note = "";
+            $rollCall = $rollCalls->where('student_id', $student->id)->first();
+            if(!is_null($rollCall)){
+                $status = $rollCall->status;
+                $note = $rollCall->note;
+            }
+            return [
+                'fullname' => $student->fullname ?? "",
+                'code' => $student->student_code ?? "",
+                'dob' => $student->dob ?? "",
+                'status' => $status,
+                'note' => $note,
+            ];
+        })->toArray();
+
     }
 }

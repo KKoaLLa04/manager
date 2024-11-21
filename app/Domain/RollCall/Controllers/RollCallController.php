@@ -6,8 +6,10 @@ use App\Common\Enums\AccessTypeEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\RollCall\Models\RollCall;
 use App\Domain\RollCall\Repository\RollCallRepository;
+use App\Domain\RollCall\Requests\RollCallRequest;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class RollCallController extends BaseController
@@ -97,5 +99,21 @@ class RollCallController extends BaseController
         ];
 
         return $this->responseSuccess($data, trans('api.rollcall.attendaced_updated.success'));
+    }
+
+    public function getRowCallOfClass(RollCallRequest $request)
+    {
+        $keyWord = $request->input('keyWord', "");
+        $classId = $request->input('classId', 0);
+        $date = $request->input('date');
+        $date = isset($date) ? Carbon::parse($date) : now();
+        list($students,$total) = $this->rollCallRepository->getStudentClass($classId, $keyWord);
+        $rollCall = $this->rollCallRepository->getRollCall($classId, $students, $date);
+        return $this->responseSuccess(
+            [
+                "rollCall" => $rollCall,
+                "totalStudent" => $total,
+            ]
+        );
     }
 }

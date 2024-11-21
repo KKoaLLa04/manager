@@ -12,6 +12,8 @@ class RollCallRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'classId' => 'required|integer|exists:classes,id',
+            'date' => 'required',
         ];
     }
     
@@ -22,4 +24,3 @@ class RollCallRequest extends FormRequest
     }
     
 }
-            
