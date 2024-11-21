@@ -19,12 +19,14 @@ use App\Domain\Student\Repository\StudentUpGradeRepository;
 use App\Domain\Student\Requests\AssignParentRequest;
 use App\Domain\Student\Requests\StudentRequest;
 use App\Domain\Student\Requests\StudentUpdateRequest;
+use App\Exports\StudentExport;
 use App\Http\Controllers\BaseController;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 
@@ -116,7 +118,7 @@ class StudentController extends BaseController
 
 
 
-    public function delete(int $id, ){
+    public function delete(int $id){
 
 
         $user_id =Auth::user()->id;
@@ -603,7 +605,12 @@ class StudentController extends BaseController
 
 
 
-
+    public function excel(Request $request)
+    {
+        $fromDate = isset($request->fromDate) ? $request->fromDate : now()->toDateString();
+        $toDate = isset($request->toDate) ? $request->toDate : now()->toDateString();
+        return Excel::download(new StudentExport($fromDate, $toDate), now()->timestamp.'students.xlsx');
+    }
 
 
 }

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix' => 'manager/student', 'middleware' => 'auth:api'], function () {
     // Lấy danh sách học sinh
     Route::get('/', [StudentController::class, 'index']);
+    Route::get('/export-excel', [StudentController::class, 'excel']);
     Route::post('/class_by_year', [StudentController::class, 'classByYear']);
     Route::get('/detail_class_current', [StudentController::class, 'getDetailClassCurrent']);
     Route::get('/student_by_class', [StudentController::class, 'getStudentByClass']);

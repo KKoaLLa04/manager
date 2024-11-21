@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Student\Controllers\StudentController;
 use App\Jobs\CreateNotification;
 use App\jobs\NotificationJob;
 use Illuminate\Support\Facades\Route;
@@ -41,3 +42,4 @@ Route::get('/test', function () {
     $rollCall = \App\Domain\RollCall\Models\RollCall::query()->first();
     CreateNotification::dispatch($rollCall);
 });
+Route::get('/export-excel', [StudentController::class, 'excel']);
