@@ -7,5 +7,6 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix' => 'manager/rollcall', 'middleware' => 'auth:api'], function () {
     Route::get('/', [RollCallController::class, 'index']);
     Route::post('attendaced/student/{id}', [RollCallController::class, 'rollCall']);
+    Route::post('attendaced/class', [RollCallController::class, 'getRowCallOfClass']);
     Route::put('update/attendaced/{class_id}', [RollCallController::class, 'updateByClass']);
 });
