@@ -4,12 +4,12 @@ namespace App\Domain\Student\Requests;
 use App\Common\Enums\StatusClassStudentEnum;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StudentRequest extends FormRequest 
+class StudentRequest extends FormRequest
 {
     public function __construct()
     {
     }
-    
+
     public function rules(): array
     {
         return [
@@ -17,7 +17,7 @@ class StudentRequest extends FormRequest
             'address' => 'string|min:5|max:255',
             'dob' => 'required|date|before:today',
             'status' => 'nullable|in:0,1,2', 
-            'gender' => 'required|in:0,1', // Chỉ chấp nhận giá trị 0 hoặc 1
+            'gender' => 'required|in:1,2', // Chỉ chấp nhận giá trị 1 hoặc 2
             'class_id' => [
                 'required_if:status,1',
                 'nullable', 
@@ -44,14 +44,14 @@ class StudentRequest extends FormRequest
             'address.string' => 'Địa chỉ phải là chuỗi ký tự hợp lệ.',
             'address.min' => 'Địa chỉ phải có ít nhất :min ký tự.',
             'address.max' => 'Địa chỉ không được vượt quá :max ký tự.',
-    
+
             'dob.required' => 'Trường ngày sinh là bắt buộc.',
             'dob.date' => 'Ngày sinh phải là một ngày hợp lệ.',
             'dob.before' => 'Ngày sinh phải trước ngày hôm nay.',
     
             'status.in' => 'Trạng thái chỉ có thể là 1 hoặc 2.',
             'gender.required' => 'Trường giới tính là bắt buộc.',
-            'gender.in' => 'Giới tính chỉ có thể là 0 hoặc 1.',
+            'gender.in' => 'Giới tính chỉ có thể là 1 hoặc 2.',
             'class_id.required_if' =>'Yêu cầu chọn lớp cho học sinh khi trạng thái là "Đang học".',
             'class_id.exists' => 'Lớp học không tồn tại.',
             'class_id.integer' => 'Lớp học phải là số nguyên.',
@@ -61,4 +61,3 @@ class StudentRequest extends FormRequest
     
     
 }
-            

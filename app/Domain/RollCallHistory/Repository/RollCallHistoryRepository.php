@@ -212,10 +212,14 @@ class RollCallHistoryRepository {
     
     public function getClassRollCallHistoryDetailsByDate($classId, $date) 
     {
-        // Tính tổng số học sinh
+        // Tính tổng số học sinh tại lớp tính đến ngày được chỉ định, bỏ qua các học sinh đã chuyển lớp
         $totalStudents = StudentClassHistory::where('class_id', $classId)
-            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->count();
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->where(function ($query) use ($date) {
+            $query->whereNull('end_date')            // Học sinh chưa rời lớp
+                    ->orWhereDate('end_date', '>', $date);  // Hoặc còn học trong lớp sau ngày `$date`
+        })
+        ->count();
     
         // Lấy danh sách lịch sử điểm danh theo class_id và ngày cụ thể
         $rollCallHistories = RollCallHistory::where('class_id', $classId)

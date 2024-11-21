@@ -92,9 +92,9 @@ class ClassRepository
                 "academic_name"  => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
                 "academic_id"    => is_null($class->academicYear) ? 0 : $class->academicYear->id,
                 "academic_code"  => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
-                "teacher_id"     => is_null($class->user->first()) ? 0 : $class->user->first()->id,
-                "teacher_name"   => is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname,
-                "teacher_email"  => is_null($class->user->first()->email) ? "" : $class->user->first()->email,
+                "teacher_id"     => is_null($class->user->first()) ? "" : (is_null($class->user->first()->id) ? "" : $class->user->first()->id),
+                "teacher_name"   => is_null($class->user->first()) ? "" : (is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname),
+                "teacher_email"  => is_null($class->user->first()) ? "" : (is_null($class->user->first()->email) ? "" : $class->user->first()->email),
                 "status"         => is_null($class->status) ? "1" : $class->status,
             ];
         })->toArray();
@@ -440,37 +440,31 @@ class ClassRepository
 
     private function toArrayGrades(Collection $grades)
     {
-        return $grades->map(function ($item){
+        return $grades->map(function ($item) {
             return [
-                'id' => $item->id,
+                'id'   => $item->id,
                 'name' => is_null($item->name) ? "" : $item->name,
             ];
         })->toArray();
-
-
     }
 
     private function toArrayAcademic(Collection $grades)
     {
-        return $grades->map(function ($item){
+        return $grades->map(function ($item) {
             return [
-                'id' => $item->id,
+                'id'   => $item->id,
                 'name' => is_null($item->name) ? "" : $item->name,
             ];
         })->toArray();
-
-
     }
 
     private function toArraySchoolYear(Collection $grades)
     {
-        return $grades->map(function ($item){
+        return $grades->map(function ($item) {
             return [
-                'id' => $item->id,
+                'id'   => $item->id,
                 'name' => is_null($item->name) ? "" : $item->name,
             ];
         })->toArray();
-
-
     }
 }
