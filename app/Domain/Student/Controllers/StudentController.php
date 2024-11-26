@@ -64,11 +64,10 @@ class StudentController extends BaseController
         if ($students->count() > 0) {
             return response()->json([
                 'status' => 'success',
-                'data' => $students->items(), // Thay items() bằng all() ở đây
-                'total' => $students->total(), // Tổng số bản ghi
-                'page_index' => $students->currentPage(), // Trang hiện tại
-                // 'page' => $students->lastPage(), // Trang cuối cùng
-                'page_size' => $students->perPage(), // Số bản ghi mỗi trang
+                'data' => $students->items(), 
+                'total' => $students->total(), 
+                'page_index' => $students->currentPage(), 
+                'page_size' => $students->perPage(), 
             ]);
         } else {
             return response()->json(['status' => 'error', 'data' => []]);
@@ -146,45 +145,6 @@ class StudentController extends BaseController
         }
     }
 
-
-
-
-
-    // public function update(int $id, StudentUpdateRequest $request)
-    // {
-    //     $StudentUpdateRepository = new StudentUpdateRepository();
-    //     $user_id = Auth::user()->id;
-    //     $type = AccessTypeEnum::MANAGER->value;
-
-    //     if (!$this->user->getUser($user_id, $type)) {
-    //         return $this->responseError(trans('api.error.user_not_permission'));
-    //     }
-
-    //     // Thực hiện cập nhật thông qua repository
-    //     $check = $StudentUpdateRepository->handle($id, $user_id, $request);
-
-    //     if ($check) {
-    //         $data = Student::find($id);
-
-    //         // Chuyển đổi đối tượng thành mảng
-    //         $studentArray = $data->toArray();
-
-    //         // Không tạo bản ghi mới nếu class_id không thay đổi
-    //         $studentArray['class_id'] = optional($data->classHistory->last())->class_id;
-
-    //         return response()->json([
-    //             'message' => 'Sửa học sinh ' . $studentArray['fullname'] . ' thành công',
-    //             'status' => 'success',
-    //             'data' => []
-    //         ]);
-    //     } else {
-    //         return response()->json([
-    //             'message' => 'Sửa học sinh thất bại',
-    //             'status' => 'error',
-    //             'data' => []
-    //         ]);
-    //     }
-    // }
 
     public function update(int $id, StudentUpdateRequest $request)
     {
