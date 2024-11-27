@@ -119,7 +119,7 @@ class ClassController extends BaseController
         if ($statusCreateClass) {
             $classId = $statusCreateClass->id;
             $this->createClassRepository->createClassTeacherSubject($classId,
-                $request->teacher_id);
+                $request->teacher_id ?? 0);
 
             return $this->responseSuccess();
         }
