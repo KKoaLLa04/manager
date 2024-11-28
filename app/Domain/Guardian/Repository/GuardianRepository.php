@@ -18,16 +18,16 @@ class GuardianRepository
         $query = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->with(['students.classHistories']);
-    
+
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
                 $q->where('fullname', 'LIKE', '%' . $keyword . '%')
-                  ->orWhere('phone', 'LIKE', '%' . $keyword . '%');
+                    ->orWhere('phone', 'LIKE', '%' . $keyword . '%');
             });
         }
-    
+
         $paginatedResult = $query->paginate($pageSize);
-    
+
         $mappedData = $paginatedResult->getCollection()->map(function ($guardian) {
             return [
                 'id' => $guardian->id,
@@ -38,6 +38,11 @@ class GuardianRepository
                 'status' => $guardian->status,
                 'gender' => $guardian->gender,
                 'career' => $guardian->career,
+                'username' => $guardian->username,
+                'dob' => $guardian->dob,
+                'address' => $guardian->address,
+                'password' => $guardian->password,
+                'confirm_password' => $guardian->confirm_password,
                 'studentsInfo' => $guardian->students->map(function ($student) {
                     return [
                         'id' => $student->id,
@@ -53,13 +58,13 @@ class GuardianRepository
                 }),
             ];
         });
-    
+
         return [
             'data' => $mappedData,
             'total' => $paginatedResult->total(),
         ];
     }
-    
+
 
 
     public function addGuardian(array $data)
@@ -68,100 +73,100 @@ class GuardianRepository
     }
 
     public function getOneGuardian(int $id)
-{
-    
-    $one = Guardian::with('students')
-        ->where('access_type', AccessTypeEnum::GUARDIAN->value)
-        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-        ->find($id);
+    {
 
-    
-    if (!$one) {
+        $one = Guardian::with('students')
+            ->where('access_type', AccessTypeEnum::GUARDIAN->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->find($id);
+
+
+        if (!$one) {
+            return [
+                'msg' => 'Phụ huynh không tồn tại',
+                'data' => null,
+            ];
+        }
+
+
+        if ($one->status == StatusEnum::UN_ACTIVE->value) {
+            return [
+                'msg' => 'Phụ huynh đang bị khoá',
+                'data' => null,
+            ];
+        }
+
+
+        $guardianData = [
+            'id' => $one->id,
+            'fullname' => $one->fullname,
+            'phone' => $one->phone,
+            'email' => $one->email,
+            'code' => $one->code,
+            'dob' => strtotime($one->dob),
+            'status' => $one->status,
+            'address' => $one->address,
+            'usernames' => $one->username,
+            'students' => $one->students->map(function ($student) {
+                return [
+                    'id' => $student->id,
+                    'student_code' => $student->student_code,
+                    'fullname' => $student->fullname,
+                    'email' => $student->email,
+                    'gender' => $student->gender,
+                    'dob' => strtotime($student->dob),
+                    'phone' => $student->phone,
+                    'academicYear' => $student->classHistories->first()->class->academicYear->name,
+                    'username' => $student->username,
+                ];
+            }),
+        ];
+
         return [
-            'msg' => 'Phụ huynh không tồn tại',
-            'data' => null,
+            'data' => $guardianData,
         ];
     }
 
-    
-    if ($one->status == StatusEnum::UN_ACTIVE->value) {
-        return [
-            'msg' => 'Phụ huynh đang bị khoá',
-            'data' => null,
-        ];
-    }
 
-    
-    $guardianData = [
-        'id' => $one->id,
-        'fullname' => $one->fullname,
-        'phone' => $one->phone,
-        'email' => $one->email,
-        'code' => $one->code,
-        'dob' => strtotime($one->dob),
-        'status' => $one->status,
-        'address' => $one->address,
-        'usernames' => $one->username,
-        'students' => $one->students->map(function ($student) {
+
+    public function getStudent($keyword = null, $pageIndex = 1, $pageSize = 10)
+    {
+        // Truy vấn dữ liệu từ bảng student và liên kết với classHistories
+        $query = Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('status', StatusEnum::ACTIVE->value);
+
+        // Tìm kiếm theo từ khóa nếu có
+        if ($keyword) {
+            $query->where('fullname', 'LIKE', '%' . $keyword . '%')
+                ->orWhere('student_code', 'LIKE', '%' . $keyword . '%');
+        }
+
+        // Lấy dữ liệu sinh viên phân trang
+        $students = $query->paginate($pageSize, ['*'], 'page', $pageIndex);
+
+        $data = $students->map(function ($student) {
             return [
                 'id' => $student->id,
                 'student_code' => $student->student_code,
                 'fullname' => $student->fullname,
                 'email' => $student->email,
+                'phone' => $student->phone,
                 'gender' => $student->gender,
                 'dob' => strtotime($student->dob),
-                'phone' => $student->phone,
-                'academicYear' => $student->classHistories->first()->class->academicYear->name,
                 'username' => $student->username,
+                'academicYear' => $student->classHistories->first()->class->academicYear->name
             ];
-        }),
-    ];
-
-    return [
-        'data' => $guardianData,
-    ];
-}
+        });
 
 
 
-public function getStudent($keyword = null, $pageIndex = 1, $pageSize = 10)
-{
-    // Truy vấn dữ liệu từ bảng student và liên kết với classHistories
-    $query = Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)
-        ->where('status', StatusEnum::ACTIVE->value);
 
-    // Tìm kiếm theo từ khóa nếu có
-    if ($keyword) {
-        $query->where('fullname', 'LIKE', '%' . $keyword . '%')
-            ->orWhere('student_code', 'LIKE', '%' . $keyword . '%');
-    }
-
-    // Lấy dữ liệu sinh viên phân trang
-    $students = $query->paginate($pageSize, ['*'], 'page', $pageIndex);
-
-    $data = $students->map(function ($student) {
+        // Trả về kết quả dạng API
         return [
-            'id' => $student->id,
-            'student_code' => $student->student_code,
-            'fullname' => $student->fullname,
-            'email' => $student->email,
-            'phone' => $student->phone,
-            'gender' => $student->gender,
-            'dob' => strtotime($student->dob),
-            'username' => $student->username,
-            'academicYear' => $student->classHistories->first()->class->academicYear->name
+            'data' => $data,
+            'total' => $students->total()
         ];
-    });
-    
-    
-    
-
-    // Trả về kết quả dạng API
-    return [
-        'data' => $data,
-        'total' => $students->total()
-    ];
-}
+    }
 
     public function updateGuardian(int $id, array $data)
     {
@@ -240,35 +245,35 @@ public function getStudent($keyword = null, $pageIndex = 1, $pageSize = 10)
     }
 
     public function changePassword(int $id, array $data)
-{
-    
-    $guardian = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
-        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-        ->find($id);
+    {
 
-    
-    if (!$guardian) {
-        return response()->json([
-            'message' => 'Phụ huynh không tồn tại'
-        ], 404);
+        $guardian = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->find($id);
+
+
+        if (!$guardian) {
+            return response()->json([
+                'message' => 'Phụ huynh không tồn tại'
+            ], 404);
+        }
+
+
+        if ($guardian->is_deleted == DeleteEnum::DELETED->value) {
+            return response()->json([
+                'message' => 'Phụ huynh đang bị xóa'
+            ], 403);
+        }
+
+
+        $guardian->fill($data);
+        $guardian->save();
+
+
+        return [
+            'data' => []
+        ];
     }
-
-    
-    if ($guardian->is_deleted == DeleteEnum::DELETED->value) {
-        return response()->json([
-            'message' => 'Phụ huynh đang bị xóa'
-        ], 403);
-    }
-
-   
-    $guardian->fill($data);
-    $guardian->save();
-
-    
-    return [
-        'data' => [] 
-    ];
-}
 
 
 
