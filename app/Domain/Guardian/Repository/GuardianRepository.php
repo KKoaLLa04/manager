@@ -89,12 +89,12 @@ class GuardianRepository
         }
 
 
-        if ($one->status == StatusEnum::UN_ACTIVE->value) {
-            return [
-                'msg' => 'Phụ huynh đang bị khoá',
-                'data' => null,
-            ];
-        }
+        // if ($one->status == StatusEnum::UN_ACTIVE->value) {
+        //     return [
+        //         'msg' => 'Phụ huynh đang bị khoá',
+        //         'data' => null,
+        //     ];
+        // }
 
 
         $guardianData = [
