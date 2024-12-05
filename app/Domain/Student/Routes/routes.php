@@ -17,7 +17,7 @@ Route::group(['prefix' => 'manager/student', 'middleware' => 'auth:api'], functi
     Route::get('/show/{id}', [StudentController::class, 'show']);
     Route::post('/update/{id}', [StudentController::class, 'update']);
     Route::post('/delete/{id}', [StudentController::class, 'delete']);
-    Route::post('/assign-parent/{student_id}', [StudentController::class, 'assignParent']);
+    Route::post('/assign-parent/{student_id}', [StudentController::class, 'assignParent'])->whereNumber('student_id');
     Route::post('/detach-parent/{student_id}', [StudentController::class, 'detachParent']);
     Route::post('/up_grade', [StudentController::class, 'upGrade']);
 
