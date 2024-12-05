@@ -1,9 +1,9 @@
 <?php
-namespace App\Domain\RollcallStatistics\Requests;
+namespace App\Domain\Point\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class RollcallStatisticsRequest extends FormRequest 
+class GetExamPeriodRequest extends FormRequest
 {
     public function __construct()
     {
@@ -12,6 +12,7 @@ class RollcallStatisticsRequest extends FormRequest
     public function rules(): array
     {
         return [
+            "exam_id" => "required|exists:exam,id",
         ];
     }
     
@@ -22,4 +23,3 @@ class RollcallStatisticsRequest extends FormRequest
     }
     
 }
-            
