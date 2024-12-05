@@ -264,6 +264,7 @@ class RollCallRepository
                 $note = $rollCall->note;
             }
             return [
+                'id' => $student->id,
                 'fullname' => $student->fullname ?? "",
                 'code' => $student->student_code ?? "",
                 'dob' => $student->dob ?? "",
