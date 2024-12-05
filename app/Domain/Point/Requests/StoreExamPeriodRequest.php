@@ -4,7 +4,7 @@ namespace App\Domain\Point\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateExamRequest extends FormRequest
+class StoreExamPeriodRequest extends FormRequest
 {
     public function __construct()
     {
@@ -14,9 +14,7 @@ class UpdateExamRequest extends FormRequest
     {
         return [
             "exam_id" => "required|exists:exam,id",
-            "school_year_id" => "required|integer|exists:school_year,id",
-            "name"           => "required|string",
-            "point"          => "required|integer",
+            "date"    => "required|date",
         ];
     }
 

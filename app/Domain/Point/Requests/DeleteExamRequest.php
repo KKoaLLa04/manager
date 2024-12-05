@@ -13,7 +13,7 @@ class DeleteExamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "exam_period_id" => "required|exists:exam_period,id",
+            "exam_id" => "required|exists:exam,id",
         ];
     }
 

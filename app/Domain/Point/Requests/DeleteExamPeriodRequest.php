@@ -4,7 +4,7 @@ namespace App\Domain\Point\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateExamRequest extends FormRequest
+class DeleteExamPeriodRequest extends FormRequest
 {
     public function __construct()
     {
@@ -13,10 +13,7 @@ class UpdateExamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "exam_id" => "required|exists:exam,id",
-            "school_year_id" => "required|integer|exists:school_year,id",
-            "name"           => "required|string",
-            "point"          => "required|integer",
+            "exam_period_id" => "required|exists:exam_period,id",
         ];
     }
 
