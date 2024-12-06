@@ -5,7 +5,9 @@ namespace App\Domain\RollCall\Repository;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\statusClassAttendance;
 use App\Common\Enums\StatusClassStudentEnum;
+use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusStudentEnum;
+use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\RollCall\Models\RollCall;
 use App\Jobs\CreateNotification;
 use App\jobs\NotificationJob;
@@ -18,82 +20,63 @@ use Illuminate\Support\Collection;
 class RollCallRepository
 {
     public function getClass($pageIndex = 1, $pageSize = 10, $keyWord = null, $date = null)
-{
-    // Đếm số lớp đã điểm danh và chưa điểm danh
-    $totalClassAttendanced = StudentClassHistory::where('status', StatusClassAttendance::HAS_CHECKED->value)
-        ->distinct('class_id')
-        ->count('class_id');
+    {
+        $query = Classes::where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->with([
+                'grade',
+                'rollCalls' => function ($query) {
+                    $query->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+                        ->where('status');
+                },
+                'classHistory' => function ($query) {
+                    $query->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+                        ->where('status', StatusEnum::ACTIVE->value);
+                },
+                'classSubjectTeacher.user' => function ($query) {
+                    $query->select('id', 'fullname', 'email');
+                }
+            ]);
 
-    $totalClassNoAttendance = StudentClassHistory::where('status', StatusClassAttendance::NOT_YET_CHECKED->value)
-        ->distinct('class_id')
-        ->count();
 
-    // Truy vấn danh sách các lớp học
-    $classesQuery = Classes::with(['user', 'rollCalls.attendanceBy']);  // eager load attendanceBy
+        if ($keyWord) {
+            $query->where(function ($q) use ($keyWord) {
+                $q->where('name', 'LIKE', '%' . $keyWord . '%')
+                    ->orWhereHas('grade', function ($q) use ($keyWord) {
+                        $q->where('name', 'LIKE', '%' . $keyWord . '%');
+                    })
+                    ->orWhereHas('classSubjectTeacher.user', function ($q) use ($keyWord) {
+                        $q->where('fullname', 'LIKE', '%' . $keyWord . '%');
+                    });
+            });
+        }
 
-    // Tìm kiếm theo từ khóa nếu có
-    if ($keyWord) {
-        $classesQuery->where('name', 'LIKE', '%' . $keyWord . '%');
-    }
+        // dd($query->toSql(), $query->getBindings()); 
 
-    // Lọc theo ngày nếu có
-    if ($date) {
-        $classesQuery->whereHas('rollCalls', function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        });
-    }
+        $classes = $query->paginate($pageSize);
 
-    // Phân trang
-    $classes = $classesQuery->paginate($pageSize, ['*'], 'page', $pageIndex);
-
-    // Xử lý dữ liệu trả về
-    $data = $classes->map(function ($class) {
-        $teacher = optional($class->user->first());  // Lấy giáo viên dạy lớp
-        
-        // Đếm tổng số học sinh trong lớp
-        $totalStudent = StudentClassHistory::where('class_id', $class->id)
-            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->count();
-    
-        // Lấy lần điểm danh đầu tiên
-        $rollCall = optional($class->rollCalls)->first();
-    
-        // Lấy tên giáo viên điểm danh từ quan hệ attendanceBy
-        $attendanceBy = optional($class->rollCalls)->first()->attendanceBy->fullname ?? null;
-        
-    
-        // Đếm số học sinh đã điểm danh
-        $studentAttendanced = RollCall::where('class_id', $class->id)
-            ->where('status', StatusStudentEnum::PRESENT->value)
-            ->count();
-    
-        // Thời gian điểm danh và ngày điểm danh
-        $attendanceAt = optional($rollCall)->time ? strtotime($rollCall->time) : null;
-        $dateAttendanced = optional($rollCall)->date ? Carbon::parse($rollCall->date)->translatedFormat('l, d/m/Y') : null;
-    
         return [
-            'classId' => $class->id,
-            'className' => $class->name,
-            'grade' => optional($class->grade)->name,
-            'totalStudent' => $totalStudent,
-            'dateAttendanced' => $dateAttendanced,
-            'attendanceAt' => $attendanceAt,
-            'fullname' => $teacher->fullname,
-            'email' => $teacher->email,
-            'status' => $class->status,
-            'studentAttendanced' => $studentAttendanced,
-            'attendanceBy' => $attendanceBy,  // Trả về tên giáo viên điểm danh
-        ];
-    });
+            'total' => $classes->total(),
+            'data' => $classes->map(function ($class) {
+                $mainTeacher = $class->classSubjectTeacher
+                    ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
+                    ->first()->user ?? null;
 
-    // Trả về kết quả
-    return [
-        'totalClassAttendanced' => $totalClassAttendanced,
-        'totalClassNoAttendance' => $totalClassNoAttendance,
-        'data' => $data,
-        'total' => $classes->total(),
-    ];
-}
+                    $status = $class->rollCalls->first()->status ?? null;
+
+                return [
+                    'class_id' => $class->id,
+                    'className' => $class->name ?? null,
+                    'grade' => $class->grade->name ?? null,
+                    'fullname' => $mainTeacher ? $mainTeacher->fullname : 'Chưa có giáo viên chủ nhiệm',
+                    'email' => $mainTeacher ? $mainTeacher->email : null,
+                    'status' => $status,
+                    'total_students' => $class->classHistory->count(),
+                ];
+            }),
+            'current_page' => $classes->currentPage(),
+            'per_page' => $classes->perPage(),
+        ];
+    }
 
 
 
@@ -118,10 +101,10 @@ class RollCallRepository
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->get();
 
-        
+
         $insertedRollCalls = [];
 
-        
+
         if (!empty($rollCallData)) {
             foreach ($rollCallData as $data) {
                 $studentID = $data['studentID'];
@@ -161,7 +144,6 @@ class RollCallRepository
                         'status' => $rollCall->status ?? 'N/A',
                     ];
                 }
-
             }
         }
 
@@ -239,11 +221,11 @@ class RollCallRepository
 
         $query = Student::query()
             ->whereIn('id', $studentIds)
-        ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
-        if(!is_null($keyWord)){
-            $query->where('fullname', 'like', '%'.$keyWord.'%');
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+        if (!is_null($keyWord)) {
+            $query->where('fullname', 'like', '%' . $keyWord . '%');
         }
-        return [$query->get(),count($studentIds)];
+        return [$query->get(), count($studentIds)];
     }
 
     public function getRollCall(int $classId, Collection $students, Carbon $date): array
@@ -252,14 +234,14 @@ class RollCallRepository
         $rollCalls = RollCall::query()
             ->where('class_id', $classId)
             ->whereIn('student_id', $studentIds)
-            ->where('date',$date->toDateString())
+            ->where('date', $date->toDateString())
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->get();
         return $students->map(function ($student) use ($rollCalls) {
             $status = StatusStudentEnum::PRESENT->value;
             $note = "";
             $rollCall = $rollCalls->where('student_id', $student->id)->first();
-            if(!is_null($rollCall)){
+            if (!is_null($rollCall)) {
                 $status = $rollCall->status;
                 $note = $rollCall->note;
             }
@@ -271,6 +253,5 @@ class RollCallRepository
                 'note' => $note,
             ];
         })->toArray();
-
     }
 }
