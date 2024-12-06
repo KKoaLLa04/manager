@@ -56,19 +56,18 @@ class StudentController extends BaseController
             // $pageSize = 10; // Mặc định về 10 bản ghi
             return response()->json(['message' => 'yêu cầu nhập số lượng lớn hơn 1']);
         }
-
+        $keyWord = $request->input('keyWord', null);
         $studentRepository = new StudentRepository();
 
         // Lấy danh sách sinh viên
-        $students = $studentRepository->paginateStudents($pageSize);
+        $students = $studentRepository->paginateStudents($pageSize,$keyWord);
         if ($students->count() > 0) {
             return response()->json([
                 'status' => 'success',
-                'data' => $students->items(), // Thay items() bằng all() ở đây
-                'total' => $students->total(), // Tổng số bản ghi
-                'page_index' => $students->currentPage(), // Trang hiện tại
-                // 'page' => $students->lastPage(), // Trang cuối cùng
-                'page_size' => $students->perPage(), // Số bản ghi mỗi trang
+                'data' => $students->items(), 
+                'total' => $students->total(), 
+                'page_index' => $students->currentPage(), 
+                'page_size' => $students->perPage(), 
             ]);
         } else {
             return response()->json(['status' => 'error', 'data' => []]);
@@ -96,7 +95,9 @@ class StudentController extends BaseController
                       ->with(['class' => function($q) {
                           $q->select('id', 'name');
                       }]);
-            }])->where('student_code', $request->student_code)->first();
+            }]) ->where('student_code', $request->student_code)
+            ->orderBy('created_at', 'desc') // Sắp xếp theo thời gian tạo giảm dần
+            ->first();
 
             return response()->json([
                 'message' => 'Thêm học sinh thành công',
@@ -147,45 +148,6 @@ class StudentController extends BaseController
     }
 
 
-
-
-
-    // public function update(int $id, StudentUpdateRequest $request)
-    // {
-    //     $StudentUpdateRepository = new StudentUpdateRepository();
-    //     $user_id = Auth::user()->id;
-    //     $type = AccessTypeEnum::MANAGER->value;
-
-    //     if (!$this->user->getUser($user_id, $type)) {
-    //         return $this->responseError(trans('api.error.user_not_permission'));
-    //     }
-
-    //     // Thực hiện cập nhật thông qua repository
-    //     $check = $StudentUpdateRepository->handle($id, $user_id, $request);
-
-    //     if ($check) {
-    //         $data = Student::find($id);
-
-    //         // Chuyển đổi đối tượng thành mảng
-    //         $studentArray = $data->toArray();
-
-    //         // Không tạo bản ghi mới nếu class_id không thay đổi
-    //         $studentArray['class_id'] = optional($data->classHistory->last())->class_id;
-
-    //         return response()->json([
-    //             'message' => 'Sửa học sinh ' . $studentArray['fullname'] . ' thành công',
-    //             'status' => 'success',
-    //             'data' => []
-    //         ]);
-    //     } else {
-    //         return response()->json([
-    //             'message' => 'Sửa học sinh thất bại',
-    //             'status' => 'error',
-    //             'data' => []
-    //         ]);
-    //     }
-    // }
-
     public function update(int $id, StudentUpdateRequest $request)
     {
         $StudentUpdateRepository = new StudentUpdateRepository();
@@ -197,7 +159,7 @@ class StudentController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-        try {
+        
             // Thực hiện cập nhật thông qua repository
             $check = $StudentUpdateRepository->handle($id, $user_id, $request);
 
@@ -223,13 +185,7 @@ class StudentController extends BaseController
                     'data' => []
                 ]);
             }
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Không được phép: ' . $e->getMessage(),
-                'status' => 'error',
-                'data' => []
-            ]);
-        }
+      
     }
 
     public function show($id)
@@ -314,6 +270,7 @@ class StudentController extends BaseController
 
     public function assignParent(int $student_id, AssignParentRequest $request)
     {
+        $student_id = (int) $student_id;
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
 

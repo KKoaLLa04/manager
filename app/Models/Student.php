@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
+use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,9 +34,12 @@ class Student extends Model
     
     public function schoolYear()
     {
-        return $this->belongsTo(SchoolYear::class, 'school_year_name'); // Thay 'school_year_id' bằng tên trường thực tế trong bảng student
+        return $this->belongsTo(SchoolYear::class, 'school_year_name'); 
     }
-
+    public function academic()
+    {
+        return $this->belongsTo(AcademicYear::class, 'academic_year_name'); 
+    }
     protected static function boot()
     {
         parent::boot();

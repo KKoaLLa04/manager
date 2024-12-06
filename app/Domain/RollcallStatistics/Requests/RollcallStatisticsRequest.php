@@ -1,9 +1,9 @@
 <?php
-namespace App\Domain\ParentRollCallHistory\Requests;
+namespace App\Domain\RollcallStatistics\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ParentRollCallHistoryRequest extends FormRequest 
+class RollcallStatisticsRequest extends FormRequest 
 {
     public function __construct()
     {

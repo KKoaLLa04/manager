@@ -117,7 +117,7 @@ class SendNotification extends Command
         $message = [
             "message" => [
                 "token" => $userDevice->device_token,
-                "notification" => [
+                "data" => [
                     "body" => json_encode($dataNoti),
                     "image" => "https://cdn.shopify.com/s/files/1/1061/1924/files/Smiling_with_Sweat_Emoji_Icon_60x60.png?14173495976923716614"
 

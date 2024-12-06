@@ -28,6 +28,10 @@ return [
         ],
         'student' => [
             'students_array_required' => 'Bắt buộc phải nhập và phải là một mảng',
+        ],
+        'subject' => [
+            'have_subject_class' => 'Lớp đã có môn học này',
+            'subjects_array_required' => 'bắt buộc phải nhập và phải là một mảng dữ liệu'
         ]
     ],
 
