@@ -109,6 +109,77 @@ class RollCallRepository
         ];
     }
 
+    public function getStudent($class_id, $name = null, $student_code = null)
+{
+    // Truy vấn học sinh trong lớp
+    $studentsQuery = StudentClassHistory::where('class_id', $class_id)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->where('status', StatusClassStudentEnum::STUDYING->value)
+        ->where('status', StatusEnum::ACTIVE->value)
+        ->whereNull('end_date')
+        ->with([
+            'student' => function ($query) {
+                $query->select('id', 'fullname', 'student_code', 'dob');
+            },
+            'class.rollCalls' => function ($query) {
+                $query->select('note', 'student_id', 'class_id', 'date');
+            }
+        ]);
+
+    // Nếu có tìm kiếm theo tên, thêm điều kiện vào truy vấn
+    if ($name) {
+        $studentsQuery->whereHas('student', function ($query) use ($name) {
+            $query->where('fullname', 'like', '%' . $name . '%');
+        });
+    }
+
+    // Nếu có tìm kiếm theo mã học sinh, thêm điều kiện vào truy vấn
+    if ($student_code) {
+        $studentsQuery->whereHas('student', function ($query) use ($student_code) {
+            $query->where('student_code', 'like', '%' . $student_code . '%');
+        });
+    }
+
+    // Lấy danh sách học sinh
+    $students = $studentsQuery->get();
+
+    // Lấy tổng số học sinh trong lớp
+    $totalStudent = $studentsQuery->count();
+
+    // Lấy số học sinh đã điểm danh
+    $toltalStudentAttendance = RollCall::where('class_id', $class_id)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->distinct('student_id')
+        ->count();
+
+    // Trả về dữ liệu
+    return [
+        'totalStudent' => $totalStudent, // Tổng số học sinh
+        'toltalStudentAttendance' => $toltalStudentAttendance, // Số học sinh đã điểm danh
+        'data' => $students->map(function ($classHistory) {
+            // Lấy thông tin học sinh đã được eager loaded
+            $student = $classHistory->student;
+            $rollcall = $classHistory->class->rollCalls->first(); // Lấy bản ghi rollCall đầu tiên (nếu có)
+            
+            // Kiểm tra xem học sinh có điểm danh hay không, nếu không có thì trả về 'Không có ghi chú'
+            $note = $rollcall ? $rollcall->note : 'Không có ghi chú';
+            
+            return [
+                'id' => $student->id,
+                'fullname' => $student->fullname,
+                'student_code' => $student->student_code,
+                'dob' => $student->dob,
+                'note' => $note,
+            ];
+        }),
+    ];
+}
+
+
+
+    
+
+
     public function attendanceStudentOfClass($classId, $rollCallData = [], $user_id, Carbon $date)
     {
         // Đếm tổng số học sinh trong lớp
