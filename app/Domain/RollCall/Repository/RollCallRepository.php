@@ -9,6 +9,7 @@ use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusStudentEnum;
 use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\RollCall\Models\RollCall;
+use App\Domain\RollCallHistory\Models\RollCallHistory;
 use App\Jobs\CreateNotification;
 use App\jobs\NotificationJob;
 use App\Models\AttendanceLog;
@@ -100,80 +101,79 @@ class RollCallRepository
 }
 
 
-    public function getStudentClassDetails($classId, $rollCallData = [], $user_id)
+    public function attendanceStudentOfClass($classId, $rollCallData = [], $user_id, Carbon $date)
     {
         // Đếm tổng số học sinh trong lớp
-        $totalStudent = StudentClassHistory::where('class_id', $classId)
+        $studentIds = StudentClassHistory::where('class_id', $classId)
             ->whereNull('end_date')
-            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('status', StatusClassStudentEnum::STUDYING->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->count();
-
-        $totalStudentNotAttendaced = RollCall::where('status', StatusStudentEnum::UN_PRESENT)
+            ->get()->pluck('student_id')->toArray();
+        $studentRecords = RollCall::query()
             ->where('class_id', $classId)
-            ->count();
-
-        $totalStudentAttendaced = RollCall::where('status', StatusStudentEnum::PRESENT)
-            ->where('class_id', $classId)
-            ->count();
+            ->where('date', $date->toDateString())
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->get()->keyBy('student_id');
 
         // Lấy tất cả học sinh trong lớp
-        $studentClasses = StudentClassHistory::with(['student'])
-            ->where('class_id', $classId)
-            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->get();
+        $rollCallData = collect($rollCallData)->whereIn('studentID',$studentIds);
+        $dataInsertRollCallHistory = [];
+        foreach ($rollCallData as $data){
+            $rollCall = $studentRecords->get($data['studentID']);
 
+            if(!is_null($rollCall)){
+                $dataUpdate = [
+                    "student_id" => $data['studentID'],
+                    "note" => $data['note'],
+                    "class_id" => $classId,
+                    "date" => $date->toDateString(),
+                    "time" => now()->toTimeString(),
+                    "status" => $data['status'],
+                    "modified_user_id" => $user_id,
+                ];
+                RollCall::query()->where('id', $rollCall->id)->update($dataUpdate);
+                $dataInsertRollCallHistory [] = [
+                    "student_id" => $data['studentID'],
+                    "note" => $data['note'],
+                    "class_id" => $classId,
+                    "roll_call_id" => $rollCall->id,
+                    "date" => $date->toDateString(),
+                    "time" => now()->toTimeString(),
+                    "status" => $data['status'],
+                    "user_id" => $user_id,
+                    "created_at" => now(),
+                    "updated_at" => now(),
+                ];
 
-        $insertedRollCalls = [];
+            }else{
+                $dataInsert = [
+                    "student_id" => $data['studentID'],
+                    "note" => $data['note'],
+                    "class_id" => $classId,
+                    "date" => $date->toDateString(),
+                    "time" => now()->toTimeString(),
+                    "status" => $data['status'],
+                    "created_user_id" => $user_id,
+                ];
+                $rollCall = RollCall::query()->create($dataInsert);
+                CreateNotification::dispatch($rollCall);
 
-        
-        if (!empty($rollCallData)) {
-            foreach ($rollCallData as $data) {
-                $studentID = $data['studentID'];
-                $status    = $data['status'];
-                $note      = $data['note'] ?? null;
-
-
-                $studentClass = $studentClasses->firstWhere('student_id', $studentID);
-
-                if (!$studentClass) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Niên khóa không tồn tại cho học sinh với ID: '.$studentID,
-                        'status'  => 400
-                    ], 400);
-                }
-
-                if ($studentClass) {
-                    $rollCall = RollCall::create([
-                        'student_id'      => $studentClass->student_id,
-                        'class_id'        => $classId,
-                        'status'          => $status,
-                        'date'            => now()->format('Y-m-d'),
-                        'time'            => now()->format('H:i:s'),
-                        'note'            => $note,
-                        'created_user_id' => $user_id,
-                    ]);
-                    CreateNotification::dispatch($rollCall);
-
-
-                    $insertedRollCalls[] = [
-                        'className'  => $studentClass->class->name ?? 'N/A',
-                        'fullname'   => $studentClass->student->fullname ?? 'N/A',
-                        'studentDOB' => $studentClass->student->dob ?? 'N/A',
-                        'note'       => $rollCall->note ?? 'N/A',
-                        'status'     => $rollCall->status ?? 'N/A',
-                    ];
-                }
+                $dataInsertRollCallHistory [] = [
+                    "student_id" => $data['studentID'],
+                    "note" => $data['note'],
+                    "class_id" => $classId,
+                    "roll_call_id" => $rollCall->id,
+                    "date" => $date->toDateString(),
+                    "time" => now()->toTimeString(),
+                    "status" => $data['status'],
+                    "user_id" => $user_id,
+                    "created_at" => now(),
+                    "updated_at" => now(),
+                ];
             }
         }
+        RollCallHistory::query()->insert($dataInsertRollCallHistory);
 
-        return [
-            'totalStudent'              => $totalStudent,
-            'totalStudentNotAttendaced' => $totalStudentNotAttendaced,
-            'totalStudentAttendaced'    => $totalStudentAttendaced,
-            'insert_roll_call'          => $insertedRollCalls,
-        ];
     }
 
     private function attendanceLog($classId)
