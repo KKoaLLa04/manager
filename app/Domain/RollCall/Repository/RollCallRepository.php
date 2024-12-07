@@ -109,7 +109,7 @@ class RollCallRepository
         ];
     }
 
-    public function getStudentClassDetails($classId, $rollCallData = [], $user_id)
+    public function attendanceStudentOfClass($classId, $rollCallData = [], $user_id, Carbon $date)
     {
         // Đếm tổng số học sinh trong lớp
         $studentIds = StudentClassHistory::where('class_id', $classId)
@@ -129,35 +129,42 @@ class RollCallRepository
         foreach ($rollCallData as $data){
             $rollCall = $studentRecords->get($data['studentID']);
 
+            if(!is_null($rollCall)){
+                $dataUpdate = [
+                    "student_id" => $data['studentID'],
+                    "note" => $data['note'],
+                    "class_id" => $classId,
+                    "date" => $date->toDateString(),
+                    "time" => now()->toTimeString(),
+                    "status" => $data['status'],
+                    "modified_user_id" => $user_id,
+                ];
+                RollCall::query()->where('id', $rollCall->id)->update($dataUpdate);
+                $dataInsertRollCallHistory [] = [
+                    "student_id" => $data['studentID'],
+                    "note" => $data['note'],
+                    "class_id" => $classId,
+                    "roll_call_id" => $rollCall->id,
+                    "date" => $date->toDateString(),
+                    "time" => now()->toTimeString(),
+                    "status" => $data['status'],
+                    "user_id" => $user_id,
+                    "created_at" => now(),
+                    "updated_at" => now(),
+                ];
 
-        if (!empty($rollCallData)) {
-            foreach ($rollCallData as $data) {
-                $studentID = $data['studentID'];
-                $status    = $data['status'];
-                $note      = $data['note'] ?? null;
-
-
-                $studentClass = $studentClasses->firstWhere('student_id', $studentID);
-
-                if (!$studentClass) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Niên khóa không tồn tại cho học sinh với ID: ' . $studentID,
-                        'status'  => 400
-                    ], 400);
-                }
-
-                if ($studentClass) {
-                    $rollCall = RollCall::create([
-                        'student_id'      => $studentClass->student_id,
-                        'class_id'        => $classId,
-                        'status'          => $status,
-                        'date'            => now()->format('Y-m-d'),
-                        'time'            => now()->format('H:i:s'),
-                        'note'            => $note,
-                        'created_user_id' => $user_id,
-                    ]);
-                    CreateNotification::dispatch($rollCall);
+            }else{
+                $dataInsert = [
+                    "student_id" => $data['studentID'],
+                    "note" => $data['note'],
+                    "class_id" => $classId,
+                    "date" => $date->toDateString(),
+                    "time" => now()->toTimeString(),
+                    "status" => $data['status'],
+                    "created_user_id" => $user_id,
+                ];
+                $rollCall = RollCall::query()->create($dataInsert);
+                CreateNotification::dispatch($rollCall);
 
                 $dataInsertRollCallHistory [] = [
                     "student_id" => $data['studentID'],
@@ -176,6 +183,7 @@ class RollCallRepository
         RollCallHistory::query()->insert($dataInsertRollCallHistory);
 
     }
+
 
     private function attendanceLog($classId)
     {
@@ -251,9 +259,9 @@ class RollCallRepository
 
         $query = Student::query()
             ->whereIn('id', $studentIds)
-            ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
-        if (!is_null($keyWord)) {
-            $query->where('fullname', 'like', '%' . $keyWord . '%');
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+        if(!is_null($keyWord)){
+            $query->where('fullname', 'like', '%'.$keyWord.'%');
         }
         return [$query->get(), count($studentIds)];
     }
@@ -285,4 +293,5 @@ class RollCallRepository
             ];
         })->toArray();
     }
+    
 }
