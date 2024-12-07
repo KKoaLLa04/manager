@@ -3,11 +3,15 @@
 namespace App\Domain\RollCall\Controllers;
 
 use App\Common\Enums\AccessTypeEnum;
+use App\Common\Enums\DeleteEnum;
+use App\Common\Enums\GenderEnum;
+use App\Common\Enums\StatusStudentEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\RollCall\Models\RollCall;
 use App\Domain\RollCall\Repository\RollCallRepository;
 use App\Domain\RollCall\Requests\RollCallRequest;
 use App\Http\Controllers\BaseController;
+use App\Models\StudentClassHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -44,6 +48,7 @@ class RollCallController extends BaseController
             return $this->responseError(trans('api.rollcall.index.errors'));
         }
     }
+   
 
     public function rollCall(Request $request, $classId, GetUserRepository $getUserRepository)
     {
