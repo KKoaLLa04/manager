@@ -137,15 +137,9 @@ class ClassController extends BaseController
             return $this->responseError(trans('api.error.not_found'));
         }
 
-        $statusCreateClass = $this->updateClassRepository->UpdateClass($request);
-        if ($statusCreateClass) {
-            $classId = $request->class_id;
-            $this->updateClassRepository->createClassTeacherSubject($classId,
-                $request->teacher_id ?? 0);
+        $this->updateClassRepository->UpdateClass($request);
 
-            return $this->responseSuccess();
-        }
-        return $this->responseError();
+        return $this->responseSuccess();
     }
 
     public function delete(DeleteClassRequest $request)

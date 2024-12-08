@@ -47,6 +47,7 @@ class StudentRepository {
                 });
             });
         }
+        $query->orderBy('created_at', 'desc');
 
         // Lấy danh sách sinh viên đã lọc theo từ khóa
         $students = $query->paginate($pageSize);
