@@ -64,10 +64,10 @@ class StudentController extends BaseController
         if ($students->count() > 0) {
             return response()->json([
                 'status' => 'success',
-                'data' => $students->items(), 
-                'total' => $students->total(), 
-                'page_index' => $students->currentPage(), 
-                'page_size' => $students->perPage(), 
+                'data' => $students->items(),
+                'total' => $students->total(),
+                'page_index' => $students->currentPage(),
+                'page_size' => $students->perPage(),
             ]);
         } else {
             return response()->json(['status' => 'error', 'data' => []]);
@@ -509,7 +509,7 @@ class StudentController extends BaseController
         if ($check) {
             return response([
                 'msg' => trans('api.alert.together.index_success'),
-                'data' => $check
+                'data' => array_filter($check)
             ], ResponseAlias::HTTP_OK);
         } else {
             return response([
@@ -556,7 +556,17 @@ class StudentController extends BaseController
 
         $check = $repository->handle($keyword, (int)$schoolYearChoose, (int)$classId, (int)$schoolYearId, $studentsIn, $studentsOut);
 
-        dd($check);
+        if ($check) {
+            return response([
+                'msg' => trans('api.alert.together.add_success'),
+                'data' => []
+            ], ResponseAlias::HTTP_OK);
+        } else {
+            return response([
+                'msg' => trans('api.alert.together.add_failed'),
+                'data' => []
+            ], ResponseAlias::HTTP_FOUND);
+        }
 
     }
 
