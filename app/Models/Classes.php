@@ -81,5 +81,12 @@ class Classes extends Model
     public function rollCalls(){
         return $this->hasMany(RollCall::class, 'class_id', 'id');
     }
+
+    public function attendanceLog(){
+        return $this->hasMany(AttendanceLog::class, 'class_id', 'id');
+    }
+
+    
+    
 }
 
