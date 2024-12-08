@@ -132,12 +132,6 @@ class ClassController extends BaseController
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
-
-        $checkTeacher = $this->getUserRepository->getUser($request->teacher_id, AccessTypeEnum::TEACHER->value);
-        if (!$checkTeacher) {
-            return $this->responseError(trans('api.error.not_found'));
-        }
-
         $checkGrade = $this->gradeRepository->checkGradeExits($request->grade_id);
         if (!$checkGrade) {
             return $this->responseError(trans('api.error.not_found'));
@@ -147,7 +141,7 @@ class ClassController extends BaseController
         if ($statusCreateClass) {
             $classId = $request->class_id;
             $this->updateClassRepository->createClassTeacherSubject($classId,
-                $request->teacher_id);
+                $request->teacher_id ?? 0);
 
             return $this->responseSuccess();
         }
