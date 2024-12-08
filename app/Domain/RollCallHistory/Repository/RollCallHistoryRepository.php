@@ -146,6 +146,8 @@ class RollCallHistoryRepository {
             ->whereNull('end_date')
             ->count();
     
+            $class = Classes::find($classId);
+            $className = $class ? $class->name : 'Unknown';
         // Lấy danh sách lịch sử điểm danh với điều kiện tìm kiếm và lọc theo ngày
         $rollCallHistoriesQuery = RollCallHistory::where('class_id', $classId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
@@ -204,6 +206,7 @@ class RollCallHistoryRepository {
             'message' => 'Lấy lịch sử điểm danh thành công',
             'status' => 'success',
             'total_students' => $totalStudents, // Tổng số học sinh
+            'class_name' => $className,
             'data' => $paginator->items(), // Dữ liệu đã phân trang
             'total' => $paginator->total(), // Tổng số ngày
             'pageIndex' => $paginator->currentPage(), // Trang hiện tại
@@ -223,7 +226,8 @@ class RollCallHistoryRepository {
                     ->orWhereDate('end_date', '>', $date);  // Hoặc còn học trong lớp sau ngày `$date`
         })
         ->count();
-    
+        $class = Classes::find($classId);
+        $className = $class ? $class->name : 'Unknown';
         // Lấy danh sách lịch sử điểm danh theo class_id và ngày cụ thể
         $rollCallHistories = RollCallHistory::where('class_id', $classId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
@@ -281,6 +285,7 @@ class RollCallHistoryRepository {
             'status' => 'success',
             'date' => Carbon::parse($date)->translatedFormat('l, d/m/Y'), // Hiển thị ngày đã chọn
             'class_id' => $classId,
+            'class_name' => $className,
             'total_students' => $totalStudents, // Tổng số học sinh
             'total_Students_Attended' => $totalRollCalledStudents, // Tổng số học sinh đã điểm danh
             'total_Student_NotAttendance' => $totalStudentNotAttendance, // Số học sinh vắng mặt không phép
