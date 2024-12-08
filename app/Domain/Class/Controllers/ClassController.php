@@ -133,25 +133,14 @@ class ClassController extends BaseController
         }
 
 
-        $checkTeacher = $this->getUserRepository->getUser($request->teacher_id, AccessTypeEnum::TEACHER->value);
-        if (!$checkTeacher) {
-            return $this->responseError(trans('api.error.not_found'));
-        }
-
         $checkGrade = $this->gradeRepository->checkGradeExits($request->grade_id);
         if (!$checkGrade) {
             return $this->responseError(trans('api.error.not_found'));
         }
 
-        $statusCreateClass = $this->updateClassRepository->UpdateClass($request);
-        if ($statusCreateClass) {
-            $classId = $request->class_id;
-            $this->updateClassRepository->createClassTeacherSubject($classId,
-                $request->teacher_id);
+        $this->updateClassRepository->UpdateClass($request);
 
-            return $this->responseSuccess();
-        }
-        return $this->responseError();
+        return $this->responseSuccess();
     }
 
     public function delete(DeleteClassRequest $request)

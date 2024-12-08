@@ -52,7 +52,12 @@ class GuardianRepository
                         'dob' => strtotime($student->dob),
                         'gender' => $student->gender,
                         'phone' => $student->phone,
-                        'academicYear' => $student->classHistories->first()->class->academicYear->name,
+                        'academicYear' => $student->classHistories->isNotEmpty() &&
+                        $student->classHistories->first()->class &&
+                        $student->classHistories->first()->class->academicYear
+                        ? $student->classHistories->first()->class->academicYear->name
+                        : null,
+
                         'username' => $student->username,
                     ];
                 }),
