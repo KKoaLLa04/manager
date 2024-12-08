@@ -132,7 +132,6 @@ class ClassController extends BaseController
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
-
         $checkGrade = $this->gradeRepository->checkGradeExits($request->grade_id);
         if (!$checkGrade) {
             return $this->responseError(trans('api.error.not_found'));

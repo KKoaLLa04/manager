@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix' => 'manager/student', 'middleware' => 'auth:api'], function () {
     // Lấy danh sách học sinh
     Route::get('/', [StudentController::class, 'index']);
-    Route::post('/class_by_year', [StudentController::class, 'classByYear']);
+    Route::get('/class_by_year', [StudentController::class, 'classByYear']);
     Route::get('/detail_class_current', [StudentController::class, 'getDetailClassCurrent']);
     Route::get('/student_by_class', [StudentController::class, 'getStudentByClass']);
-    Route::get('/change_class_for_student', [StudentController::class, 'changeClassForStudent']);
+    Route::post('/change_class_for_student', [StudentController::class, 'changeClassForStudent']);
 
     // Thêm mới học sinh
     Route::post('/store', [StudentController::class, 'store']);

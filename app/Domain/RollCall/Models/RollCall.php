@@ -27,6 +27,7 @@ class RollCall extends Model
         return $this->belongsTo(Classes::class, 'class_id', 'id');
     }
 
+    
     public function attendanceBy()
     {
         return $this->belongsTo(User::class, 'created_user_id', 'id');

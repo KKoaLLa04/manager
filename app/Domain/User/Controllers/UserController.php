@@ -64,12 +64,11 @@ class UserController extends BaseController
         $IndexRepository = new UserIndexRepository();
 
         $check = $IndexRepository->handle($keyword);
-
         if ($check) {
             // return $this->responseSuccess(['data' => $check->forPage($pageIndex, $pageSize)], trans('api.alert.together.index_success'));
             return response()->json([
                 'msg'   => trans('api.alert.together.index_success'),
-                'data'  => $check->forPage($pageIndex, $pageSize),
+                'data'  => $check->forPage($pageIndex, $pageSize)->values(),
                 'total' => $check->count()
             ], ResponseAlias::HTTP_OK);
         } else {
