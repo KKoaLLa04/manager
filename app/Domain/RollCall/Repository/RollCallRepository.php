@@ -198,6 +198,19 @@ class RollCallRepository
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->get()->keyBy('student_id');
 
+        $attendanceLog = AttendanceLog::query()->where('date', $date->toDateString())
+            ->where('class_id', $classId)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->first();
+        if(is_null($attendanceLog)){
+            AttendanceLog::query()->create(
+                [
+                    'class_id' => $classId,
+                    'date' => $date->toDateString(),
+                    'user_id' => $user_id,
+                ]
+            );
+        }
         // Lấy tất cả học sinh trong lớp
         $rollCallData = collect($rollCallData)->whereIn('studentID', $studentIds);
         $dataInsertRollCallHistory = [];
