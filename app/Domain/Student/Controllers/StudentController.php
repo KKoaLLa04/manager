@@ -56,11 +56,11 @@ class StudentController extends BaseController
             // $pageSize = 10; // Mặc định về 10 bản ghi
             return response()->json(['message' => 'yêu cầu nhập số lượng lớn hơn 1']);
         }
-
+        $keyWord = $request->input('keyWord', null);
         $studentRepository = new StudentRepository();
 
         // Lấy danh sách sinh viên
-        $students = $studentRepository->paginateStudents($pageSize);
+        $students = $studentRepository->paginateStudents($pageSize,$keyWord);
         if ($students->count() > 0) {
             return response()->json([
                 'status' => 'success',
@@ -95,7 +95,9 @@ class StudentController extends BaseController
                       ->with(['class' => function($q) {
                           $q->select('id', 'name');
                       }]);
-            }])->where('student_code', $request->student_code)->first();
+            }]) ->where('student_code', $request->student_code)
+            ->orderBy('created_at', 'desc') // Sắp xếp theo thời gian tạo giảm dần
+            ->first();
 
             return response()->json([
                 'message' => 'Thêm học sinh thành công',
@@ -157,7 +159,7 @@ class StudentController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-        try {
+        
             // Thực hiện cập nhật thông qua repository
             $check = $StudentUpdateRepository->handle($id, $user_id, $request);
 
@@ -183,13 +185,7 @@ class StudentController extends BaseController
                     'data' => []
                 ]);
             }
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Không được phép: ' . $e->getMessage(),
-                'status' => 'error',
-                'data' => []
-            ]);
-        }
+      
     }
 
     public function show($id)
@@ -274,6 +270,7 @@ class StudentController extends BaseController
 
     public function assignParent(int $student_id, AssignParentRequest $request)
     {
+        $student_id = (int) $student_id;
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
 
