@@ -159,7 +159,7 @@ class StudentController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-        
+
             // Thực hiện cập nhật thông qua repository
             $check = $StudentUpdateRepository->handle($id, $user_id, $request);
 
@@ -185,7 +185,7 @@ class StudentController extends BaseController
                     'data' => []
                 ]);
             }
-      
+
     }
 
     public function show($id)
@@ -506,7 +506,7 @@ class StudentController extends BaseController
         if ($check) {
             return response([
                 'msg' => trans('api.alert.together.index_success'),
-                'data' => array_filter($check)
+                'data' => array_values(array_filter($check))
             ], ResponseAlias::HTTP_OK);
         } else {
             return response([
