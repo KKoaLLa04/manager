@@ -64,6 +64,7 @@ class RollcallStatisticsRepository {
                     ->first()->user ?? null;
 
                 return [
+                    'class_id' => $class->id ?? null, 
                     'class_name' => $class->name ?? null,
                     'grade_name' => $class->grade->name ?? null,
                     'status_class' => $class->status ?? null,
