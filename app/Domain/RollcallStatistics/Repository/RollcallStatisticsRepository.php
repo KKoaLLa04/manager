@@ -64,6 +64,7 @@ class RollcallStatisticsRepository {
                     ->first()->user ?? null;
 
                 return [
+                    'class_id' => $class->id ?? null, 
                     'class_name' => $class->name ?? null,
                     'grade_name' => $class->grade->name ?? null,
                     'status_class' => $class->status ?? null,
@@ -177,6 +178,7 @@ class RollcallStatisticsRepository {
         return [
             'message' => 'Lấy lịch sử điểm danh thành công',
             'status' => 'success',
+            'class_id'=>$classId,
             'class_name' => $className,
             'total_students' => $totalStudents,
             'data' => $paginator->items(),
