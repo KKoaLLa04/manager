@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domain\User\Controllers;
 
 use App\Common\Enums\AccessTypeEnum;
@@ -19,7 +20,6 @@ use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 
-
 class UserController extends BaseController
 {
 
@@ -27,7 +27,6 @@ class UserController extends BaseController
 
     public function __construct(Request $request)
     {
-
         // dd(Auth::user());
 
         $this->user = new GetUserRepository();
@@ -38,61 +37,56 @@ class UserController extends BaseController
 
     public function index(Request $request)
     {
-
         $user_id = Auth::user()->id;
 
-        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
         $keyword = "";
 
-        if(!empty($request->keyword)){
+        if (!empty($request->keyword)) {
             $keyword = $request->keyword;
         }
 
         $pageIndex = 1;
 
-        if(!empty($request->pageIndex)){
+        if (!empty($request->pageIndex)) {
             $pageIndex = $request->pageIndex;
         }
 
         $pageSize = 15;
 
-        if(!empty($request->pageSize)){
+        if (!empty($request->pageSize)) {
             $pageSize = $request->pageSize;
         }
 
         $IndexRepository = new UserIndexRepository();
 
         $check = $IndexRepository->handle($keyword);
-
         if ($check) {
             // return $this->responseSuccess(['data' => $check->forPage($pageIndex, $pageSize)], trans('api.alert.together.index_success'));
             return response()->json([
-                'msg' => trans('api.alert.together.index_success'),
-                'data' => $check->forPage($pageIndex, $pageSize),
+                'msg'   => trans('api.alert.together.index_success'),
+                'data'  => $check->forPage($pageIndex, $pageSize)->values(),
                 'total' => $check->count()
             ], ResponseAlias::HTTP_OK);
         } else {
             // return $this->responseError(trans('api.alert.together.index_failed'));
             return response()->json([
-                'msg' => trans('api.alert.together.index_success'),
-                'data' => [],
+                'msg'   => trans('api.alert.together.index_success'),
+                'data'  => [],
                 'total' => 0
             ], ResponseAlias::HTTP_OK);
         }
-
     }
-
 
 
     public function detail(int $id, Request $request)
     {
-
         $user_id = Auth::user()->id;
 
-        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -105,15 +99,13 @@ class UserController extends BaseController
         } else {
             return $this->responseError(trans('api.alert.together.detail_failed'));
         }
-
-
     }
 
     public function add(UserAddRequest $request)
     {
         $user_id = Auth::user()->id;
 
-        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -126,26 +118,24 @@ class UserController extends BaseController
             // $data = $data->last();
             // return $this->responseSuccess(['data' => $data->infoMainTearchWithClass()], trans('api.alert.together.add_success'));
             return response()->json([
-                'msg' => trans('api.alert.together.add_success'),
+                'msg'  => trans('api.alert.together.add_success'),
                 'data' => [],
             ], ResponseAlias::HTTP_OK);
         } else {
             // return $this->responseError(trans('api.alert.together.add_failed'));
             return response()->json([
-                'msg' => trans('api.alert.together.add_failed'),
+                'msg'  => trans('api.alert.together.add_failed'),
                 'data' => [],
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
-
     }
 
 
     public function edit(int $id, UserEditRequest $request)
     {
-
         $user_id = Auth::user()->id;
 
-        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -157,27 +147,24 @@ class UserController extends BaseController
             // $data = User::find($id);
             // return $this->responseSuccess(['data' => $data->infoMainTearchWithClass()], trans('api.alert.together.edit_success'));
             return response()->json([
-                'msg' => trans('api.alert.together.edit_success'),
+                'msg'  => trans('api.alert.together.edit_success'),
                 'data' => [],
             ], ResponseAlias::HTTP_OK);
         } else {
             // return $this->responseError(trans('api.alert.together.edit_failed'));
             return response()->json([
-                'msg' => trans('api.alert.together.edit_failed'),
+                'msg'  => trans('api.alert.together.edit_failed'),
                 'data' => [],
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-
     }
 
 
     public function delete(int $id, Request $request)
     {
-
         $user_id = Auth::user()->id;
 
-        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -190,19 +177,18 @@ class UserController extends BaseController
         } else {
             return $this->responseError(trans('api.alert.together.delete_failed'));
         }
-
     }
 
 
-    public function chooseClassToMainTearch (Request $request) {
-
+    public function chooseClassToMainTearch(Request $request)
+    {
         $request->validate([
             'schoolYearId' => 'required'
         ]);
 
         $user_id = Auth::user()->id;
 
-        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
@@ -210,30 +196,23 @@ class UserController extends BaseController
 
         $check = $ChooseClassToMainTearchRepository->handle($request->schoolYearId);
 
-        if ($check) {
-            return $this->responseSuccess($check, trans('api.alert.together.index_success'));
-        } else {
-            return $this->responseError(trans('api.alert.together.index_failed'));
-        }
-
+        return $this->responseSuccess($check, trans('api.alert.together.index_success'));
     }
-
 
 
     public function changePassword(int $id, Request $request)
     {
-
         $user_id = Auth::user()->id;
 
-        if(!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)){
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
         $request->validate([
             'userPassword' => 'required|min:3|max:255'
         ], [
-            'min' => trans('api.error.min'),
-            'max' => trans('api.error.max'),
+            'min'      => trans('api.error.min'),
+            'max'      => trans('api.error.max'),
             'required' => trans('api.error.required'),
         ]);
 
@@ -246,7 +225,6 @@ class UserController extends BaseController
         } else {
             return $this->responseError(trans('api.alert.together.edit_failed'));
         }
-
     }
 
 

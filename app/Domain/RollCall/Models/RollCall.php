@@ -4,6 +4,7 @@ namespace App\Domain\RollCall\Models;
 
 use App\Models\Classes;
 use App\Models\Student;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,5 +25,11 @@ class RollCall extends Model
     public function class()
     {
         return $this->belongsTo(Classes::class, 'class_id', 'id');
+    }
+
+    
+    public function attendanceBy()
+    {
+        return $this->belongsTo(User::class, 'created_user_id', 'id');
     }
 }

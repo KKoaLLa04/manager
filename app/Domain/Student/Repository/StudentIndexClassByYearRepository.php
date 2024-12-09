@@ -21,11 +21,16 @@ class StudentIndexClassByYearRepository {
 
         $list = Classes::where('school_year_id', $year_id)->where('status', StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
 
-        if ($list->count() > 0) {
-            return $list->toArray();
-        }
+        // if ($list->count() > 0) {
+            return $list->map(function ($item) {
+                return [
+                    'classId' => $item->id,
+                    'className' => $item->name
+                ];
+            });
+        // }
 
-        return [];
+        // return [];
 
     }
 
