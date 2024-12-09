@@ -7,6 +7,7 @@ use App\Common\Enums\DeleteEnum;
 use App\Http\Controllers\BaseController;
 use App\Models\UserNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -33,7 +34,7 @@ class NotificationController extends BaseController
                 'item_id'    => $notification->item_id,
                 'item_type'  => $notification->type,
                 'date'       => $notification->date,
-                'created_at' => $notification->created_at,
+                'created_at' => Carbon::parse($notification->created_at)->timestamp,
                 'data'       => json_decode($notification->data),
             ];
         });
