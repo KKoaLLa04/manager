@@ -177,6 +177,7 @@ class RollcallStatisticsRepository {
         return [
             'message' => 'Lấy lịch sử điểm danh thành công',
             'status' => 'success',
+            'class_id'=>$classId,
             'class_name' => $className,
             'total_students' => $totalStudents,
             'data' => $paginator->items(),
