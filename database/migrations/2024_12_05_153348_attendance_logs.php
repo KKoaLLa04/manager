@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('class_id');
             $table->date('date');
             $table->integer('is_deleted')->default(0)->comment("1: deleted, 0: not deleted");
+            $table->timestamps();
         });
     }
 
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('attendance_logs');
+        Schema::dropIfExists('attendance_log');
     }
 };
