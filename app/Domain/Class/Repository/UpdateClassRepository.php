@@ -24,7 +24,7 @@ class UpdateClassRepository extends ClassRepository
             "modified_user_id" => Auth::user()->id
         ];
 
-        return Classes::query()->where('id', $request->class_id)->update($dataUpdate);
+         Classes::query()->where('id', $request->class_id)->update($dataUpdate);
     }
 
     public function createClassTeacherSubject(int $classId, int $teacherId)

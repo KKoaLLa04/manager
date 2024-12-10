@@ -32,4 +32,14 @@ class BaseController extends Controller
             $status
         );
     }
+
+    public function responseValidate($data = [], $message = 'Unprocessable Content'): JsonResponse
+    {
+        return response()->json(
+            [
+                'msg'  => !empty($message) ? $message : '',
+                'errors' => $data,
+            ]
+            , ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
+    }
 }

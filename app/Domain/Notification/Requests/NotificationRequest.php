@@ -1,9 +1,9 @@
 <?php
-namespace App\Domain\RollcallStatistics\Requests;
+namespace App\Domain\Notification\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class RollcallStatisticsRequest extends FormRequest 
+class NotificationRequest extends FormRequest 
 {
     public function __construct()
     {

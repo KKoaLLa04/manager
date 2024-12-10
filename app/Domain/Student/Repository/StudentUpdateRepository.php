@@ -35,17 +35,18 @@ class StudentUpdateRepository {
             ->orderBy('updated_at', 'desc')              
             ->orderBy('id', 'desc')                      
             ->first();
-    
-        if ($status == StatusClassStudentEnum::NOT_YET_CLASS->value && $currentClassHistory) {
-            throw new \Exception('Không thể chuyển sang trạng thái "Chưa vào lớp" khi học sinh đã có lớp học.');
-        }
+            
+            
+            // if (!$status == StatusClassStudentEnum::NOT_YET_CLASS->value) {              
+            //     throw new \Exception('Không thể chuyển sang trạng thái "Chưa vào lớp" khi học sinh đã có lớp học.');                
+            // }
+
+            $item->save();
         
-        $item->save();
     
         // Kiểm tra nếu có sự thay đổi về `class_id` hoặc `status`
         $isClassChanged = $currentClassHistory && $currentClassHistory->class_id != $classId;
         $isStatusChanged = $currentClassHistory && $currentClassHistory->status != $status;
-    
         // Nếu chưa có bản ghi lớp học thì tạo mới
         if (!$currentClassHistory) {
             StudentClassHistory::create([
