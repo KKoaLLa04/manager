@@ -16,6 +16,9 @@ Route::group(['prefix' => 'manager/guardian', 'middleware' => 'auth:api'], funct
     Route::put('change/{id}',[GuardianController::class,'ChangePasswordGuardian']);
     Route::post('add/{guardianId}/assign-student', [GuardianController::class, 'assignStudent']);
     Route::post('delete/{guardianId}/unassign-student', [GuardianController::class, 'unassignStudent']);
+
+    Route::post('/import', [GuardianController::class, 'importExcel']);
+
 });
 
 Route::group(['prefix' => 'teacher/guardian', 'middleware' => 'auth:api'], function () {
