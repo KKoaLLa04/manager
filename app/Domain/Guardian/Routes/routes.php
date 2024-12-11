@@ -28,6 +28,8 @@ Route::group(['prefix' => 'teacher/guardian', 'middleware' => 'auth:api'], funct
 
 Route::group(['prefix' => 'guardian/guardian','middleware' => 'auth:api'] ,function (){
     Route::get('show',[GuardianOfGuardianController::class,'show']);
-    Route::put('change',[GuardianOfGuardianController::class,'ChangePasswordGuardian']);
+    Route::post('change',[GuardianOfGuardianController::class,'ChangePasswordGuardian']);
     Route::get('student',[GuardianOfGuardianController::class,'getStudentInGuardian']);
+    Route::get('lay-danh-sach-hoc-sinh',[GuardianOfGuardianController::class,'layDanhSachHocSinh']);
+    Route::get('lay-chi-tiet-hoc-sinh',[GuardianOfGuardianController::class,'layMotHocSinh']);
 });
