@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domain\Guardian\Controllers;
 
 use App\Common\Enums\AccessTypeEnum;
@@ -17,60 +18,33 @@ class GuardianOfGuardianController extends BaseController
         $this->guardianRepository = new GuardianOfGuardianRespository();
     }
 
-    public function show(int $id, GetUserRepository $getUserRepository, Request $request)
+    public function show(GetUserRepository $getUserRepository)
+    {
+        // Lấy ID của người dùng hiện tại
+        $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::GUARDIAN->value;
+
+        // Kiểm tra xem người dùng có quyền truy cập hay không
+        $getUser = $getUserRepository->getUser($user_id, $type);
+        if (!$getUser) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        // Lấy thông tin của Guardian
+        $showoneGuardian = $this->guardianRepository->getOneGuardian();
+
+        // Kiểm tra nếu không tìm thấy Guardian
+        if ($showoneGuardian) {
+            return $this->responseSuccess($showoneGuardian, trans('api.guardianofguardian.show.success'));
+        } else {
+            return $this->responseError(trans('api.guardianofguardian.show.errors'));
+        }
+    }
+
+    public function getStudentInGuardian()
 {
-    $user_id = Auth::user()->id;
-    $type = AccessTypeEnum::GUARDIAN->value;
-
-    $getUser = $getUserRepository->getUser($user_id, $type);
-    if (!$getUser) {
-        return $this->responseError(trans('api.error.user_not_permission'));
-    }
-
-    if ($user_id != $id) {
-        return $this->responseError(trans('api.guardianofguardian.show.access_denied'));
-    }
-
-    $showoneGuardian = $this->guardianRepository->getOneGuardian($id);
-
-    if ($showoneGuardian['data'] === null) {
-        return $this->responseError(trans('api.guardianofguardian.show.errors'));
-    }
-
-    return $this->responseSuccess($showoneGuardian['data'], trans('api.guardianofguardian.show.success'));
+    $response = $this->guardianRepository->getStudentInGuardian();
+    return response()->json($response);
 }
 
-
-public function update(int $id, GuardianLayoutGuardianRequest $request, GetUserRepository $getUserRepository) {
-    $user_id = Auth::user()->id;
-    $type = AccessTypeEnum::GUARDIAN->value;
-
-    
-    $getUser = $getUserRepository->getUser($user_id, $type); 
-    if (!$getUser) {
-        return $this->responseError(trans('api.error.user_not_permission'));
-    }
-
-    if ($user_id != $id) {
-        return $this->responseError(trans('api.guardianofguardian.show.access_denied'));
-    }
-    
-    $dataUpdate = [
-        'fullname' => $request->fullname,
-        'phone' => $request->phone,
-        'dob' => $request->dob,
-        'address' => $request->address,
-        'modified_user_id' => $user_id,
-        'updated_at' => now(),
-    ];
- 
-    $update = $this->guardianRepository->updateGuardianProfile($dataUpdate, $id);
-    if ($update) {
-        return $this->responseSuccess(['data' => []], trans('api.guardianofguardian.update.success'));
-    } else {
-        return $this->responseError(trans('api.guardianofguardian.update.errors'));
-    }
 }
-    
-}
-            

@@ -27,6 +27,7 @@ Route::group(['prefix' => 'teacher/guardian', 'middleware' => 'auth:api'], funct
 });
 
 Route::group(['prefix' => 'guardian/guardian','middleware' => 'auth:api'] ,function (){
-    Route::get('show/{id}',[GuardianOfGuardianController::class,'show']);
-    Route::put('update/{id}',[GuardianOfGuardianController::class,'update']);
+    Route::get('show',[GuardianOfGuardianController::class,'show']);
+    Route::put('change',[GuardianOfGuardianController::class,'ChangePasswordGuardian']);
+    Route::get('student',[GuardianOfGuardianController::class,'getStudentInGuardian']);
 });
