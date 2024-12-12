@@ -23,16 +23,15 @@ class StudentChangeClassForStudentRepository {
 
     public function handle(string $keyword = '', int $school_year_id_choose = 0 , int $class_id = 0, int $school_year_id = 0, array $students_out = [], array $students_in = [])
     {
-
         $error = true;
 
         if (!empty($students_in)) {
 
-            if ($class_id != 0) {
+            if ($class_id) {
 
                 foreach ($students_in as $key => $item) {
 
-                    $studentH = StudentClassHistory::where('student_id', $item)->where('class_id', $class_id)->where('status', StatusClassStudentEnum::STUDYING->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->where('end_date', null)->first();
+                    $studentH = StudentClassHistory::where('student_id', $item)->where('status', StatusClassStudentEnum::STUDYING->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->where('end_date', null)->first();
 
                     if ($studentH) {
 
@@ -44,6 +43,43 @@ class StudentChangeClassForStudentRepository {
                             if (!$check){
                                 $error = true;
                             }
+
+                            $studentHNew = new StudentClassHistory();
+
+                            $studentHNew->student_id = $item;
+                            $studentHNew->class_id = $class_id;
+                            $studentHNew->start_date = Carbon::now();
+                            $studentHNew->status = StatusClassStudentEnum::STUDYING->value;
+                            $studentHNew->created_user_id = Auth::id();
+
+                            $check = $studentHNew->save();
+
+                            if (!$check){
+                                $error = true;
+                            }
+
+                        } else {
+
+                            $studentHNew = new StudentClassHistory();
+
+                            $studentHNew->student_id = $item;
+                            $studentHNew->class_id = $class_id;
+                            $studentHNew->start_date = Carbon::now();
+                            $studentHNew->status = StatusClassStudentEnum::STUDYING->value;
+                            $studentHNew->created_user_id = Auth::id();
+
+                            $check = $studentHNew->save();
+
+                            if (!$check){
+                                $error = true;
+                            }
+
+
+                        }
+
+                    } else {
+
+                        if ($school_year_id_choose == $school_year_id) {
 
                             $studentHNew = new StudentClassHistory();
 
@@ -111,6 +147,22 @@ class StudentChangeClassForStudentRepository {
                             $error = true;
                         }
 
+                    } else {
+
+                        $studentHNew = new StudentClassHistory();
+
+                        $studentHNew->student_id = $item;
+                        $studentHNew->class_id = $class_id;
+                        $studentHNew->start_date = Carbon::now();
+                        $studentHNew->status = StatusClassStudentEnum::STUDYING->value;
+                        $studentHNew->created_user_id = Auth::id();
+
+                        $check = $studentHNew->save();
+
+                        if (!$check){
+                            $error = true;
+                        }
+
                     }
 
                 }
@@ -136,6 +188,21 @@ class StudentChangeClassForStudentRepository {
                     if (!$check){
                         $error = true;
                     }
+
+                    $studentHNew = new StudentClassHistory();
+
+                    $studentHNew->student_id = $item;
+                    $studentHNew->start_date = Carbon::now();
+                    $studentHNew->status = StatusClassStudentEnum::LEAVE->value;
+                    $studentHNew->created_user_id = Auth::id();
+
+                    $check = $studentHNew->save();
+
+                    if (!$check){
+                        $error = true;
+                    }
+
+                } else {
 
                     $studentHNew = new StudentClassHistory();
 

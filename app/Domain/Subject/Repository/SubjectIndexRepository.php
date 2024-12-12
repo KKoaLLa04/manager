@@ -14,6 +14,7 @@ class SubjectIndexRepository {
         if($lists->count() > 0){
             return $lists->map(function ($item) {
                 return [
+                    'subject_id' => $item->id,
                     'subjectName' => $item->name
                 ];
             });

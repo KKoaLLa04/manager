@@ -7,6 +7,7 @@ use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use App\Domain\Guardian\Models\Guardian;
 use App\Models\Student;
+use App\Models\User;
 use Exception;
 
 class GuardianRepository
@@ -330,5 +331,12 @@ class GuardianRepository
         } else {
             throw new Exception('Phụ huynh không tồn tại.');
         }
+    }
+    public function getUser($userId, $accessType)
+    {
+        return User::where('id', $userId)
+            ->where('access_type', $accessType)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->first();
     }
 }
