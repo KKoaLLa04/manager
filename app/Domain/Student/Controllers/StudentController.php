@@ -503,6 +503,13 @@ class StudentController extends BaseController
 
         $check = $repository->handle((int)$classId, $keyword);
 
+        if ($check === false) {
+            return response([
+                'msg' => 'Lớp không tồn tại',
+                'data' => []
+            ], ResponseAlias::HTTP_NOT_FOUND);
+        }
+
         if ($check) {
             return response([
                 'msg' => trans('api.alert.together.index_success'),
@@ -510,9 +517,9 @@ class StudentController extends BaseController
             ], ResponseAlias::HTTP_OK);
         } else {
             return response([
-                'msg' => trans('api.alert.together.index_failed'),
+                'msg' => trans('api.alert.together.index_success'),
                 'data' => []
-            ], ResponseAlias::HTTP_FOUND);
+            ], ResponseAlias::HTTP_OK);
         }
 
 
@@ -551,7 +558,7 @@ class StudentController extends BaseController
 
         $repository = new StudentChangeClassForStudentRepository();
 
-        $check = $repository->handle($keyword, (int)$schoolYearChoose, (int)$classId, (int)$schoolYearId, $studentsIn, $studentsOut);
+        $check = $repository->handle($keyword, (int)$schoolYearChoose, (int)$classId, (int)$schoolYearId, $studentsOut, $studentsIn);
 
         if ($check) {
             return response([
