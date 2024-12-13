@@ -46,9 +46,11 @@ class ExamPeriodController extends BaseController
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
         $date = isset($request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now()->toDateString();
+        $name = isset($request->name) ? $request->name : "";
         $data = [
             'exam_id' => $request->exam_id,
             'date' => $date,
+            'name' => $name,
             'created_by' => Auth::id(),
         ];
 
@@ -63,9 +65,11 @@ class ExamPeriodController extends BaseController
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
         $date = isset($request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now()->toDateString();
+        $name = isset($request->name) ? $request->name : "";
         $dataUpdate = [
             'exam_id' => $request->exam_id,
             'date' => $date,
+            'name' => $name,
             'updated_by' => Auth::id(),
         ];
 

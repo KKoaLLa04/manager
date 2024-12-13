@@ -104,7 +104,7 @@ class GuardianPointStudentRepository
                                         "examPeriodDate" => $item->date,
                                         "examPeriodName" => $item->name,
                                         "point"          => isset($pointStudent) ? $pointStudent->point : "",
-                                        "note"           => isset($pointStudent) ? $pointStudent->note : "",
+                                        "note"           => isset($pointStudent) ? $pointStudent->note ?? "" : "",
                                     ];
                                 })->toArray()
                             ];
