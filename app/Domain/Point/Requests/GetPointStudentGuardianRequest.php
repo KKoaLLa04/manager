@@ -15,7 +15,6 @@ class GetPointStudentGuardianRequest extends FormRequest
         return [
             "school_year_id" => "required|integer|exists:school_year,id",
             "student_id"       => "required|integer|exists:students,id",
-            "subject_id"     => "required|integer|exists:subjects,id",
         ];
     }
 

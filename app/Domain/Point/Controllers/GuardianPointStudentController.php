@@ -31,21 +31,18 @@ class GuardianPointStudentController extends BaseController
 
     public function index(GetPointStudentGuardianRequest $request)
     {
-        if (Auth::user()->access_type != AccessTypeEnum::GUARDIAN->value) {
-            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
-        }
+//        if (Auth::user()->access_type != AccessTypeEnum::GUARDIAN->value) {
+//            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+//        }
         $schoolYearId = isset($request->school_year_id) ? (int)$request->school_year_id : 0;
-        $studentId    = isset($request->student_id) ? (int)$request->subject_id : 0;
+        $studentId    = isset($request->student_id) ? (int)$request->student_id : 0;
 
         $exams = $this->pointStudentRepository->getExamBySchoolYearId($schoolYearId);
 
         $examPeriods   = $this->pointStudentRepository->getExamPeriodByIds($exams->pluck('id')->toArray());
         $examPeriodIds = $examPeriods->pluck('id')->toArray();
         $examPeriods   = $examPeriods->groupBy('exam_id');
-
         $pointStudents = $this->pointStudentRepository->getPointStudent($studentId, $examPeriodIds);
-
-
 
         $classIds   = $pointStudents->pluck('class_id')->toArray();
         $subjectIds = $pointStudents->pluck('subject_id')->toArray();
