@@ -3,6 +3,7 @@
 namespace App\Domain\Point\Repository;
 
 use App\Common\Enums\DeleteEnum;
+use App\Models\Exam;
 use App\Models\ExamPeriod;
 use Illuminate\Support\Collection;
 

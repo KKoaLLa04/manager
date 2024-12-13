@@ -18,9 +18,10 @@ return new class extends Migration
             $table->unsignedBigInteger('class_id');
             $table->unsignedBigInteger('subject_id');
             $table->integer('point');
+            $table->string('note');
             $table->integer('is_deleted')->default(0)->comment("1: deleted, 0: not deleted");
-            $table->unsignedBigInteger('created_by');
-            $table->unsignedBigInteger('updated_by');
+            $table->unsignedBigInteger('created_by')->default(0);
+            $table->unsignedBigInteger('updated_by')->default(0);
             $table->timestamps();
         });
     }

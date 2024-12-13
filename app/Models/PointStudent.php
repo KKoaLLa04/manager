@@ -15,6 +15,7 @@ class PointStudent extends Model
         'student_id',
         'exam_period_id',
         'class_id',
+        'note',
         'point',
         'date',
         'created_by',

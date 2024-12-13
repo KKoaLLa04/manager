@@ -14,7 +14,7 @@ class StoreExamPeriodRequest extends FormRequest
     {
         return [
             "exam_id" => "required|exists:exam,id",
-            "date"    => "required|date",
+            "date"    => "required",
         ];
     }
 

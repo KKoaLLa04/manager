@@ -15,6 +15,7 @@ use App\Domain\Point\Requests\StoreExamRequest;
 use App\Domain\Point\Requests\UpdateExamPeriodRequest;
 use App\Domain\Point\Requests\UpdateExamRequest;
 use App\Http\Controllers\BaseController;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -44,9 +45,10 @@ class ExamPeriodController extends BaseController
         if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
+        $date = isset($request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now()->toDateString();
         $data = [
             'exam_id' => $request->exam_id,
-            'date' => $request->date,
+            'date' => $date,
             'created_by' => Auth::id(),
         ];
 
@@ -60,10 +62,10 @@ class ExamPeriodController extends BaseController
         if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
-
+        $date = isset($request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now()->toDateString();
         $dataUpdate = [
             'exam_id' => $request->exam_id,
-            'date' => $request->date,
+            'date' => $date,
             'updated_by' => Auth::id(),
         ];
 

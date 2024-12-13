@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 class ExamController extends BaseController
 {
     public function __construct(
-        protected ExamRepository $examPeriodRepository
+        protected ExamRepository $examRepository
     ) {
         parent::__construct();
     }
@@ -32,9 +32,9 @@ class ExamController extends BaseController
         $page         = isset($request->page) ? (int)$request->page : PaginateEnum::PAGE->value;
         $size         = isset($request->size) ? (int)$request->size : PaginateEnum::MAX_SIZE->value;
         $schoolYearId = isset($request->school_year_id) ? (int)$request->school_year_id : 0;
-        $examPeriods  = $this->examPeriodRepository->getExam($search, $page, $size, $schoolYearId);
+        $examPeriods  = $this->examRepository->getExam($search, $page, $size, $schoolYearId);
         if ($examPeriods->count() > 0) {
-            return $this->responseSuccess($this->examPeriodRepository->transformGetExam($examPeriods));
+            return $this->responseSuccess($this->examRepository->transformGetExam($examPeriods));
         } else {
             return response()->json(['status' => 'success', 'data' => []]);
         }
@@ -52,7 +52,7 @@ class ExamController extends BaseController
             "point"          => (int)$request->point,
             "created_by"     => Auth::id(),
         ];
-        $this->examPeriodRepository->storeExam($dataInsert);
+        $this->examRepository->storeExam($dataInsert);
         return $this->responseSuccess([]);
     }
 
@@ -61,14 +61,14 @@ class ExamController extends BaseController
         if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
-        $examPeriodId = $request->exam_period_id;
+        $examPeriodId = $request->exam_id;
         $dataUpdate = [
             "name"           => $request->name ?? "",
             "school_year_id" => (int)$request->school_year_id,
             "point"          => (int)$request->point,
             "updated_by"     => Auth::id(),
         ];
-        $this->examPeriodRepository->updateExam($dataUpdate,$examPeriodId);
+        $this->examRepository->updateExam($dataUpdate,$examPeriodId);
         return $this->responseSuccess([]);
     }
 
@@ -77,10 +77,21 @@ class ExamController extends BaseController
         if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
-        $examPeriodId = $request->exam_period_id;
+        $examPeriodId = $request->exam_id;
 
-        $this->examPeriodRepository->deleteExam($examPeriodId);
+        $this->examRepository->deleteExam($examPeriodId);
         return $this->responseSuccess([]);
+    }
+
+    public function subject()
+    {
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+
+        $userId = Auth::id();
+
+
     }
 
 }

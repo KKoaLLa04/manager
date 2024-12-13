@@ -14,6 +14,7 @@ class ExamPeriod extends Model
     protected $fillable = [
         'id',
         'exam_id',
+        'name',
         'date',
         'created_by',
         'updated_by',

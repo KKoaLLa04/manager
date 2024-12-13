@@ -11,9 +11,10 @@ return new class extends Migration
         Schema::create('exam_period', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('exam_id');
+            $table->string('name');
             $table->date('date');
-            $table->unsignedBigInteger('created_by');
-            $table->unsignedBigInteger('updated_by');
+            $table->unsignedBigInteger('created_by')->default(0);
+            $table->unsignedBigInteger('updated_by')->default(0);
             $table->integer('is_deleted')->default(0)->comment("1: deleted, 0: not deleted");
             $table->timestamps();
         });
