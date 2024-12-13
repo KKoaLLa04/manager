@@ -131,35 +131,51 @@ class PointStudentRepository
         Collection $examPeriods,
         Collection $exams
     ): array {
-        $data = $students->map(function ($item) use ($pointStudents, $examPeriods, $exams): array {
+        $data = $students->map(function ($item) use ($pointStudents) {
+            $pointStudents = $pointStudents->where('student_id', $item->id);
             return [
-                "exams" => $exams->map(function ($item) use (
-                    $pointStudents,
-                    $examPeriods,
-                ) {
-                    $examPeriod = $examPeriods->get($item->id);
+                "id"     => $item->id,
+                "name"   => $item->fullname,
+                "code"   => $item->student_code,
+                "dob"    => $item->dob,
+                "points" => $pointStudents->map(function ($item) {
                     return [
-                        "examId"      => $item->id,
-                        "examName"    => $item->name,
-                        "examPeriods" => !isset($examPeriod) ? [] : $examPeriod->map(function ($item) use (
-                            $pointStudents,
-                        ) {
-                            $pointStudent = $pointStudents->where('exam_period_id',
-                                $item->id)->first();
-                            return [
-                                "examPeriodId"   => $item->id,
-                                "examPeriodDate" => $item->date,
-                                "examPeriodName" => $item->name,
-                                "pointStudentId" => $pointStudent->id,
-                                "point"          => isset($pointStudent) ? $pointStudent->point : "",
-                                "note"           => isset($pointStudent) ? $pointStudent->note : "",
-                            ];
-                        })->toArray()
+                        "id"             => $item->id,
+                        "exam_period_id" => $item->exam_period_id,
+                        "point"          => $item->point ?? 0,
+                        "note"           => $item->note ?? "",
                     ];
-                })->toArray()
+                })->values()->toArray(),
             ];
-        });
-
+        })->toArray();
+//        $data = $students->map(function ($item) use ($pointStudents, $examPeriods, $exams): array {
+//            return [
+//                "exams" => $exams->map(function ($item) use (
+//                    $pointStudents,
+//                    $examPeriods,
+//                ) {
+//                    $examPeriod = $examPeriods->get($item->id);
+//                    return [
+//                        "examId"      => $item->id,
+//                        "examName"    => $item->name,
+//                        "examPeriods" => !isset($examPeriod) ? [] : $examPeriod->map(function ($item) use (
+//                            $pointStudents,
+//                        ) {
+//                            $pointStudent = $pointStudents->where('exam_period_id',
+//                                $item->id)->first();
+//                            return [
+//                                "examPeriodId"   => $item->id,
+//                                "examPeriodDate" => $item->date,
+//                                "examPeriodName" => $item->name,
+//                                "pointStudentId" => $pointStudent->id,
+//                                "point"          => isset($pointStudent) ? $pointStudent->point : "",
+//                                "note"           => isset($pointStudent) ? $pointStudent->note : "",
+//                            ];
+//                        })->toArray()
+//                    ];
+//                })->toArray()
+//            ];
+//        });
         $struct = $exams->map(function ($item) use ($examPeriods) {
             $examPeriod = $examPeriods->get($item->id);
             return [
