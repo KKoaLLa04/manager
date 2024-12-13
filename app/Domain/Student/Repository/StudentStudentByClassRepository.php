@@ -20,7 +20,7 @@ class StudentStudentByClassRepository {
     public function handle(int $class_id = 0, string $keyword = '')
     {
 
-        if ($class_id != 0) {
+        if ($class_id) {
 
             $classCurrent = Classes::where('id', $class_id)->where('status', StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
 

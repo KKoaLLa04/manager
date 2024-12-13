@@ -9,9 +9,11 @@ use App\Domain\Guardian\Repository\GuardianRepository;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use App\Domain\Guardian\Requests\GuardianRequest;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 
 class GuardianController extends BaseController
 {
@@ -287,6 +289,58 @@ public function unassignStudent(Request $request, int $guardianId, GetUserReposi
 }
 
 
-    
+public function importExcel(Request $request)
+{
+    $user_id = Auth::user()->id;
+    $type = AccessTypeEnum::MANAGER->value;
+
+    $getUser = $this->guardianRepository->getUser($user_id, $type);
+    if (!$getUser) {
+        return $this->responseError(trans('api.error.user_not_permission'));
+    }
+
+    if (!$request->hasFile('file')) {
+        return $this->responseError(trans('api.error.file_not_found'));
+    }
+
+    try {
+        $file = $request->file('file');
+        $data = Excel::toArray([], $file)[0]; // Lấy dữ liệu sheet đầu tiên
+
+        $guardiansData = [];
+
+        foreach ($data as $index => $row) {
+            // Bỏ qua dòng tiêu đề
+            if ($index == 0) continue;
+            $dob = Carbon::parse($row[3])->format('Y-m-d');
+            $guardiansData[] = [
+                'fullname' => $row[0], // Cột đầu tiên trong Excel
+                'phone' => $row[1], // Cột thứ hai
+                'code' => Guardian::generateRandomCode(),
+                'email' => $row[2],
+                'access_type' => AccessTypeEnum::GUARDIAN->value,
+                'dob' => $dob,
+                'status' => $row[4],
+                'gender' => $row[5],
+                'address' => $row[6],
+                'career' => $row[7],
+                'username' => $row[8], 
+                'password' => Hash::make($row[9]),
+                'created_user_id' => $user_id,
+                'is_deleted' => DeleteEnum::NOT_DELETE->value,
+                'created_at' => now(),
+                'updated_at' => now(), 
+            ];
+        }
+
+        Guardian::insert($guardiansData);
+
+        return $this->responseSuccess([], trans('api.guardian.import.success'));
+    } catch (\Exception $e) {
+        return $this->responseError(trans('api.guardian.import.errors') . $e->getMessage());
+    }
+}
+
+
 }
             

@@ -23,19 +23,34 @@ class StudentRepository {
         return [];
 
     }
-    public function paginateStudents($pageSize)
+    public function paginateStudents($pageSize, $keyWord = null)
     {
-        // Lấy danh sách sinh viên không bị xóa cùng với phụ huynh
-        $students = Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)
+           // Bắt đầu truy vấn để lấy danh sách sinh viên không bị xóa
+            $query = Student::where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->with([
                 'parents' => function($query) {
                     $query->select('users.id', 'fullname', 'phone', 'code', 'status')
-                          ->where('users.access_type', AccessTypeEnum::GUARDIAN->value)
-                          ->where('users.is_deleted', DeleteEnum::NOT_DELETE->value);
+                        ->where('users.access_type', AccessTypeEnum::GUARDIAN->value)
+                        ->where('users.is_deleted', DeleteEnum::NOT_DELETE->value);
                 }
-            ])
-            ->paginate($pageSize);
-        
+            ]);
+
+        // Nếu có từ khóa tìm kiếm, thêm điều kiện vào truy vấn
+        if ($keyWord) {
+            $query->where(function($q) use ($keyWord) {
+                $q->where('fullname', 'like', '%' . $keyWord . '%')
+                ->orWhere('student_code', 'like', '%' . $keyWord . '%')
+                ->orWhere('address', 'like', '%' . $keyWord . '%')
+                ->orWhereHas('parents', function($q) use ($keyWord) {
+                    $q->where('users.fullname', 'like', '%' . $keyWord . '%')
+                        ->orWhere('users.code', 'like', '%' . $keyWord . '%');
+                });
+            });
+        }
+        $query->orderBy('created_at', 'desc');
+
+        // Lấy danh sách sinh viên đã lọc theo từ khóa
+        $students = $query->paginate($pageSize);
         // Lấy tất cả lớp và chuyển đổi thành mảng với key là id
         $classes = ClassModel::with('academicYear:id,name')->get()->keyBy('id');
         
