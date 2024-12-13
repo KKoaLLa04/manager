@@ -9,6 +9,7 @@ use App\Models\Classes;
 use App\Models\Exam;
 use App\Models\ExamPeriod;
 use App\Models\PointStudent;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -137,7 +138,7 @@ class PointStudentRepository
                 "id"     => $item->id,
                 "name"   => $item->fullname,
                 "code"   => $item->student_code,
-                "dob"    => $item->dob,
+                "dob"    => Carbon::parse($item->dob)->timestamp,
                 "points" => $pointStudents->map(function ($item) {
                     return [
                         "id"             => $item->id,
@@ -183,6 +184,7 @@ class PointStudentRepository
                 "examName"    => $item->name,
                 "examPeriods" => !isset($examPeriod) ? [] : $examPeriod->map(function ($item) {
                     return [
+                        "examPeriodId"   => $item->id,
                         "examPeriodDate" => $item->date,
                         "examPeriodName" => $item->name,
                     ];
