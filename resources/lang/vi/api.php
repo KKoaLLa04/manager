@@ -102,6 +102,18 @@ return [
         'attendaced_updated.errors'=> 'Cập nhập điểm danh thất bại'
     ],
 
+
+    'leaveRequest' => [
+        'index.success'=> 'Lấy danh sách hóa đơn thành công',
+        'index.errors'=> 'Lấy danh sách hóa đơn thất bại',
+        'accept.success'=> 'Chấp nhận đơn thành công',
+        'accept.errors' => 'Chấp nhận đơn thất bại',
+        'reject.success' => 'Từ chối đơn thành công',
+        'reject.errors' => 'Từ chối đơn thất bại',
+        'detail.success'=> 'Lấy chi tiết đơn thành công',
+        'detail.errors' => 'Lấy chi tiết đơn thất bại',
+      ],
+
     'guardianofguardian' => [
         'show.success'=> 'Lấy thông tin phụ huynh thành công!',
         'show.errors'=> 'Lấy thông tin phụ huynh thất bại!',
