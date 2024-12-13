@@ -3,6 +3,7 @@
 namespace App\Domain\LeaveRequest\Repository;
 
 use App\Common\Enums\DeleteEnum;
+use App\Common\Enums\LeaveRequestEnum;
 use App\Domain\LeaveRequest\Models\LeaveRequest;
 use App\Domain\LeaveRequest\Requests\LeaveRequestRequest;
 
@@ -90,7 +91,7 @@ class LeaveRequestResponsitory
             return response()->json(['message' => 'Không tìm thấy đơn'], 404);
         }
 
-        $one->status = 1;
+        $one->status = LeaveRequestEnum::ACCEPT->value;
         $one->processed_by = auth()->id();
         $one->save();
 

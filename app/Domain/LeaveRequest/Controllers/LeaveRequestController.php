@@ -2,6 +2,7 @@
 namespace App\Domain\LeaveRequest\Controllers;
 
 use App\Common\Enums\AccessTypeEnum;
+use App\Common\Enums\LeaveRequestEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\LeaveRequest\Repository\LeaveRequestResponsitory;
 use App\Domain\LeaveRequest\Requests\LeaveRequestRequest;
@@ -87,7 +88,7 @@ class LeaveRequestController extends BaseController
     }
 
     $dataUpdate = [
-        'status' => 2,
+        'status' => LeaveRequestEnum::REJECT->value,
         'refuse_note'=>$request->refuse_note,
         'processed_by'=> auth()->id(),
         'updated_at' => now(),
