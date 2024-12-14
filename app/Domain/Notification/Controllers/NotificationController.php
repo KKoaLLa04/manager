@@ -15,7 +15,6 @@ class NotificationController extends BaseController
 {
     public function __construct(Request $request)
     {
-        parent::__construct($request);
     }
 
     public function index()
