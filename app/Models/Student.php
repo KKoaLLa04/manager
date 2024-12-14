@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
+use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,7 @@ class Student extends Model
     protected $fillable = [       
         'fullname','address','student_code','dob','status','gender','is_deleted','created_user_id','modified_user_id','created_at','updated_at',
     ];
+
     public function classHistory()
     {
         return $this->hasMany(StudentClassHistory::class, 'student_id')->where('is_deleted', DeleteEnum::NOT_DELETE->value);
@@ -32,9 +34,12 @@ class Student extends Model
     
     public function schoolYear()
     {
-        return $this->belongsTo(SchoolYear::class, 'school_year_name'); // Thay 'school_year_id' bằng tên trường thực tế trong bảng student
+        return $this->belongsTo(SchoolYear::class, 'school_year_name'); 
     }
-
+    public function academic()
+    {
+        return $this->belongsTo(AcademicYear::class, 'academic_year_name'); 
+    }
     protected static function boot()
     {
         parent::boot();
@@ -53,5 +58,13 @@ class Student extends Model
     }
 
 
-    
+    public function pointStudents()
+    {
+        return $this->hasMany(PointStudent::class, 'student_id', 'id');
+    }
+
+
+    public function classHistories(){
+        return $this->hasMany(StudentClassHistory::class, 'student_id', 'id');
+    }
 }

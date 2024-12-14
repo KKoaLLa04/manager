@@ -6,6 +6,7 @@ use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\AcademicYear\Models\AcademicYear;
+use App\Domain\RollCall\Models\RollCall;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -55,6 +56,10 @@ class Classes extends Model
             ->withTimestamps()
             ->where('users.status', StatusEnum::ACTIVE->value);
     }
+    // public function grade()
+    // {
+    //     return $this->belongsTo(Grades::class, 'grade_id');
+    // }
 
     public function students()
     {
@@ -72,4 +77,16 @@ class Classes extends Model
         return $this->hasMany(StudentClassHistory::class, 'class_id', 'id')
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
+
+    public function rollCalls(){
+        return $this->hasMany(RollCall::class, 'class_id', 'id');
+    }
+
+    public function attendanceLog(){
+        return $this->hasMany(AttendanceLog::class, 'class_id', 'id');
+    }
+
+    
+    
 }
+

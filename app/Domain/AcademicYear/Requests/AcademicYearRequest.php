@@ -10,20 +10,50 @@ class AcademicYearRequest extends FormRequest
     }
     
     public function rules(): array
-    {
-        return [
-            'name' => ['required', 'min:6', 'max:255', 'unique:academic_year,name'],
-            'start_year' => ['required', 'date', 'after_or_equal:today'],
-            'end_year' => ['required', 'date', 'after_or_equal:start_year', function($attribute, $value, $fail) {
+{
+    $rules = [
+        'name' => ['required', 'min:6', 'max:255', 'unique:academic_year,name,' . $this->route('id')],
+        'status' => ['required'],
+    ];
+
+    
+    if ($this->isMethod('post')) {
+        $rules['start_year'] = ['required', 'date', 'after_or_equal:today'];
+        $rules['end_year'] = [
+            'required', 
+            'date', 
+            'after_or_equal:start_year', 
+            function ($attribute, $value, $fail) {
                 $startYear = \Carbon\Carbon::parse($this->start_year)->year;
                 $endYear = \Carbon\Carbon::parse($value)->year;
                 if (($endYear - $startYear) != 4) {
-                    $fail('Năm kết thúc phải cách năm bắt đầu 4 năm.');
+                    $fail('Năm kết thúc phải cách năm bắt đầu đúng 4 năm.');
                 }
-            }],
-            'status' => ['required']
+            }
         ];
+    } else { 
+        if ($this->filled('start_year')) {
+            $rules['start_year'] = ['date', 'after_or_equal:today'];
+        }
+
+        if ($this->filled('end_year')) {
+            $rules['end_year'] = [
+                'date', 
+                'after_or_equal:start_year', 
+                function ($attribute, $value, $fail) {
+                    $startYear = \Carbon\Carbon::parse($this->start_year)->year;
+                    $endYear = \Carbon\Carbon::parse($value)->year;
+                    if (($endYear - $startYear) != 4) {
+                        $fail('Năm kết thúc phải cách năm bắt đầu đúng 4 năm.');
+                    }
+                }
+            ];
+        }
     }
+
+    return $rules;
+}
+
     
     public function messages(): array
     {
