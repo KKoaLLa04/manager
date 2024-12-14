@@ -10,5 +10,7 @@ Route::group(['prefix' => 'manager/subject', 'middleware' => 'auth:api'], functi
     Route::get('/currentClass', [SubjectController::class, 'currentClass']);
     Route::get('/classNoHasSubject', [SubjectController::class, 'classNoHasSubject']);
     Route::post('/mix_subject_for_class', [SubjectController::class, 'mixSubjectForClass']);
-
+    Route::post('/create', [SubjectController::class, 'create']);
+    Route::post('/update/{id}', [SubjectController::class, 'update']);
+    Route::post('/delete/{id}', [SubjectController::class, 'delete']);
 });

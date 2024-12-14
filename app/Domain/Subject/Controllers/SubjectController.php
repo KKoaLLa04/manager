@@ -1,9 +1,11 @@
 <?php
 namespace App\Domain\Subject\Controllers;
 
+use App\Common\Enums\DeleteEnum;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use App\Common\Repository\GetUserRepository;
+use App\Domain\Subject\Models\Subject;
 use App\Domain\Subject\Repository\SubjectClassNoHasSubjectRepository;
 use App\Domain\Subject\Repository\SubjectCurrentClassRepository;
 use App\Domain\Subject\Repository\SubjectIndexRepository;
@@ -213,6 +215,110 @@ class SubjectController extends BaseController
 
 
     }
+
+
+    public function create(Request $request)
+    {
+        $user_id = Auth::user()->id;
+
+        if (!$this->user->getManager($user_id)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        try {
+            $subject = Subject::create([
+                'name' => $validated['name'],
+                'is_deleted' => DeleteEnum::NOT_DELETE->value,
+                'created_user_id' => auth()->id(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Môn học được tạo thành công!',
+                'data' => [],
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi tạo môn học.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    public function update(Request $request, $id)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+    ]);
+
+    $subject = Subject::find($id);
+
+    if (!$subject) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Môn học không tồn tại.',
+        ], 404);
+    }
+
+    try {
+        $subject->update([
+            'name' => $validated['name'],
+            'modified_user_id' => auth()->id(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Môn học được cập nhật thành công!',
+            'data' => [],
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Có lỗi xảy ra khi cập nhật môn học.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+public function delete($id)
+{
+    $subject = Subject::find($id);
+
+    if (!$subject) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Môn học không tồn tại.',
+        ], 404);
+    }
+
+    try {
+        $subject->update([
+            'is_deleted' => DeleteEnum::DELETED->value, // Đánh dấu đã xóa (soft delete)
+            'modified_user_id' => auth()->id(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Môn học đã được xóa thành công!',
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Có lỗi xảy ra khi xóa môn học.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+
 
 
 
