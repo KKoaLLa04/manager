@@ -45,7 +45,19 @@ class DiemDanhController extends BaseController
             'classId' => 'required'
         ]);
 
+
         $class_id = $request->classId;
+
+        $checkExten = DiemDanh::where('class_id', $class_id)->count();
+
+        if (!$checkExten) {
+
+            return response()->json([
+                'msg' => 'Lớp chưa có thời khóa biểu',
+                'data' => []
+            ], ResponseAlias::HTTP_OK);
+
+        }
 
         $sangThu2 = DiemDanh::where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU2->value)->where('class_id', $class_id)->get();
         $sangThu3 = DiemDanh::where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU3->value)->where('class_id', $class_id)->get();;
