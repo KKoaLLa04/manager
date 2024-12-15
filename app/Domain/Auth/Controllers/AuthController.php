@@ -44,11 +44,19 @@ class AuthController extends BaseController
 
     public function storeDeviceToken(DeviceRequest $request)
     {
-        UserDevice::query()->create([
-            "user_id" => auth()->id(),
-            "device_token" => $request->device_token,
-            "device_type" => $request->device_type,
-            "status" => StatusEnum::ACTIVE->value
-        ]);
+        $checkExits = UserDevice::query()
+            ->where('user_id', auth()->id())
+            ->where('device_token', $request->device_token)
+            ->where('device_type', $request->device_type)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->exists();
+        if (!$checkExits){
+            UserDevice::query()->create([
+                "user_id" => auth()->id(),
+                "device_token" => $request->device_token,
+                "device_type" => $request->device_type,
+                "status" => StatusEnum::ACTIVE->value
+            ]);
+        }
     }
 }
