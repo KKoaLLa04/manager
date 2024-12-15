@@ -33,9 +33,9 @@ class ExamController extends BaseController
         $page         = isset($request->page) ? (int)$request->page : PaginateEnum::PAGE->value;
         $size         = isset($request->size) ? (int)$request->size : PaginateEnum::MAX_SIZE->value;
         $schoolYearId = isset($request->school_year_id) ? (int)$request->school_year_id : 0;
-        $examPeriods  = $this->examRepository->getExam($search, $page, $size, $schoolYearId);
-        if ($examPeriods->count() > 0) {
-            return $this->responseSuccess($this->examRepository->transformGetExam($examPeriods));
+        $exams         = $this->examRepository->getExam($search, $page, $size, $schoolYearId);
+        if ($exams->count() > 0) {
+            return $this->responseSuccess($this->examRepository->transformGetExam($exams));
         } else {
             return response()->json(['status' => 'success', 'data' => []]);
         }
@@ -53,8 +53,8 @@ class ExamController extends BaseController
             "point"          => (int)$request->point,
             "created_by"     => Auth::id(),
         ];
-        $this->examRepository->storeExam($dataInsert);
-        return $this->responseSuccess([]);
+        $exam = $this->examRepository->storeExam($dataInsert);
+        return $this->responseSuccess(["id" => $exam->id]);
     }
 
     public function update(UpdateExamRequest $request)
@@ -63,13 +63,13 @@ class ExamController extends BaseController
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
         $examPeriodId = $request->exam_id;
-        $dataUpdate = [
+        $dataUpdate   = [
             "name"           => $request->name ?? "",
             "school_year_id" => (int)$request->school_year_id,
             "point"          => (int)$request->point,
             "updated_by"     => Auth::id(),
         ];
-        $this->examRepository->updateExam($dataUpdate,$examPeriodId);
+        $this->examRepository->updateExam($dataUpdate, $examPeriodId);
         return $this->responseSuccess([]);
     }
 
@@ -90,22 +90,22 @@ class ExamController extends BaseController
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
-        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value){
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
             $subjects = $this->examRepository->getSubject();
-        }else{
-            $userId = Auth::id();
-            $classId = $request->classId;
+        } else {
+            $userId              = Auth::id();
+            $classId             = $request->classId;
             $classSubjectTeacher = $this->examRepository->getClassSubjectTeacher($userId, $classId);
-            if (is_null($classSubjectTeacher)){
+            if (is_null($classSubjectTeacher)) {
                 return $this->responseSuccess([]);
             }
             $teacherType = $classSubjectTeacher->access_type;
             if ($teacherType == StatusTeacherEnum::MAIN_TEACHER->value) {
                 $subjectIds = $this->examRepository->getSubjectIdsByClassId($classId);
-                $subjects = $this->examRepository->getSubject($subjectIds);
-            }else{
+                $subjects   = $this->examRepository->getSubject($subjectIds);
+            } else {
                 $subjectId = $this->examRepository->getSubjectIds($classSubjectTeacher);
-                $subjects = $this->examRepository->getSubject([$subjectId]);
+                $subjects  = $this->examRepository->getSubject([$subjectId]);
             }
         }
 

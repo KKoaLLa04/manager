@@ -8,6 +8,7 @@ use App\Domain\Subject\Models\Subject;
 use App\Models\ClassSubject;
 use App\Models\ClassSubjectTeacher;
 use App\Models\Exam;
+use App\Models\ExamPeriod;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -21,7 +22,7 @@ class ExamRepository
     {
         $query = Exam::query()->where('school_year_id', $schoolYearId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->with('schoolYear');
+            ->with(['schoolYear','examPeriods']);
         if (isset($search) && !empty($search)) {
             $query->where('name', 'like', '%'.$search.'%');
         }
@@ -29,27 +30,35 @@ class ExamRepository
         return $query->paginate($size, ['*'], 'page', $page);
     }
 
-    public function transformGetExam(LengthAwarePaginator $examPeriods): array
+    public function transformGetExam(LengthAwarePaginator $exams): array
     {
-        $data = $examPeriods->map(function (Exam $examPeriod) {
+        $data = $exams->map(function (Exam $exam) {
+            $examPeriods = $exam->examPeriods;
             return [
-                "name"         => $examPeriod->name ?? "",
-                "schoolYearId" => $examPeriod->school_year_id,
-                "schoolYear"   => $examPeriod->schoolYear->name ?? "",
-                "point"        => $examPeriod->point,
+                "name"         => $exam->name ?? "",
+                "schoolYearId" => $exam->school_year_id,
+                "schoolYear"   => $exam->schoolYear->name ?? "",
+                "point"        => $exam->point,
+                "examPeriod"   => $examPeriods->map(function (ExamPeriod $examPeriod) {
+                    return [
+                        'id' => $examPeriod->id,
+                        'name' => $examPeriod->name,
+                        'date' => $examPeriod->date,
+                    ];
+                })
             ];
         })->toArray();
         return [
             'data'       => $data,
-            'total'      => $examPeriods->total(),
-            'page_index' => $examPeriods->currentPage(),
-            'page_size'  => $examPeriods->perPage(),
+            'total'      => $exams->total(),
+            'page_index' => $exams->currentPage(),
+            'page_size'  => $exams->perPage(),
         ];
     }
 
-    public function storeExam(array $dataInsert): void
+    public function storeExam(array $dataInsert)
     {
-        Exam::query()->create($dataInsert);
+        return Exam::query()->create($dataInsert);
     }
 
     public function updateExam(array $dataUpdate, int $examPeriodId): void
