@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Domain\DiemDanh\Controllers;
 
 use App\Common\Enums\StatusBuoi;
