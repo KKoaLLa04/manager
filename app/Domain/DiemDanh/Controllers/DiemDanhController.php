@@ -48,21 +48,21 @@ class DiemDanhController extends BaseController
 
         $class_id = $request->classId;
 
-        $sangThu2 = DiemDanh::where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU2->value)->where('class_id', $class_id)->get();
-        $sangThu3 = DiemDanh::where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU3->value)->where('class_id', $class_id)->get();;
-        $sangThu4 = DiemDanh::where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU4->value)->where('class_id', $class_id)->get();;
-        $sangThu5 = DiemDanh::where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU5->value)->where('class_id', $class_id)->get();;
-        $sangThu6 = DiemDanh::where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU6->value)->where('class_id', $class_id)->get();;
-        $sangThu7 = DiemDanh::where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU7->value)->where('class_id', $class_id)->get();;
-        $sangChuNhat = DiemDanh::where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::CHUNHAT->value)->where('class_id', $class_id)->get();;
+        $sangThu2 = DiemDanh::with('subject')->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU2->value)->where('class_id', $class_id)->get();
+        $sangThu3 = DiemDanh::with('subject')->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU3->value)->where('class_id', $class_id)->get();;
+        $sangThu4 = DiemDanh::with('subject')->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU4->value)->where('class_id', $class_id)->get();;
+        $sangThu5 = DiemDanh::with('subject')->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU5->value)->where('class_id', $class_id)->get();;
+        $sangThu6 = DiemDanh::with('subject')->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU6->value)->where('class_id', $class_id)->get();;
+        $sangThu7 = DiemDanh::with('subject')->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU7->value)->where('class_id', $class_id)->get();;
+        $sangChuNhat = DiemDanh::with('subject')->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::CHUNHAT->value)->where('class_id', $class_id)->get();;
 
-        $chieuThu2 = DiemDanh::where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU2->value)->where('class_id', $class_id)->get();;
-        $chieuThu3 = DiemDanh::where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU3->value)->where('class_id', $class_id)->get();;
-        $chieuThu4 = DiemDanh::where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU4->value)->where('class_id', $class_id)->get();;
-        $chieuThu5 = DiemDanh::where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU5->value)->where('class_id', $class_id)->get();;
-        $chieuThu6 = DiemDanh::where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU6->value)->where('class_id', $class_id)->get();;
-        $chieuThu7 = DiemDanh::where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU7->value)->where('class_id', $class_id)->get();;
-        $chieuChuNhat = DiemDanh::where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::CHUNHAT->value)->where('class_id', $class_id)->get();;
+        $chieuThu2 = DiemDanh::with('subject')->where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU2->value)->where('class_id', $class_id)->get();;
+        $chieuThu3 = DiemDanh::with('subject')->where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU3->value)->where('class_id', $class_id)->get();;
+        $chieuThu4 = DiemDanh::with('subject')->where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU4->value)->where('class_id', $class_id)->get();;
+        $chieuThu5 = DiemDanh::with('subject')->where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU5->value)->where('class_id', $class_id)->get();;
+        $chieuThu6 = DiemDanh::with('subject')->where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU6->value)->where('class_id', $class_id)->get();;
+        $chieuThu7 = DiemDanh::with('subject')->where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::THU7->value)->where('class_id', $class_id)->get();;
+        $chieuChuNhat = DiemDanh::with('subject')->where('buoi', StatusBuoi::CHIEU->value)->where('thu', StatusThu::CHUNHAT->value)->where('class_id', $class_id)->get();;
 
         return response()->json(
             [
@@ -71,102 +71,102 @@ class DiemDanhController extends BaseController
                     "sang" => [
                         "thu2" => $sangThu2->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "thu3" => $sangThu3->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "thu4" => $sangThu4->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "thu5" => $sangThu5->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "thu6" => $sangThu6->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "thu7" => $sangThu7->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "chunhat" => $sangChuNhat->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                     ],
                     "chieu" => [
                         "thu2" => $chieuThu2->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "thu3" => $chieuThu3->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "thu4" => $chieuThu4->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "thu5" => $chieuThu5->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "thu6" => $chieuThu6->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "thu7" => $chieuThu7->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                         "chunhat" => $chieuChuNhat->map(function ($item) {
                             return [
-                                "id" => $item->subject->id,
+                                "id" => $item->subject->id ?? null,
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject->name ?? null,
                             ];
                         }),
                     ]

@@ -18,6 +18,17 @@ class DiemDanh extends Model
 {
     protected $table = 'diemdanh';
 
+    protected $fillable = [
+        'id',
+        'tiet',
+        'thu',
+        'mon',
+        'class_id',
+        'buoi',
+        'created_at',
+        'updated_at',
+    ];
+
     public function subject () {
         return $this->belongsTo(
             Subject::class,
