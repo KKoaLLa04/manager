@@ -25,7 +25,8 @@ class ExamPeriodRepository
         return $examPeriods->map(function (ExamPeriod $examPeriod) {
             return [
                 "date" => $examPeriod->date,
-                "name" => $examPeriod->name
+                "name" => $examPeriod->name,
+                "type" => $examPeriod->type,
             ];
         })->toArray();
     }

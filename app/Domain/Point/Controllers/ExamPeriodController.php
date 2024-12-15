@@ -47,10 +47,12 @@ class ExamPeriodController extends BaseController
         }
         $date = isset($request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now()->toDateString();
         $name = isset($request->name) ? $request->name : "";
+        $type = isset($request->type) ? $request->type : 1;
         $data = [
             'exam_id' => $request->exam_id,
             'date' => $date,
             'name' => $name,
+            'type' => $type,
             'created_by' => Auth::id(),
         ];
 
@@ -66,10 +68,12 @@ class ExamPeriodController extends BaseController
         }
         $date = isset($request->date) ? Carbon::parse($request->date)->toDateString() : Carbon::now()->toDateString();
         $name = isset($request->name) ? $request->name : "";
+        $type = isset($request->type) ? $request->type : 1;
         $dataUpdate = [
             'exam_id' => $request->exam_id,
             'date' => $date,
             'name' => $name,
+            'type' => $type,
             'updated_by' => Auth::id(),
         ];
 
