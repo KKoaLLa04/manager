@@ -15,6 +15,7 @@ use App\Models\UserStudent;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class LeaveRequestGuardianController extends BaseController
 {
@@ -132,6 +133,20 @@ class LeaveRequestGuardianController extends BaseController
         }
 
         return $this->responseError(trans('api.error.leave_request_not_found'));
+    }
+
+    public function sendTestEmail()
+    {
+        $toEmail = 'hoangdxph32103@fpt.edu.vn';  
+        $subject = 'Hệ thống website sổ liên lạc điện tử học sinh techscholl';
+
+        // Gửi email
+        Mail::raw('Khánh Nhàn trốn học bỏ tiết đú đởn với bạn bè Lừa gạt thầy cô trong trường yêu cầu phụ huynh nhắc nhở con em thật kỹ', function ($message) use ($toEmail, $subject) {
+            $message->to($toEmail)
+                    ->subject($subject);
+        });
+
+        return 'Email đã được gửi!';
     }
     
 }
