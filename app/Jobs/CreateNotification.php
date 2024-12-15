@@ -37,8 +37,8 @@ class CreateNotification implements ShouldQueue
         $student = Student::query()->where('id',$studentId ?? 0)->with('parents')->first();
 
         $dataNoti = [
-            "title" => "Học sinh: " . $student->fullname . StatusStudentEnum::transform($this->notification->status),
-            "title_en" => "Học sinh: " . $student->fullname . StatusStudentEnum::transform($this->notification->status),
+            "title" => "Học sinh: " . $student->fullname . " " . StatusStudentEnum::transform($this->notification->status),
+            "title_en" => "Học sinh: " . $student->fullname . " " . StatusStudentEnum::transform($this->notification->status),
             "class_id" =>  $this->notification->class_id ?? 0,
             "time"     => now()
         ];
