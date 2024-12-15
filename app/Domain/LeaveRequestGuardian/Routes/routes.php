@@ -9,6 +9,7 @@ Route::group(['prefix' => 'guardian/leaverequest', 'middleware' => 'auth:api'], 
     Route::post('/storeleave/{student_id}', [LeaveRequestGuardianController::class, 'store']);
     Route::post('/cancel/{leave_request_id}', [LeaveRequestGuardianController::class, 'cancel']);
 
-    
+    Route::get('test-email', [LeaveRequestGuardianController::class, 'sendTestEmail']);
+
 
 });
