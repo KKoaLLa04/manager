@@ -70,88 +70,102 @@ class DiemDanhController extends BaseController
                     "sang" => [
                         "thu2" => $sangThu2->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "thu3" => $sangThu3->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "thu4" => $sangThu4->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "thu5" => $sangThu5->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "thu6" => $sangThu6->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "thu7" => $sangThu7->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "chunhat" => $sangChuNhat->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                     ],
                     "chieu" => [
                         "thu2" => $chieuThu2->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "thu3" => $chieuThu3->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "thu4" => $chieuThu4->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "thu5" => $chieuThu5->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "thu6" => $chieuThu6->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "thu7" => $chieuThu7->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                         "chunhat" => $chieuChuNhat->map(function ($item) {
                             return [
-                              "tiet" => $item->tiet,
-                              "mon" => $item->subject->name,
+                                "id" => $item->subject->id,
+                                "tiet" => $item->tiet,
+                                "mon" => $item->subject->name,
                             ];
                         }),
                     ]
@@ -159,8 +173,6 @@ class DiemDanhController extends BaseController
             ],
             ResponseAlias::HTTP_OK
         );
-
-
     }
 
 
@@ -332,8 +344,6 @@ class DiemDanhController extends BaseController
             return response()->json([
                 'msg' => 'Sửa thời khóa biểu thành công'
             ], ResponseAlias::HTTP_OK);
-
-
         } else {
 
 
@@ -474,17 +484,13 @@ class DiemDanhController extends BaseController
             return response()->json([
                 'msg' => 'Tạo thời khóa biểu thành công'
             ], ResponseAlias::HTTP_OK);
-
-
-
         }
-
-
     }
 
 
 
-    public function taoDiemDanh ($tiet, $thu, $mon, $class_id, $buoi) {
+    public function taoDiemDanh($tiet, $thu, $mon, $class_id, $buoi)
+    {
 
         $item = new DiemDanh();
         $item->tiet = $tiet;
@@ -493,11 +499,11 @@ class DiemDanhController extends BaseController
         $item->class_id = $class_id;
         $item->buoi = $buoi;
         $item->save();
-
     }
 
 
-    public function suaDiemDanh ($tiet, $thu, $mon, $class_id, $buoi) {
+    public function suaDiemDanh($tiet, $thu, $mon, $class_id, $buoi)
+    {
 
         $item = DiemDanh::where('tiet', $tiet)->where('thu', $thu)->where('class_id', $class_id)->where('buoi', $buoi)->first();
 
@@ -505,10 +511,5 @@ class DiemDanhController extends BaseController
             $item->mon = $mon;
             $item->save();
         }
-
     }
-
-
-
-
 }
