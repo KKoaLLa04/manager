@@ -498,6 +498,10 @@ class DiemDanhController extends BaseController
         $item->mon = $mon;
         $item->class_id = $class_id;
         $item->buoi = $buoi;
+
+        // lấy lại lịch sử
+
+        // tạo thêm
         $item->save();
     }
 

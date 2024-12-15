@@ -112,4 +112,32 @@ class ExamController extends BaseController
         return $this->responseSuccess($this->examRepository->transformSubject($subjects));
     }
 
+    public function subjectClass(Request $request)
+    {
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value && Auth::user()->access_type != AccessTypeEnum::TEACHER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            $subjects = $this->examRepository->getSubject();
+        } else {
+            $userId              = Auth::id();
+            $classId             = $request->classId;
+            $classSubjectTeacher = $this->examRepository->getClassSubjectTeacher($userId, $classId);
+            if (is_null($classSubjectTeacher)) {
+                return $this->responseSuccess([]);
+            }
+            $teacherType = $classSubjectTeacher->access_type;
+            if ($teacherType == StatusTeacherEnum::MAIN_TEACHER->value) {
+                $subjectIds = $this->examRepository->getSubjectIdsByClassId($classId);
+                $subjects   = $this->examRepository->getSubject($subjectIds);
+            } else {
+                $subjectId = $this->examRepository->getSubjectIds($classSubjectTeacher);
+                $subjects  = $this->examRepository->getSubject([$subjectId]);
+            }
+        }
+
+        return $this->responseSuccess($this->examRepository->transformSubject($subjects));
+    }
+
 }
