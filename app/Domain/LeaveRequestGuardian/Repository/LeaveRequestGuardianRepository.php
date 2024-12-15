@@ -5,6 +5,8 @@ namespace App\Domain\LeaveRequestGuardian\Repository;
 use App\Common\Enums\DeleteEnum;
 use App\Domain\LeaveRequestGuardian\Models\LeaveRequestGuardian;
 use App\Domain\LeaveRequestGuardian\Requests\LeaveRequestGuardianRequest;
+use App\Jobs\CancelNotification;
+use App\Jobs\CancelParentNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +27,7 @@ class LeaveRequestGuardianRepository
         )
         ->join('students', 'leave_request.student_id', '=', 'students.id')
         ->join('classes', 'leave_request.class_id', '=', 'classes.id')
-        ->where('leave_request.parent_user_id', $parentUserId) // Chỉ lấy đơn của con phụ huynh này
+        ->where('leave_request.parent_user_id', $parentUserId)
         ->where('leave_request.is_deleted', DeleteEnum::NOT_DELETE->value)
         ->paginate($pageSize, ['*'], 'page', $pageIndex);
     }
@@ -33,16 +35,19 @@ class LeaveRequestGuardianRepository
     public function cancelLeaveRequest(int $leaveRequestId): bool
     {
         $leaveRequest = LeaveRequestGuardian::find($leaveRequestId);
-
+    
         if ($leaveRequest) {
             $leaveRequest->is_deleted = DeleteEnum::DELETED->value;
-
+    
+            CancelParentNotification::dispatch($leaveRequest->id);
+    
             return $leaveRequest->save();
         }
-
-        // Trả về false nếu không tìm thấy đơn
+    
         return false;
     }
+    
+
 
 
 

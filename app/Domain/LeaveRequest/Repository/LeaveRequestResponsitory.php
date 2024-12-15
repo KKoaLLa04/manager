@@ -6,6 +6,7 @@ use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\LeaveRequestEnum;
 use App\Domain\LeaveRequest\Models\LeaveRequest;
 use App\Domain\LeaveRequest\Requests\LeaveRequestRequest;
+use App\Jobs\CancelNotification;
 
 class LeaveRequestResponsitory
 {
@@ -94,24 +95,32 @@ class LeaveRequestResponsitory
         $one->status = LeaveRequestEnum::ACCEPT->value;
         $one->processed_by = auth()->id();
         $one->save();
+        CancelNotification::dispatch($one); // Đảm bảo dispatch với đúng đối tượng
 
         return $one;
     }
 
     public function reject($id, $data)
-    {
-        // Tìm đơn xin dựa vào ID
-        $one = LeaveRequest::where('is_deleted', DeleteEnum::NOT_DELETE->value)->find($id);
+{
+    // Tìm đơn xin dựa vào ID
+    $one = LeaveRequest::where('is_deleted', DeleteEnum::NOT_DELETE->value)->find($id);
 
-
-        if (!$one) {
-            return response()->json(['message' => 'Không tìm thấy đơn'], 404);
-        }
-
-
-        $one->fill($data);
-        $one->save();
-
-        return $one;
+    // Kiểm tra nếu không tìm thấy đơn
+    if (!$one) {
+        return response()->json(['message' => 'Không tìm thấy đơn'], 404);
     }
+
+    // Cập nhật dữ liệu của đơn
+    $one->fill($data);
+    $one->save();
+
+    // Dispatch job gửi thông báo nếu trạng thái là 'rejected'
+    if ($one->status == LeaveRequestEnum::REJECT->value) {
+        // Tạo và dispatch job gửi thông báo
+        CancelNotification::dispatch($one); // Đảm bảo dispatch với đúng đối tượng
+    }
+
+    return response()->json(['message' => 'Cập nhật đơn thành công.'], 200);
+}
+
 }
