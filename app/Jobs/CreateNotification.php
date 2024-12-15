@@ -6,10 +6,12 @@ use App\Common\Enums\StatusStudentEnum;
 use App\Domain\RollCall\Models\RollCall;
 use App\Models\Student;
 use App\Common\Enums\WebAppTypeEnum;
+use App\Models\User;
 use App\Models\UserNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Mail\Message;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
@@ -18,6 +20,7 @@ use App\Models\UserDevice;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Google\Auth\Credentials\ServiceAccountCredentials;
+use Illuminate\Support\Facades\Mail;
 
 class CreateNotification implements ShouldQueue
 {
@@ -119,20 +122,28 @@ class CreateNotification implements ShouldQueue
                     if ($userDevice->device_type == WebAppTypeEnum::WEB->value){
                         $this->sendNotificationWeb($userDevice, $notification);
                     }
-                    $dataConvert[] = [
-                        'user_id'         => $userDevice->user_id,
-                        'device_token'    => $userDevice->device_token,
-                        'notification_id' => $notification->id,
-                        'type'            => $notification->type,
-                        'data'            => $notification->data,
-                        'device_type'     => $userDevice->device_type,
-                        'send_at'         => now(),
-                        'created_at'      => Carbon::now(),
-                        'updated_at'      => Carbon::now(),
-                    ];
+                    $user = User::query()->where('id',$parent->id)->first();
+                    if(!is_null($user)){
+                        if(!is_null($user->email)){
+                            $this->sendMailNotification($user->email, $dataNoti);
+
+                        }
+                    }
                 }
             }
         }
 
+    }
+
+    private function sendMailNotification($email, $notification
+    ) {
+
+        $toEmail = $email;
+        $subject = 'Hệ thống website sổ liên lạc điện tử học sinh techscholl';
+
+        Mail::send('sendNoti', compact('notification'),
+            function (Message $message) use ($toEmail, $subject) {
+                $message->to($toEmail)->subject($subject);
+            });
     }
 }
