@@ -83,49 +83,49 @@ class DiemDanhController extends BaseController
                         "thu2" => $sangThu2->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "thu3" => $sangThu3->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "thu4" => $sangThu4->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "thu5" => $sangThu5->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "thu6" => $sangThu6->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "thu7" => $sangThu7->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "chunhat" => $sangChuNhat->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
@@ -134,49 +134,49 @@ class DiemDanhController extends BaseController
                         "thu2" => $chieuThu2->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "thu3" => $chieuThu3->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "thu4" => $chieuThu4->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "thu5" => $chieuThu5->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "thu6" => $chieuThu6->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "thu7" => $chieuThu7->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
                         "chunhat" => $chieuChuNhat->map(function ($item) {
                             return [
                                 "tiet" => $item->tiet,
-                                "mon" => $item->subject->name,
+                                "mon" => $item->subject ? $item->subject->name : null,
                                 "subject_id" => $item->mon,
                             ];
                         }),
