@@ -58,7 +58,10 @@ class Student extends Model
     }
 
 
-    
+    public function pointStudents()
+    {
+        return $this->hasMany(PointStudent::class, 'student_id', 'id');
+    }
 
 
     public function classHistories(){
