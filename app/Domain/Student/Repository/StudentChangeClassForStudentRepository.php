@@ -122,7 +122,7 @@ class StudentChangeClassForStudentRepository {
 
                 foreach ($students_in as $key => $item) {
 
-                    $studentH = StudentClassHistory::where('student_id', $item)->where('status', StatusClassStudentEnum::LEAVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->where('end_date', null)->first();
+                    $studentH = StudentClassHistory::where('student_id', $item)->where('status', StatusClassStudentEnum::NOT_YET_CLASS->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->where('end_date', null)->first();
 
                     if ($studentH) {
 
@@ -193,7 +193,7 @@ class StudentChangeClassForStudentRepository {
 
                     $studentHNew->student_id = $item;
                     $studentHNew->start_date = Carbon::now();
-                    $studentHNew->status = StatusClassStudentEnum::LEAVE->value;
+                    $studentHNew->status = StatusClassStudentEnum::NOT_YET_CLASS->value;
                     $studentHNew->created_user_id = Auth::id();
 
                     $check = $studentHNew->save();
@@ -208,7 +208,7 @@ class StudentChangeClassForStudentRepository {
 
                     $studentHNew->student_id = $item;
                     $studentHNew->start_date = Carbon::now();
-                    $studentHNew->status = StatusClassStudentEnum::LEAVE->value;
+                    $studentHNew->status = StatusClassStudentEnum::NOT_YET_CLASS->value;
                     $studentHNew->created_user_id = Auth::id();
 
                     $check = $studentHNew->save();
