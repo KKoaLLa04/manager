@@ -44,19 +44,19 @@ class DiemDanhController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-        $classSubjects = $this->classRepository->getSubjectOfClass($request->classId);
-        $classSubjectIds = $classSubjects->pluck('id')->toArray();
-        $classSubjectTeachers = $this->classRepository->getClassSubjectTeacher($classSubjectIds);
-        $subjects = collect();
-
-        foreach ($classSubjects as $classSubject) {
-            $classSubjectId = $classSubject->id;
-            $classSubjectTeacher = $classSubjectTeachers->get($classSubjectId);
-            if (!empty($classSubjectTeacher)) {
-                $subjects->push($classSubject->subject);
-            }
-        }
-        $subjects = $subjects->unique('id');
+//        $classSubjects = $this->classRepository->getSubjectOfClass($request->classId);
+//        $classSubjectIds = $classSubjects->pluck('id')->toArray();
+//        $classSubjectTeachers = $this->classRepository->getClassSubjectTeacher($classSubjectIds);
+//        $subjects = collect();
+//
+//        foreach ($classSubjects as $classSubject) {
+//            $classSubjectId = $classSubject->id;
+//            $classSubjectTeacher = $classSubjectTeachers->get($classSubjectId);
+//            if (!empty($classSubjectTeacher)) {
+//                $subjects->push($classSubject->subject);
+//            }
+//        }
+//        $subjects = $subjects->unique('id');
 
         $request->validate([
             'classId' => 'required'
@@ -64,7 +64,6 @@ class DiemDanhController extends BaseController
         $class_id = $request->classId;
 
         $sangThu2 = DiemDanh::with(['classSubjectTeacher','classSubjectTeacher.subject'])->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU2->value)->where('class_id', $class_id)->get();
-        dd($sangThu2);
         $sangThu3 = DiemDanh::with(['classSubjectTeacher','classSubjectTeacher.subject'])->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU3->value)->where('class_id', $class_id)->get();;
         $sangThu4 = DiemDanh::with(['classSubjectTeacher','classSubjectTeacher.subject'])->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU4->value)->where('class_id', $class_id)->get();;
         $sangThu5 = DiemDanh::with(['classSubjectTeacher','classSubjectTeacher.subject'])->where('buoi', StatusBuoi::SANG->value)->where('thu', StatusThu::THU5->value)->where('class_id', $class_id)->get();;
