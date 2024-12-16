@@ -29,11 +29,20 @@ class DiemDanh extends Model
         'updated_at',
     ];
 
-    public function subject () {
-        return $this->belongsTo(
-            Subject::class,
-            'mon',
-            'id'
+//    public function subject () {
+//        return $this->belongsTo(
+//            Subject::class,
+//            'mon',
+//            'id'
+//        );
+//    }
+
+    public function classSubjectTeacher (): HasOne
+    {
+        return $this->hasOne(
+            ClassSubjectTeacher::class,
+            'id',
+            'mon'
         );
     }
 
