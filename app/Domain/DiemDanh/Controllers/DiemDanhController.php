@@ -4,6 +4,7 @@ namespace App\Domain\DiemDanh\Controllers;
 use App\Common\Enums\StatusBuoi;
 use App\Common\Enums\StatusThu;
 use App\Common\Enums\StatusTiet;
+use App\Domain\Class\Repository\ClassRepository;
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -23,7 +24,10 @@ class DiemDanhController extends BaseController
     private $user;
 
 
-    public function __construct(Request $request)
+    public function __construct(
+        Request $request,
+        protected ClassRepository $classRepository,
+    )
     {
         $this->user = new GetUserRepository();
         parent::__construct($request);
@@ -40,6 +44,19 @@ class DiemDanhController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
+        $classSubjects = $this->classRepository->getSubjectOfClass($request->class_id);
+        $classSubjectIds = $classSubjects->pluck('id')->toArray();
+        $classSubjectTeachers = $this->classRepository->getClassSubjectTeacher($classSubjectIds);
+        $subjects = collect();
+
+        foreach ($classSubjects as $classSubject) {
+            $classSubjectId = $classSubject->id;
+            $classSubjectTeacher = $classSubjectTeachers->get($classSubjectId);
+            if (!empty($classSubjectTeacher)) {
+                $subjects->push($classSubject->subject);
+            }
+        }
+        $subjects = $subjects->unique('id');
 
         $request->validate([
             'classId' => 'required'

@@ -35,6 +35,7 @@ class ExamRepository
         $data = $exams->map(function (Exam $exam) {
             $examPeriods = $exam->examPeriods;
             return [
+                "id"         => $exam->id,
                 "name"         => $exam->name ?? "",
                 "schoolYearId" => $exam->school_year_id,
                 "schoolYear"   => $exam->schoolYear->name ?? "",
