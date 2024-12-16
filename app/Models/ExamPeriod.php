@@ -16,6 +16,7 @@ class ExamPeriod extends Model
         'exam_id',
         'name',
         'date',
+        'type',
         'created_by',
         'updated_by',
         'is_deleted',

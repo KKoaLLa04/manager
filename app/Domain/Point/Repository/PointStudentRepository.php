@@ -83,6 +83,7 @@ class PointStudentRepository
                     "subject_id"     => $data['subject_id'],
                     "class_id"       => $data['class_id'],
                     "point"          => $data['point'],
+                    "note"           => $data['note'],
                     "created_by"     => Auth::id(),
                     "created_at"     => now(),
                     "updated_at"     => now(),
@@ -95,6 +96,7 @@ class PointStudentRepository
                     "subject_id"     => $data['subject_id'],
                     "class_id"       => $data['class_id'],
                     "point"          => $data['point'],
+                    "note"           => $data['note'],
                     "updated_by"     => Auth::id(),
                     "created_at"     => now(),
                     "updated_at"     => now(),
@@ -138,6 +140,7 @@ class PointStudentRepository
                 "id"     => $item->id,
                 "name"   => $item->fullname,
                 "code"   => $item->student_code,
+                "note"   => $item->note,
                 "dob"    => Carbon::parse($item->dob)->timestamp,
                 "points" => $pointStudents->map(function ($item) {
                     return [
