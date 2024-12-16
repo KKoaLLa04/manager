@@ -31,7 +31,7 @@ class StudentChangeClassForStudentRepository {
 
                 foreach ($students_in as $key => $item) {
 
-                    $studentH = StudentClassHistory::where('student_id', $item)->where('status', StatusClassStudentEnum::STUDYING->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->where('end_date', null)->first();
+                    $studentH = StudentClassHistory::where('student_id', $item)->where('status', StatusClassStudentEnum::NOT_YET_CLASS->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->where('end_date', null)->first();
 
                     if ($studentH) {
 
