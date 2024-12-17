@@ -159,7 +159,7 @@ class RollCallController extends BaseController
         $diemdanhId   = $request->diemdanh_id;
         $this->rollCallRepository->attendanceStudentOfClass($diemdanhId, $classId, $rollCallData, $user_id, $date);
 
-        return $this->responseSuccess([], trans('api.rollcall.attendaced.success'));
+        return $this->responseSuccess();
     }
 
     public function updateByClass(Request $request, $class_id, GetUserRepository $getUserRepository)
