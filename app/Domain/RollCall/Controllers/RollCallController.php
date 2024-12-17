@@ -41,8 +41,7 @@ class RollCallController extends BaseController
         if (!$showUser) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-
-        $date     = isset($date) ? Carbon::parse($date) : Carbon::now();
+        $date     = isset($request->date) ? Carbon::parse($request->date) : Carbon::now();
         $day      = $date->dayOfWeek;
         $dayQuery = 0;
         switch ($day) {
@@ -107,7 +106,7 @@ class RollCallController extends BaseController
                                 'totalRollCall' => 0,
                                 'totalStudent'  => $this->classRepository->getStudentOfClass($class->id)->count(),
                             ] : [
-                                'totalRollCall' => $rollCall->count(),
+                                'totalRollCall' => $rollCall->where('status',1)->count(),
                                 'totalStudent'  => $this->classRepository->getStudentOfClass($class->id)->count(),
                             ]
 

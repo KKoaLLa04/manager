@@ -21,6 +21,7 @@ use App\Models\StudentClassHistory;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class RollCallRepository
 {
@@ -182,13 +183,12 @@ class RollCallRepository
             ->with('student')
             ->get();
 
-        $toltalStudentAttendance = $studentAttendances->count();
+        $toltalStudentAttendance = $studentAttendances->where('status',1)->count();
 
         if($studentAttendances->isEmpty() && ((int) $diemdanh->tiet) > 1){
             $diemdanhtruoc = DiemDanh::query()
                 ->where('tiet',((int) $diemdanh->tiet) - 1)
                 ->where('class_id', $diemdanh->class_id)
-                ->where('mon', $diemdanh->mon)
                 ->where('thu', $diemdanh->thu)
                 ->where('buoi', $diemdanh->buoi)
                 ->first();
