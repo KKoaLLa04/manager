@@ -31,7 +31,7 @@ class PointStudentRepository
     public function getExamPeriodByIds(array $examIds): Collection
     {
         return ExamPeriod::query()
-            ->whereIn('id', $examIds)
+            ->whereIn('exam_id', $examIds)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->get();
     }
