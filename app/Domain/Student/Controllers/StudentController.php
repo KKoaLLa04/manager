@@ -8,9 +8,12 @@ use App\Common\Enums\StatusClassStudentEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\Student\Repository\StudentAddRepository;
 use App\Domain\Student\Repository\StudentandParensRepository;
+use App\Domain\Student\Repository\StudentChangeClassForStudentRepository;
 use App\Domain\Student\Repository\StudentDeleteRepository;
+use App\Domain\Student\Repository\StudentDetailClassCurrentRepository;
 use App\Domain\Student\Repository\StudentIndexClassByYearRepository;
 use App\Domain\Student\Repository\StudentRepository;
+use App\Domain\Student\Repository\StudentStudentByClassRepository;
 use App\Domain\Student\Repository\StudentUpdateRepository;
 use App\Domain\Student\Repository\StudentUpGradeRepository;
 use App\Domain\Student\Requests\AssignParentRequest;
@@ -53,19 +56,20 @@ class StudentController extends BaseController
             // $pageSize = 10; // Mặc định về 10 bản ghi
             return response()->json(['message' => 'yêu cầu nhập số lượng lớn hơn 1']);
         }
-    
+        $pageIndex = $request->get('pageIndex', 1);
+
+        $keyWord = $request->input('keyword', null);
         $studentRepository = new StudentRepository();
 
         // Lấy danh sách sinh viên
-        $students = $studentRepository->paginateStudents($pageSize);
+        $students = $studentRepository->paginateStudents($pageIndex,$pageSize,$keyWord);
         if ($students->count() > 0) {
             return response()->json([
                 'status' => 'success',
-                'data' => $students->items(), // Thay items() bằng all() ở đây
-                'total' => $students->total(), // Tổng số bản ghi
-                'page_index' => $students->currentPage(), // Trang hiện tại
-                // 'page' => $students->lastPage(), // Trang cuối cùng
-                'page_size' => $students->perPage(), // Số bản ghi mỗi trang
+                'data' => $students->items(),
+                'total' => $students->total(),
+                'page_index' => $students->currentPage(),
+                'page_size' => $students->perPage(),
             ]);
         } else {
             return response()->json(['status' => 'error', 'data' => []]);
@@ -76,16 +80,16 @@ class StudentController extends BaseController
         $StudentAddRepository = new StudentAddRepository();
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-    
+
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-    
+
         // Gán giá trị mặc định cho status nếu không nhập
         $request->merge([
             'status' => $request->status ?? StatusClassStudentEnum::NOT_YET_CLASS->value,
         ]);
-    
+
         $check = $StudentAddRepository->handle($user_id, $request);
         if ($check) {
             $student = Student::with(['classHistory' => function($query) {
@@ -93,8 +97,10 @@ class StudentController extends BaseController
                       ->with(['class' => function($q) {
                           $q->select('id', 'name');
                       }]);
-            }])->where('student_code', $request->student_code)->first(); 
-    
+            }]) ->where('student_code', $request->student_code)
+            ->orderBy('created_at', 'desc') // Sắp xếp theo thời gian tạo giảm dần
+            ->first();
+
             return response()->json([
                 'message' => 'Thêm học sinh thành công',
                 'status' => 'success',
@@ -108,10 +114,10 @@ class StudentController extends BaseController
             ]);
         }
     }
-    
-    
-    
-    
+
+
+
+
 
     public function delete(int $id, ){
 
@@ -144,60 +150,21 @@ class StudentController extends BaseController
     }
 
 
-
-   
-
-    // public function update(int $id, StudentUpdateRequest $request)
-    // {
-    //     $StudentUpdateRepository = new StudentUpdateRepository();
-    //     $user_id = Auth::user()->id;
-    //     $type = AccessTypeEnum::MANAGER->value;
-    
-    //     if (!$this->user->getUser($user_id, $type)) {
-    //         return $this->responseError(trans('api.error.user_not_permission'));
-    //     }
-    
-    //     // Thực hiện cập nhật thông qua repository
-    //     $check = $StudentUpdateRepository->handle($id, $user_id, $request);
-    
-    //     if ($check) {
-    //         $data = Student::find($id);
-    
-    //         // Chuyển đổi đối tượng thành mảng
-    //         $studentArray = $data->toArray();
-            
-    //         // Không tạo bản ghi mới nếu class_id không thay đổi
-    //         $studentArray['class_id'] = optional($data->classHistory->last())->class_id;
-    
-    //         return response()->json([
-    //             'message' => 'Sửa học sinh ' . $studentArray['fullname'] . ' thành công',
-    //             'status' => 'success',
-    //             'data' => []
-    //         ]);
-    //     } else {
-    //         return response()->json([
-    //             'message' => 'Sửa học sinh thất bại',
-    //             'status' => 'error',
-    //             'data' => []
-    //         ]);
-    //     }
-    // }
-    
     public function update(int $id, StudentUpdateRequest $request)
     {
         $StudentUpdateRepository = new StudentUpdateRepository();
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-    
+
         // Kiểm tra quyền người dùng
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-    
-        try {
+
+
             // Thực hiện cập nhật thông qua repository
             $check = $StudentUpdateRepository->handle($id, $user_id, $request);
-    
+
             if ($check) {
                 // Lấy dữ liệu học sinh
                 $data = Student::find($id);
@@ -220,28 +187,22 @@ class StudentController extends BaseController
                     'data' => []
                 ]);
             }
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Không được phép: ' . $e->getMessage(),
-                'status' => 'error',
-                'data' => []
-            ]);
-        }
+
     }
-    
+
     public function show($id)
     {
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-    
+
         // Kiểm tra quyền truy cập của người dùng
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-    
+
         // Gọi phương thức từ repository để lấy thông tin học sinh
         $student = $this->studentRepository->getStudentWithDetails($id);
-        
+
         // Kiểm tra nếu không tìm thấy học sinh
         if (!$student) {
             return response()->json([
@@ -250,27 +211,27 @@ class StudentController extends BaseController
                 'data' => []
             ]);
         }
-    
+
         // Chuyển đổi dữ liệu học sinh thành mảng
         $studentArray = $student->toArray();
-    
+
         // Nhóm lịch sử lớp học theo school_year_name
         $classHistories = $student->classHistory;
-    
+
         if ($classHistories && $classHistories->isNotEmpty()) {
             $groupedClassHistories = [];
-    
+
             foreach ($classHistories as $history) {
                 // Lấy tên năm học từ quan hệ schoolYear
                 $schoolYearName = optional($history->class->schoolYear)->name;
-    
+
                 if (!isset($groupedClassHistories[$schoolYearName])) {
                     $groupedClassHistories[$schoolYearName] = [
                         'school_year_name' => $schoolYearName,
                         'classes' => []
                     ];
                 }
-    
+
                 $groupedClassHistories[$schoolYearName]['classes'][] = [
                     'start_date' => $history->start_date,
                     'end_date' => $history->end_date,
@@ -278,12 +239,12 @@ class StudentController extends BaseController
                     'class_name' => optional($history->class)->name, // class có thể null
                 ];
             }
-    
+
             $studentArray['class_history'] = array_values($groupedClassHistories);
         } else {
             $studentArray['class_history'] = [];
         }
-    
+
         // Lọc thông tin phụ huynh để chỉ lấy các trường cần thiết
         $studentArray['parents'] = $student->parents->map(function($parent) {
             return [
@@ -297,7 +258,7 @@ class StudentController extends BaseController
                 'dob' => $parent->dob,
             ];
         });
-    
+
         // Trả về kết quả
         return response()->json([
             'message' => 'Lấy thông tin học sinh thành công',
@@ -305,12 +266,13 @@ class StudentController extends BaseController
             'data' => $studentArray
         ]);
     }
-    
 
-    
+
+
 
     public function assignParent(int $student_id, AssignParentRequest $request)
     {
+        $student_id = (int) $student_id;
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
 
@@ -442,7 +404,7 @@ class StudentController extends BaseController
         }
 
         $request->validate([
-            'school_year_id' => 'required|integer',
+            'schoolYearId' => 'required|integer',
         ], [
             'integer' => trans('api.error.integer'),
             'required' => trans('api.error.required'),
@@ -451,9 +413,14 @@ class StudentController extends BaseController
 
         $repository = new StudentIndexClassByYearRepository();
 
-        $check = $repository->handle($request->school_year_id);
+        $check = $repository->handle($request->schoolYearId);
 
-        return $this->responseSuccess($check, trans('api.alert.together.index_success'));
+        // return $this->responseSuccess($check, trans('api.alert.together.index_success'));
+
+        return response([
+            'msg' => trans('api.alert.together.index_success'),
+            'data' => $check->toArray()
+        ], ResponseAlias::HTTP_OK);
 
     }
 
@@ -462,19 +429,19 @@ class StudentController extends BaseController
     {
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-    
+
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-    
+
         $pageSize = $request->input('pageSize', 10);
         if (!is_numeric($pageSize) || $pageSize <= 0) {
             return response()->json(['message' => 'Yêu cầu nhập số lượng lớn hơn 0']);
         }
-    
+
         // Gọi phương thức từ repository để lấy danh sách phụ huynh
         $parents = $this->studentRepository->getAllParentsWithChildrenCount($pageSize);
-    
+
         if ($parents->count() > 0) {
             return response()->json([
                 'message' => 'Lấy danh sách phụ huynh thành công',
@@ -488,11 +455,126 @@ class StudentController extends BaseController
             return response()->json(['status' => 'error', 'data' => []]);
         }
     }
-    
-    
 
-    
-   
+
+    public function getDetailClassCurrent (Request $request) {
+
+        $request->validate([
+            'classId' => 'required'
+        ], [
+            'required' => trans('api.error.required')
+        ]);
+
+        $repository = new StudentDetailClassCurrentRepository();
+
+        $keyword = '';
+
+        if ($request->keyword) $keyword = $request->keyword;
+
+        $check = $repository->handle($request->classId, $keyword);
+
+        if ($check) {
+            return response([
+                'msg' => trans('api.alert.together.detail_success'),
+                'data' => $check
+            ], ResponseAlias::HTTP_OK);
+        } else {
+            return response([
+                'msg' => trans('api.alert.together.detail_failed'),
+                'data' => []
+            ], ResponseAlias::HTTP_FOUND);
+        }
+
+
+
+
+    }
+
+
+    public function getStudentByClass (Request $request) {
+
+        $keyword = '';
+
+        if ($request->keyword) $keyword = $request->keyword;
+
+        $classId = '';
+
+        if ($request->classId) $classId = $request->classId;
+
+        $repository = new StudentStudentByClassRepository();
+
+        $check = $repository->handle((int)$classId, $keyword);
+
+        if ($check === false) {
+            return response([
+                'msg' => 'Lớp không tồn tại',
+                'data' => []
+            ], ResponseAlias::HTTP_NOT_FOUND);
+        }
+
+        if ($check) {
+            return response([
+                'msg' => trans('api.alert.together.index_success'),
+                'data' => array_values(array_filter($check))
+            ], ResponseAlias::HTTP_OK);
+        } else {
+            return response([
+                'msg' => trans('api.alert.together.index_success'),
+                'data' => []
+            ], ResponseAlias::HTTP_OK);
+        }
+
+
+    }
+
+
+    public function changeClassForStudent (Request $request) {
+
+        $keyword = '';
+
+        if ($request->keyword) $keyword = $request->keyword;
+
+        $classId = '';
+
+        if ($request->classId) $classId = $request->classId;
+
+        $schoolYearChoose = '';
+
+        if ($request->schoolYearChoose) $schoolYearChoose = $request->schoolYearChoose;
+
+        $schoolYearId = '';
+
+        if ($request->schoolYearId) $schoolYearId = $request->schoolYearId;
+
+        $studentsOut = [];
+
+        if ($request->studentsOut) $studentsOut = $request->studentsOut;
+
+
+        $studentsIn = [];
+
+        if ($request->studentsIn) $studentsIn = $request->studentsIn;
+
+        if (!is_array($studentsOut)) $studentsOut = [];
+        if (!is_array($studentsIn)) $studentsIn = [];
+
+        $repository = new StudentChangeClassForStudentRepository();
+
+        $check = $repository->handle($keyword, (int)$schoolYearChoose, (int)$classId, (int)$schoolYearId, $studentsOut, $studentsIn);
+
+        if ($check) {
+            return response([
+                'msg' => trans('api.alert.together.add_success'),
+                'data' => []
+            ], ResponseAlias::HTTP_OK);
+        } else {
+            return response([
+                'msg' => trans('api.alert.together.add_failed'),
+                'data' => []
+            ], ResponseAlias::HTTP_FOUND);
+        }
+
+    }
 
 
 

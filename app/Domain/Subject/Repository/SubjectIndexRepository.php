@@ -9,10 +9,15 @@ class SubjectIndexRepository {
 
     public function handle () {
 
-        $school_years = Subject::all();
+        $lists = Subject::where('is_deleted', DeleteEnum::NOT_DELETE)->get();
 
-        if($school_years->count() > 0){
-            return $school_years;
+        if($lists->count() > 0){
+            return $lists->map(function ($item) {
+                return [
+                    'subject_id' => $item->id,
+                    'subjectName' => $item->name
+                ];
+            });
         }
 
         return [];

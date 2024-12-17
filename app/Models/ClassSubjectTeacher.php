@@ -36,17 +36,36 @@ class ClassSubjectTeacher extends Model
             ->where('status', StatusEnum::ACTIVE->value);
     }
 
+    public function teacher(): HasOne
+    {
+        return $this->hasOne(User::class, 'id', 'user_id')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('status', StatusEnum::ACTIVE->value);
+    }
+
 
     public function class()
     {
-        return $this->belongsTo(Classes::class, 'class_id', 'id');
+        return $this->hasOne(Classes::class, 'class_id', 'id');
     }
     
     //tai khoan
-    public function subject(): HasOne
+    public function subject()
+{
+    return $this->hasOneThrough(
+        Subject::class,             // Bảng cuối cùng là Subject
+        ClassSubject::class,        // Bảng trung gian là ClassSubject
+        'id',                       // Khóa ngoại của ClassSubject trỏ đến ClassSubjectTeacher
+        'id',                       // Khóa chính của Subject
+        'class_subject_id',         // Khóa ngoại của ClassSubjectTeacher trỏ tới ClassSubject
+        'subject_id'                // Khóa ngoại của ClassSubject trỏ tới Subject
+    )->where('class_subject.is_deleted', DeleteEnum::NOT_DELETE->value)
+     ->where('subjects.is_deleted', DeleteEnum::NOT_DELETE->value);
+}
+    
+    public function classSubject(): HasOne
     {
-        return $this->hasOne(Subject::class, 'id', 'class_subject_id')
+        return $this->hasOne(ClassSubject::class, 'id', 'class_subject_id')
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
-    
 }
