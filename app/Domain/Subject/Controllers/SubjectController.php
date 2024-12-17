@@ -11,6 +11,7 @@ use App\Domain\Subject\Repository\SubjectCurrentClassRepository;
 use App\Domain\Subject\Repository\SubjectIndexRepository;
 use App\Domain\Subject\Repository\SubjectMixSubjectForClassReqository;
 use App\Models\ClassSubject;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -225,7 +226,7 @@ class SubjectController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
         ]);
@@ -299,11 +300,17 @@ public function delete($id)
     }
 
     try {
-        $subject->update([
-            'is_deleted' => DeleteEnum::DELETED->value, // Đánh dấu đã xóa (soft delete)
-            'modified_user_id' => auth()->id(),
-            'updated_at' => now(),
-        ]);
+        // $subject->update([
+        //     'is_deleted' => DeleteEnum::DELETED->value, // Đánh dấu đã xóa (soft delete)
+        //     'modified_user_id' => auth()->id(),
+        //     'updated_at' => now(),
+        // ]);
+
+        $subject->is_deleted = DeleteEnum::DELETED->value;
+        $subject->modified_user_id = Auth::id();
+        $subject->updated_at = Carbon::now();
+        $subject->save();
+
 
         return response()->json([
             'success' => true,
