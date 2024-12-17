@@ -299,6 +299,7 @@ class ClassRepository
         if ($subjectTeacher) {
             return [
                 "id"   => $subjectTeacher->user->id,
+                "classSubjectTeacherId" => $subjectTeacher->id,
                 "name" => is_null($subjectTeacher->user->fullname) ? "" : $subjectTeacher->user->fullname,
             ];
         }
