@@ -36,10 +36,17 @@ class ClassSubjectTeacher extends Model
             ->where('status', StatusEnum::ACTIVE->value);
     }
 
+    public function teacher(): HasOne
+    {
+        return $this->hasOne(User::class, 'id', 'user_id')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('status', StatusEnum::ACTIVE->value);
+    }
+
 
     public function class()
     {
-        return $this->belongsTo(Classes::class, 'class_id', 'id');
+        return $this->hasOne(Classes::class, 'class_id', 'id');
     }
     
     //tai khoan

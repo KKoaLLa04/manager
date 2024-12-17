@@ -45,6 +45,11 @@ class DiemDanh extends Model
             'mon'
         );
     }
+    
+    public function class(): HasOne
+    {
+        return  $this->hasOne(Classes::class, 'id', 'class_id');
+    }
 
 }
 
