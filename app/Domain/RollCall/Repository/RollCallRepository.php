@@ -182,11 +182,14 @@ class RollCallRepository
             ->with('student')
             ->get();
 
+        $toltalStudentAttendance = $studentAttendances->count();
+
         if($studentAttendances->isEmpty() && ((int) $diemdanh->tiet) > 1){
             $diemdanhtruoc = DiemDanh::query()
                 ->where('tiet',((int) $diemdanh->tiet) - 1)
                 ->where('class_id', $class_id)
                 ->where('mon', $diemdanh->mon)
+                ->where('thu', $diemdanh->thu)
                 ->where('buoi', $diemdanh->buoi)
                 ->first();
             if(!is_null($diemdanhtruoc)){
@@ -198,7 +201,6 @@ class RollCallRepository
                     ->get();
             }
         }
-        $toltalStudentAttendance = $studentAttendances->count();
         // Trả về dữ liệu
         return [
             'totalStudent'            => $totalStudent,            // Tổng số học sinh
