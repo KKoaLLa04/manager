@@ -94,9 +94,10 @@ class RollCallController extends BaseController
                 $data[$key]['timetable'][$keytime] = [
                     $item->map(function ($item) use ($rollCalls, $class) {
                         $rollCall = $rollCalls->get($item->id);
-
                         return [
                             "idTimetable"     => $item->id,
+                            "tiet"            => $item->tiet,
+                            "mon"            =>     $item->classSubjectTeacher->subject->name,
                             "checkAttendance" => $this->rollCallRepository->checkAttendanceLog($class->id,
                                 $item->id) ? 1 : 0,
                             "userId"          => is_null($item->classSubjectTeacher) ? 0 : $item->classSubjectTeacher->teacher->id,
@@ -117,7 +118,6 @@ class RollCallController extends BaseController
         }
 
         return $this->responseSuccess($data);
-
     }
 
 
