@@ -80,7 +80,7 @@ class LoginRepository
         $classId = StudentClassHistory::query()->where('student_id', $studentId)
             ->whereNull('end_date')
             ->where('status', StatusEnum::ACTIVE->value)
-            ->where('is_deleted', DeleteEnum::DELETED->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->first()->class_id ?? 0;
         return Classes::query()->where('id', $classId)->first();
     }
