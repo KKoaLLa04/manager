@@ -42,10 +42,8 @@ class RollCallRepository
                 'classHistory' => function ($query) use ($date) {
                     $query->where('is_deleted', DeleteEnum::NOT_DELETE->value)
                         ->where('status', StatusEnum::ACTIVE->value)
-                        ->whereDate('start_date', '<=', $date) // Kiểm tra lớp đã bắt đầu
-                        ->where(function ($query) use ($date) {
-                            $query->whereNull('end_date'); // Lớp chưa có ngày kết thúc
-                        });
+                        ->whereDate('start_date', '<=', $date); // Kiểm tra lớp đã bắt đầu
+
                 },
                 'rollCalls'    => function ($query) use ($date) {
                     // Lọc điểm danh theo ngày, kể cả ngày trong quá khứ
@@ -146,7 +144,7 @@ class RollCallRepository
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->where('status', StatusClassStudentEnum::STUDYING->value)
             ->where('status', StatusEnum::ACTIVE->value)
-            ->whereNull('end_date')
+
             ->with([
                 'student'         => function ($query) {
                     $query->select('id', 'fullname', 'student_code', 'dob');

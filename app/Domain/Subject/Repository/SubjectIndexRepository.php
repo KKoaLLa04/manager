@@ -9,7 +9,7 @@ class SubjectIndexRepository {
 
     public function handle () {
 
-        $lists = Subject::all();
+        $lists = Subject::where('is_deleted', DeleteEnum::NOT_DELETE)->get();
 
         if($lists->count() > 0){
             return $lists->map(function ($item) {
