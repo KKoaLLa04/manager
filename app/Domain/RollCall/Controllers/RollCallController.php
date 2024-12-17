@@ -114,8 +114,10 @@ class RollCallController extends BaseController
                     })->toArray()
                 ];
             }
-            return $this->responseSuccess($data);
         }
+
+        return $this->responseSuccess($data);
+
     }
 
 
