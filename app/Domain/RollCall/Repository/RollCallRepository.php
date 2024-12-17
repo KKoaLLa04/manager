@@ -143,7 +143,7 @@ class RollCallRepository
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->where('status', StatusClassStudentEnum::STUDYING->value)
             ->where('status', StatusEnum::ACTIVE->value)
-            ->whereNull('end_date')
+
             ->with([
                 'student' => function ($query) {
                     $query->select('id', 'fullname', 'student_code', 'dob');
@@ -179,10 +179,15 @@ class RollCallRepository
             ->distinct('student_id')
             ->count();
 
+        //Lấy số học sinh chưa điểm danh
+        $toltalStudentUnAttendance = RollCall::where('class_id', $class_id)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)->where('date','=',now())->distinct('student_id')->count();
+
         // Trả về dữ liệu
         return [
             'totalStudent' => $totalStudent, // Tổng số học sinh
             'toltalStudentAttendance' => $toltalStudentAttendance, // Số học sinh đã điểm danh
+            'toltalStudentUnAttendance'=>$toltalStudentUnAttendance,
             'data' => $students->map(function ($classHistory) {
                 // Lấy thông tin học sinh đã được eager loaded
                 $student = $classHistory->student;
