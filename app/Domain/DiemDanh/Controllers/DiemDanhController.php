@@ -507,7 +507,7 @@ class DiemDanhController extends BaseController
 
     public function taoDiemDanh($tiet, $thu, $mon, $class_id, $buoi)
     {
-
+        if (!$mon) return;
         $item = new DiemDanh();
         $item->tiet = $tiet;
         $item->thu = $thu;
@@ -524,12 +524,13 @@ class DiemDanhController extends BaseController
 
     public function suaDiemDanh($tiet, $thu, $mon, $class_id, $buoi)
     {
-
         $item = DiemDanh::where('tiet', $tiet)->where('thu', $thu)->where('class_id', $class_id)->where('buoi', $buoi)->first();
 
         if ($item) {
             $item->mon = $mon;
             $item->save();
+        } else {
+            $this->taoDiemDanh($tiet, $thu, $mon, $class_id, $buoi);
         }
     }
 }
