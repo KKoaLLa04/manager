@@ -107,7 +107,7 @@ class RollCallController extends BaseController
                                 'totalRollCall' => 0,
                                 'totalStudent'  => $this->classRepository->getStudentOfClass($class->id)->count(),
                             ] : [
-                                'totalRollCall' => $rollCall->count(),
+                                'totalRollCall' => $rollCall->where('status',1)->count(),
                                 'totalStudent'  => $this->classRepository->getStudentOfClass($class->id)->count(),
                             ]
 

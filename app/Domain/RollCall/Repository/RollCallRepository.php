@@ -183,7 +183,7 @@ class RollCallRepository
             ->with('student')
             ->get();
 
-        $toltalStudentAttendance = $studentAttendances->count();
+        $toltalStudentAttendance = $studentAttendances->where('status',1)->count();
 
         if($studentAttendances->isEmpty() && ((int) $diemdanh->tiet) > 1){
             $diemdanhtruoc = DiemDanh::query()
