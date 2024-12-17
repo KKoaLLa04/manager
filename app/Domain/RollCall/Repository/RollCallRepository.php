@@ -133,7 +133,7 @@ class RollCallRepository
     }
 
 
-    public function getStudent($class_id, $diemdanh_id, $name = null, $student_code = null)
+    public function getStudent($class_id, $diemdanh_id,Carbon $date, $name = null, $student_code = null)
     {
         $diemdanh = DiemDanh::query()
             ->where('id', $diemdanh_id)
@@ -142,6 +142,7 @@ class RollCallRepository
         // Truy vấn học sinh trong lớp
         $studentsQuery = StudentClassHistory::where('class_id', $class_id)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->whereNull('end_date')
             ->where('status', StatusClassStudentEnum::STUDYING->value)
             ->where('status', StatusEnum::ACTIVE->value)
             ->with([
@@ -176,9 +177,27 @@ class RollCallRepository
         // Lấy số học sinh đã điểm danh
         $studentAttendances      = RollCall::where('class_id', $class_id)
             ->where('diemdanh_id', $diemdanh_id)
+            ->where('date', $date->toDateString())
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->with('student')
             ->get();
+
+        if($studentAttendances->isEmpty() && $diemdanh->tiet > 1){
+            $diemdanhtruoc = DiemDanh::query()
+                ->where('tiet',(int) $diemdanh->tiet - 1)
+                ->where('class_id', $class_id)
+                ->where('mon', $diemdanh->mon)
+                ->where('buoi', $diemdanh->buoi)
+                ->first();
+            if(!is_null($diemdanhtruoc)){
+                $studentAttendances      = RollCall::where('class_id', $class_id)
+                    ->where('diemdanh_id', $diemdanhtruoc->id)
+                    ->where('date', $date->toDateString())
+                    ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+                    ->with('student')
+                    ->get();
+            }
+        }
         $toltalStudentAttendance = $studentAttendances->count();
         // Trả về dữ liệu
         return [

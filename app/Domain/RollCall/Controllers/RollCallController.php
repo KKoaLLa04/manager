@@ -126,9 +126,9 @@ class RollCallController extends BaseController
         // Lấy tham số name và student_code từ request
         $name         = $request->input('name', null);         // Tên học sinh
         $student_code = $request->input('student_code', null); // Mã học sinh
-
+        $date = isset($request->date) ? Carbon::parse($request->date)  : Carbon::now();
         // Gọi repository để lấy danh sách học sinh theo lớp và tham số tìm kiếm
-        $student = $this->rollCallRepository->getStudent($class_id, $diemdanh_id, $name, $student_code);
+        $student = $this->rollCallRepository->getStudent($class_id, $diemdanh_id,$date, $name, $student_code);
         // Kiểm tra và trả về kết quả
         if ($student) {
             return $this->responseSuccess($student, trans('api.rollcall.index.success'));
