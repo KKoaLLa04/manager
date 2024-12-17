@@ -56,11 +56,13 @@ class StudentController extends BaseController
             // $pageSize = 10; // Mặc định về 10 bản ghi
             return response()->json(['message' => 'yêu cầu nhập số lượng lớn hơn 1']);
         }
-        $keyWord = $request->input('keyWord', null);
+        $pageIndex = $request->get('pageIndex', 1);
+
+        $keyWord = $request->input('keyword', null);
         $studentRepository = new StudentRepository();
 
         // Lấy danh sách sinh viên
-        $students = $studentRepository->paginateStudents($pageSize,$keyWord);
+        $students = $studentRepository->paginateStudents($pageIndex,$pageSize,$keyWord);
         if ($students->count() > 0) {
             return response()->json([
                 'status' => 'success',
