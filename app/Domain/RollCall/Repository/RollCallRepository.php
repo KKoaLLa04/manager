@@ -212,6 +212,7 @@ class RollCallRepository
             ->get()->pluck('student_id')->toArray();
         $studentRecords = RollCall::query()
             ->where('class_id', $classId)
+            ->where('diemdanh_id', $diemdanhId)
             ->where('date', $date->toDateString())
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->get()->keyBy('student_id');
