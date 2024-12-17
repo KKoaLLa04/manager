@@ -187,7 +187,7 @@ class RollCallRepository
         if($studentAttendances->isEmpty() && ((int) $diemdanh->tiet) > 1){
             $diemdanhtruoc = DiemDanh::query()
                 ->where('tiet',((int) $diemdanh->tiet) - 1)
-                ->where('class_id', $class_id)
+                ->where('class_id', $diemdanh->class_id)
                 ->where('mon', $diemdanh->mon)
                 ->where('thu', $diemdanh->thu)
                 ->where('buoi', $diemdanh->buoi)
