@@ -116,7 +116,6 @@ class CancelNotification implements ShouldQueue
             ];
 
             $notification = UserNotification::query()->create($data);
-            
             $userDevices = $this->getUserDevice([$parent->id])->groupBy('user_id');
             $userDeviceOfNotification = $userDevices->get($notification->user_id);
 
@@ -124,15 +123,16 @@ class CancelNotification implements ShouldQueue
                 foreach ($userDeviceOfNotification as $userDevice) {
                     if ($userDevice->device_type == WebAppTypeEnum::WEB->value){
                         $this->sendNotificationWeb($userDevice, $notification);
+                        Log::info('Đây là device của: '.$userDevice);
                     }
                 }
             }
         }
-        
+
     }
 
 
-    
-    
+
+
 }
 
