@@ -1,6 +1,7 @@
 <?php
 namespace App\Domain\DiemDanh\Controllers;
 
+use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\StatusBuoi;
 use App\Common\Enums\StatusThu;
 use App\Common\Enums\StatusTiet;
@@ -39,8 +40,9 @@ class DiemDanhController extends BaseController
     {
 
         $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::GUARDIAN->value;
 
-        if (!$this->user->getManager($user_id)) {
+        if (!$this->user->getManager($user_id) && !$this->user->getUser($user_id,$type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
