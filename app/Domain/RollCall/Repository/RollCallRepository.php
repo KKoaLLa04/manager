@@ -144,7 +144,6 @@ class RollCallRepository
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->where('status', StatusClassStudentEnum::STUDYING->value)
             ->where('status', StatusEnum::ACTIVE->value)
-
             ->with([
                 'student'         => function ($query) {
                     $query->select('id', 'fullname', 'student_code', 'dob');
@@ -169,11 +168,11 @@ class RollCallRepository
         }
 
         // Lấy danh sách học sinh
-        $students = $studentsQuery->get();
-
+        $studentClassHistoryIds = $studentsQuery->get()->pluck('student_id')->toArray();
         // Lấy tổng số học sinh trong lớp
+        $students     = Student::query()->whereIn('id', $studentClassHistoryIds)->where('is_deleted',
+            DeleteEnum::NOT_DELETE->value)->get();
         $totalStudent = $students->count();
-
         // Lấy số học sinh đã điểm danh
         $studentAttendances      = RollCall::where('class_id', $class_id)
             ->where('diemdanh_id', $diemdanh_id)
@@ -185,16 +184,17 @@ class RollCallRepository
         return [
             'totalStudent'            => $totalStudent,            // Tổng số học sinh
             'toltalStudentAttendance' => $toltalStudentAttendance, // Số học sinh đã điểm danh
-            "data"                    => $studentAttendances->map(function ($studentAttendance) {
+            "data"                    => $students->map(function ($student) use ($studentAttendances) {
+                $studentAttendance = $studentAttendances->where('student_id', $student->id)->first();
                 return
                     [
-                        'id'           => $studentAttendance->student->id,
-                        'fullname'     => $studentAttendance->student->fullname,
-                        'student_code' => $studentAttendance->student->student_code,
-                        'dob'          => $studentAttendance->student->dob,
-                        'status'       => $studentAttendance->status,
-                        'date'         => Carbon::parse($studentAttendance->date)->timestamp,
-                        'note'         => $studentAttendance->note,
+                        'id'           => $student->id,
+                        'fullname'     => $student->fullname,
+                        'student_code' => $student->student_code,
+                        'dob'          => is_null($student->dob) ? 0 : Carbon::parse($student->dob)->timestamp,
+                        'status'       => is_null($studentAttendance) ? 0 : $studentAttendance->status,
+                        'date'         => is_null($studentAttendance) ? 0 : Carbon::parse($studentAttendance->date)->timestamp,
+                        'note'         => is_null($studentAttendance) ? "" : $studentAttendance->note ?? "",
                     ];
             })->toArray(),
             'timetable'               => $diemdanh
