@@ -4,8 +4,10 @@ namespace App\Domain\Auth\Controllers;
 use App\Common\Enums\StatusEnum;
 use App\Common\Repository\GetSchoolYearRepository;
 use App\Domain\Auth\Repository\LoginRepository;
+use App\Domain\Auth\Requests\DeviceRequest;
 use App\Domain\Auth\Requests\LoginRequest;
 use App\Http\Controllers\BaseController;
+use App\Models\UserDevice;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -40,4 +42,21 @@ class AuthController extends BaseController
         return $this->responseSuccess($dataResponse);
     }
 
+    public function storeDeviceToken(DeviceRequest $request)
+    {
+        $checkExits = UserDevice::query()
+            ->where('user_id', auth()->id())
+            ->where('device_token', $request->device_token)
+            ->where('device_type', $request->device_type)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->exists();
+        if (!$checkExits){
+            UserDevice::query()->create([
+                "user_id" => auth()->id(),
+                "device_token" => $request->device_token,
+                "device_type" => $request->device_type,
+                "status" => StatusEnum::ACTIVE->value
+            ]);
+        }
+    }
 }

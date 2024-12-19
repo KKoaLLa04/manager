@@ -18,7 +18,7 @@ class UpdateTeacherForSubjectOfClassRequest extends FormRequest
         return [
             "class_id"         => ["required", 'integer', "exists:classes,id"],
             "teacher_id"       => ["required", "integer", "exists:users,id"],
-            "class_subject_id" => ["required", "integer", "exists:class_subject,id"],
+            "subject_id" => ["required", "integer", "exists:subjects,id"],
         ];
     }
 

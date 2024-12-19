@@ -20,7 +20,7 @@ class StudentStudentByClassRepository {
     public function handle(int $class_id = 0, string $keyword = '')
     {
 
-        if ($class_id != 0) {
+        if ($class_id) {
 
             $classCurrent = Classes::where('id', $class_id)->where('status', StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
 
@@ -45,7 +45,7 @@ class StudentStudentByClassRepository {
 
         } else {
 
-            $studentH = StudentClassHistory::where('status', StatusClassStudentEnum::LEAVE->value)->where('end_date', null)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
+            $studentH = StudentClassHistory::where('status', StatusClassStudentEnum::NOT_YET_CLASS->value)->where('end_date', null)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
 
 
             $students = $studentH->map(function ($item) use ($keyword) {

@@ -92,29 +92,44 @@ public function update(int $id, array $data)
 
 public function softDelete(int $id, int $user_id)
 {
-   
     $academicYear = AcademicYear::find($id);
 
-    if(!$academicYear){
-        return response()->json([
+    if (!$academicYear) {
+        return [
             'success' => false,
-            'message' => 'Niên khóa không tôn tại',
-        ], 400);
-    }
-    
-    if ($academicYear && ($academicYear->status == AcademicTypeEnum::NOT_STARTED_YET->value)){
-        
-        $academicYear->is_deleted = DeleteEnum::DELETED->value;
-        
-        $academicYear->modified_user_id = $user_id;
-        
-        $academicYear->save();
-        
-        return $academicYear; 
+            'message' => 'Niên khóa không tồn tại',
+            'status' => 400
+        ];
     }
 
-    return null; 
+    if($academicYear->is_deleted == DeleteEnum::DELETED->value){
+        return [
+            'success' => false,
+            'message' => 'Niên khóa đã bị xóa rồi',
+            'status' => 400
+        ];
+    }
+
+    if ($academicYear->status === AcademicTypeEnum::NOT_STARTED_YET->value) {
+        $academicYear->is_deleted = DeleteEnum::DELETED->value;
+        $academicYear->modified_user_id = $user_id;
+        $academicYear->save();
+
+        return [
+            'success' => true,
+            'message' => 'Niên khóa đã được xóa mềm thành công',
+            'data' => $academicYear,
+            'status' => 200
+        ];
+    }
+
+    return [
+        'success' => false,
+        'message' => 'Niên khóa đang hoạt động hoặc đã kết thúc không thể xóa',
+        'status' => 400
+    ];
 }
+
 
 
 }

@@ -4,18 +4,18 @@ namespace App\Domain\Student\Requests;
 use App\Common\Enums\StatusClassStudentEnum;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StudentRequest extends FormRequest 
+class StudentRequest extends FormRequest
 {
     public function __construct()
     {
     }
-    
+
     public function rules(): array
     {
         return [
             'fullname' => 'required|string|min:3|max:255',
             // 'address' => 'string|min:5|max:255',
-            'dob' => 'required|date|before:today',
+            'dob' => 'date|before:today|nullable',
             'status' => 'nullable|in:1,2', 
             'gender' => 'required|in:1,2', // Chỉ chấp nhận giá trị 1,2
             'class_id' => [
@@ -45,7 +45,7 @@ class StudentRequest extends FormRequest
             // 'address.min' => 'Địa chỉ phải có ít nhất :min ký tự.',
             // 'address.max' => 'Địa chỉ không được vượt quá :max ký tự.',
     
-            'dob.required' => 'Trường ngày sinh là bắt buộc.',
+            // 'dob.required' => 'Trường ngày sinh là bắt buộc.',
             'dob.date' => 'Ngày sinh phải là một ngày hợp lệ.',
             'dob.before' => 'Ngày sinh phải trước ngày hôm nay.',
     
@@ -61,4 +61,3 @@ class StudentRequest extends FormRequest
     
     
 }
-            
