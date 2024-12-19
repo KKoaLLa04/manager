@@ -4,6 +4,7 @@ namespace App\Domain\Notification\Controllers;
 
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
+use App\Domain\RollCall\Models\RollCall;
 use App\Http\Controllers\BaseController;
 use App\Models\UserNotification;
 use Illuminate\Http\Request;
@@ -27,6 +28,8 @@ class NotificationController extends BaseController
             ->where('user_id', Auth::id())
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->get();
+        $itemIds = $notifications->pluck('item_id')->toArray();
+        $data = RollCall::query()->whereIn('id', $itemIds)->with(['timetable.classSubjectTeacher','timetable.c']);
         $data          = $notifications->map(function ($notification) {
             return [
                 'id'         => $notification->id,

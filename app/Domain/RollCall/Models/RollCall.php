@@ -3,6 +3,7 @@
 namespace App\Domain\RollCall\Models;
 
 use App\Models\Classes;
+use App\Models\DiemDanh;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,5 +32,9 @@ class RollCall extends Model
     public function attendanceBy()
     {
         return $this->belongsTo(User::class, 'created_user_id', 'id');
+    }
+
+    public function timetable(){
+       return $this->hasOne(DiemDanh::class, 'id', 'diemdanh_id'); 
     }
 }
