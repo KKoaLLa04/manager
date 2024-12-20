@@ -35,7 +35,7 @@ class CreateNotification implements ShouldQueue
         $this->notification = $notification;
     }
 
-    
+
 
     private function getUserDevice(array $userIds): Collection
     {
@@ -47,19 +47,21 @@ class CreateNotification implements ShouldQueue
 
     private function sendNotificationWeb(mixed $userDevice, mixed $notification)
     {
-        $credentials = new ServiceAccountCredentials("https://www.googleapis.com/auth/firebase.messaging",
-            json_decode(file_get_contents(base_path('pvk.json')), true));
+        $credentials = new ServiceAccountCredentials(
+            "https://www.googleapis.com/auth/firebase.messaging",
+            json_decode(file_get_contents(base_path('pvk.json')), true)
+        );
         $ch          = curl_init("https://fcm.googleapis.com/v1/projects/manager-96391/messages:send");
         $token       = $credentials->fetchAuthToken(\Google\Auth\HttpHandler\HttpHandlerFactory::build());
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'Authorization: Bearer '.$token['access_token']
+            'Authorization: Bearer ' . $token['access_token']
         ]);
         $dataNoti =  [
-        "type" => $notification->type,
-        "itemId" => $notification->item_id,
-        "userId" => $notification->user_id,
-        "additionalData" => $notification->data,
+            "type" => $notification->type,
+            "itemId" => $notification->item_id,
+            "userId" => $notification->user_id,
+            "additionalData" => $notification->data,
         ];
         $message = [
             "message" => [
@@ -79,7 +81,6 @@ class CreateNotification implements ShouldQueue
 
         curl_exec($ch);
         curl_close($ch);
-
     }
 
 
@@ -88,19 +89,65 @@ class CreateNotification implements ShouldQueue
      */
     public function handle(): void
     {
-        Log::info("create notification job");
+        Log::info("Start creating notification job");
+
+        // Lấy thông tin học sinh
         $studentId = $this->notification->student_id;
-        $student = Student::query()->where('id',$studentId ?? 0)->with('parents')->first();
+        $student = Student::query()
+            ->where('id', $studentId)
+            ->with([
+                'parents',
+                'classHistories.class',
+                'rollCall.attendanceBy',
+                'rollCall.timetable.classSubjectTeacher.subject'
+            ])
+            ->first();
 
-        $dataNoti = [
-            "title" => "Học sinh: " . $student->fullname . " " . StatusStudentEnum::transform($this->notification->status),
-            "title_en" => "Học sinh: " . $student->fullname . " " . StatusStudentEnum::transform($this->notification->status),
-            "class_id" =>  $this->notification->class_id ?? 0,
-            "time"     => now()
-        ];
+        if (!$student) {
+            Log::error("Student not found with ID: {$studentId}");
+            return;
+        }
 
+        
+        $className = optional($student->classHistories->first())->class->name ?? 'Lớp không xác định';
+
+        
+        $rollCalls = $student->rollCall ?? collect();
+
+       
+        $dataNotiList = [];
+        foreach ($rollCalls as $rollCall) {
+            $attendanceBy = optional($rollCall->attendanceBy)->fullname ?? 'Không xác định';
+            $note = $rollCall->note ?? 'Không có ghi chú';
+            $tiet = optional($rollCall->timetable)->tiet ?? 'Không xác định';
+            $thu = optional($rollCall->timetable)->thu ?? 'Không xác định';
+            $mon = optional($rollCall->timetable)->mon ?? 'Không xác định';
+
+            $buoi = optional($rollCall->timetable)->buoi;
+            $buoiText = [
+                1 => 'Buổi sáng',
+                2 => 'Buổi chiều'
+            ][$buoi] ?? 'Không xác định';
+
+            $subjectName = optional(optional($rollCall->timetable)->classSubjectTeacher->subject)->name ?? 'Môn không xác định';
+
+            $dataNotiList[] = [
+                "title" => "Học sinh: " . $student->fullname . " học lớp " . $className . " " . StatusStudentEnum::transform($this->notification->status) . " môn " . $subjectName . " vào thứ " . $thu . " buổi " . $buoiText . " tiết " . $tiet . ", được điểm danh bởi " . $attendanceBy . ". Ghi chú: " . $note,
+                "title_en" => "Học sinh: " . $student->fullname . " " . StatusStudentEnum::transform($this->notification->status),
+                "class_id" => $this->notification->class_id ?? 0,
+                "time" => now(),
+            ];
+        }
+
+        
         $parent = $student->parents->first();
-        if(!is_null($parent)){
+        if (!$parent) {
+            Log::error("No parent found for student ID: {$studentId}");
+            return;
+        }
+
+        foreach ($dataNotiList as $dataNoti) {
+            
             $data = [
                 "user_id" => $parent->id,
                 "item_id" => $this->notification->id,
@@ -109,41 +156,45 @@ class CreateNotification implements ShouldQueue
                 "is_send" => 0,
                 "is_convert" => 0,
                 "data" => json_encode($dataNoti),
-                "date" => now()
+                "date" => now(),
             ];
-
             $notification = UserNotification::query()->create($data);
+
             
             $userDevices = $this->getUserDevice([$parent->id])->groupBy('user_id');
-
             $userDeviceOfNotification = $userDevices->get($notification->user_id);
+
             if (isset($userDeviceOfNotification)) {
                 foreach ($userDeviceOfNotification as $userDevice) {
-                    if ($userDevice->device_type == WebAppTypeEnum::WEB->value){
+                    if ($userDevice->device_type == WebAppTypeEnum::WEB->value) {
                         $this->sendNotificationWeb($userDevice, $notification);
                     }
-                    $user = User::query()->where('id',$parent->id)->first();
-                    if(!is_null($user)){
-                        if(!is_null($user->email)){
-                            $this->sendMailNotification($user->email, $dataNoti);
+                }
 
-                        }
-                    }
+                
+                $user = User::query()->find($parent->id);
+                if ($user && $user->email) {
+                    $this->sendMailNotification($user->email, $dataNoti);
                 }
             }
         }
-
     }
 
-    private function sendMailNotification($email, $notification
+
+    private function sendMailNotification(
+        $email,
+        $notification
     ) {
 
         $toEmail = $email;
         $subject = 'Hệ thống website sổ liên lạc điện tử học sinh techscholl';
 
-        Mail::send('sendNoti', compact('notification'),
+        Mail::send(
+            'sendNoti',
+            compact('notification'),
             function (Message $message) use ($toEmail, $subject) {
                 $message->to($toEmail)->subject($subject);
-            });
+            }
+        );
     }
 }
