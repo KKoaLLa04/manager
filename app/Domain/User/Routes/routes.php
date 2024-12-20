@@ -14,4 +14,7 @@ Route::group(['prefix' => 'manager/user', 'middleware' => 'auth:api'], function 
     Route::post('/edit/{id}', [UserController::class, 'edit']);
     Route::post('/delete/{id}', [UserController::class, 'delete']);
 
+    Route::post('/assign-teacher/{id}', [UserController::class, 'assignTeacher']);
+
+
 });

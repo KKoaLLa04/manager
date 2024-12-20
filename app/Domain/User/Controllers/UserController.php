@@ -13,7 +13,10 @@ use App\Domain\User\Repository\UserEditRepository;
 use App\Domain\User\Repository\UserIndexRepository;
 use App\Domain\User\Requests\UserAddRequest;
 use App\Domain\User\Requests\UserEditRequest;
+use App\Domain\User\Requests\UserRequest;
 use App\Http\Controllers\BaseController;
+use App\Models\ClassSubject;
+use App\Models\ClassSubjectTeacher;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,13 +25,13 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class UserController extends BaseController
 {
-
+    protected $classSubjectTeacherRepository;
     private $user;
 
-    public function __construct(Request $request)
+    public function __construct(Request $request,  ChooseClassToMainTearchRepository $classSubjectTeacherRepository)
     {
         // dd(Auth::user());
-
+        $this->classSubjectTeacherRepository = $classSubjectTeacherRepository;
         $this->user = new GetUserRepository();
 
         parent::__construct($request);
@@ -226,6 +229,52 @@ class UserController extends BaseController
             return $this->responseError(trans('api.alert.together.edit_failed'));
         }
     }
+
+    public function assignTeacher(UserRequest $request, $id)
+    {
+        // Kiểm tra quyền của user
+        $user_id = Auth::user()->id;
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        // Kiểm tra xem môn học có tồn tại không
+        $classSubject = ClassSubject::where('subject_id', $request->subject_id)  // Sử dụng 'subject_id' thay vì 'class_subject_id'
+            ->where('is_deleted', 0)
+            ->first();
+
+        if (!$classSubject) {
+            return $this->responseError(trans('api.error.class_subject_not_found'));
+        }
+
+        // Chuẩn bị dữ liệu cho việc gán giáo viên
+        $data = [
+            'class_subject_id' => $classSubject->id,  // Sử dụng ID môn học tìm được
+            'class_id'         => null, // Lớp học là null vì chỉ gán môn học cho giáo viên
+            'user_id'          => $id, // Lấy ID giáo viên từ tham số route
+            'start_date'       => now(), // Ngày bắt đầu là ngày hiện tại
+            'end_date'         => null, // Ngày kết thúc là null
+            'status'           => 1, // Giáo viên đang dạy
+            'access_type'      => AccessTypeEnum::TEACHER->value, // Quyền giáo viên
+            'is_deleted'       => 0, // Giáo viên chưa bị xóa
+            'created_user_id'  => $user_id, // Người tạo
+        ];
+
+        // Gọi repository để gán giáo viên vào môn học
+        $result = $this->classSubjectTeacherRepository->assignTeacherToSubject($data);
+
+        if ($result) {
+            return $this->responseSuccess([], trans('api.alert.together.assign_success'));
+        } else {
+            return $this->responseError(trans('giáo viên đã được gán môn học'));
+        }
+    }
+
+
+
+
+
+
 
 
 }
