@@ -13,8 +13,7 @@ return new class extends Migration
     {
         Schema::create('teacher_subject_timetable', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('subject_id');
+            $table->unsignedBigInteger('class_subject_teacher_id');
             $table->unsignedBigInteger('timetable_id');
             $table->unsignedBigInteger('class_id');
             $table->integer('is_deleted')->default(0);
