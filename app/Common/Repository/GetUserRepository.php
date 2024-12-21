@@ -37,7 +37,7 @@ class GetUserRepository {
             ->get()
             ->map(function ($teacher) {
                 return [
-
+                    'id'       => $teacher->id,
                     'fullname' => $teacher->fullname,
                 ];
             });
