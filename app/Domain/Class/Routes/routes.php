@@ -18,4 +18,7 @@ Route::group(['prefix' => 'manager/class', 'middleware' => 'auth:api'], function
     Route::get('/formCreateSubjectForClass', [ClassController::class, 'formCreateSubjectForClass']);
     Route::post('/createSubjectForClass', [ClassController::class, 'createSubjectForClass']);
     Route::post('/deleteSubjectForClass', [ClassController::class, 'deleteSubjectForClass']);
+
+    Route::get('teachers-by-subject', [ClassController::class, 'getTeachersBySubject']);
+
 });

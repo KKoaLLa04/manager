@@ -278,4 +278,25 @@ class ClassController extends BaseController
 
         return $this->responseError();
     }
+
+    public function getTeachersBySubject(Request $request)
+    {
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+
+        $subjectId = $request->get('subject_id');
+        if (!$subjectId) {
+            return $this->responseError(trans('api.error.missing_subject_id'), ResponseAlias::HTTP_BAD_REQUEST);
+        }
+
+        $teachers = $this->getUserRepository->getTeachersBySubject($subjectId);
+
+        if ($teachers->isEmpty()) {
+            return $this->responseSuccess([], trans('chưa có giáo viên nào được gán cho môn học này'));
+        }
+
+        return $this->responseSuccess($teachers, trans('api.alert.teachers_retrieved'));
+    }
+
 }

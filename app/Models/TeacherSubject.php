@@ -27,7 +27,8 @@ class TeacherSubject extends Model
 // Trong model TeacherSubject.php
 public function subject()
 {
-    return $this->belongsTo(Subject::class, 'subject_id'); // Liên kết với bảng subject qua subject_id
+    return $this->belongsTo(Subject::class, 'subject_id' , 'id');
 }
+
 
 }
