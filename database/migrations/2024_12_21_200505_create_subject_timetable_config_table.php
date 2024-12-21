@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('teacher_subject_timetable', function (Blueprint $table) {
+        Schema::create('subject_timetable_config', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('class_subject_teacher_id');
-            $table->unsignedBigInteger('timetable_id');
-            $table->unsignedBigInteger('class_id');
+            $table->unsignedBigInteger('subject_id');
+            $table->integer('quantity');
             $table->integer('is_deleted')->default(0);
             $table->timestamps();
         });
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('teacher_subject_timetable');
+        Schema::dropIfExists('subject_timetable_config');
     }
 };

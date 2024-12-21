@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
 //            AcademicYearSeeder::class,
 //            ClassSeeder::class,
 //            RollCallSeeder::class,
-            TimeTableSeeder::class
+//            TimeTableSeeder::class,
+            SubjectConfigSeeder::class
         ]);
         // \App\Models\User::factory()->create([
         //     'name' => 'Test User',
