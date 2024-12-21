@@ -43,30 +43,37 @@ class TimetableController extends BaseController
 
     public function editTimetable(Request $request)
     {
-        $classId     = $request->classId;
-        $userId      = $request->userId;
-        $timetableId = $request->timetableId;
+        $classId               = $request->classId;
+        $userId                = $request->userId;
+        $timetableId           = $request->timetableId;
+        $subjectId             = $request->subjectId;
         $classSubjectTeacherId = $request->classSubjectTeacherId;
 
-        $classSubjectTeacher   = $this->timetableRepository->getClassSubjectTeachersByUserIdAndClassId($userId);
-        $classSubjectTeachersId = $classSubjectTeacher->pluck('id')->toArray();
-        $teacherSubjectTimeTable = $this->timetableRepository->checkUserExistTimetable($classSubjectTeachersId, $timetableId,
+        $classSubjectTeacher          = $this->timetableRepository->getClassSubjectTeachersByUserIdAndClassId($userId);
+        $classSubjectTeachersId       = $classSubjectTeacher->pluck('id')->toArray();
+        $teacherSubjectTimeTable      = $this->timetableRepository->checkUserExistTimetable($classSubjectTeachersId,
+            $timetableId,
+            $classId);
+        $countTeacherSubjectTimetable = $this->timetableRepository->countUserTimetable($classSubjectTeachersId,
             $classId);
 
-        if(!is_null($teacherSubjectTimeTable)){
-            return $this->responseError('Giáo viên đag có tiết dạy ở lớp:' . $teacherSubjectTimeTable->class->name);
+        $quantitySubjectConfig = $this->timetableRepository->subjectConfig($subjectId);
+        if ($countTeacherSubjectTimetable >= $quantitySubjectConfig->quantity){
+            return $this->responseError('Môn học đã đủ ' . $quantitySubjectConfig->quantity .' tiết');
+        }
+        if (!is_null($teacherSubjectTimeTable)) {
+            return $this->responseError('Giáo viên đag có tiết dạy ở lớp: '.$teacherSubjectTimeTable->class->name);
         }
         $checkTeacherSubjectTimeTableExits = $this->timetableRepository->checkUserExistTimetableOfClass($timetableId,
             $classId);
 
-        if($checkTeacherSubjectTimeTableExits){
+        if ($checkTeacherSubjectTimeTableExits) {
             $this->timetableRepository->updateTeacherSubjectTeacher($classSubjectTeacherId, $timetableId, $classId);
-        }else{
+        } else {
             $this->timetableRepository->createTeacherSubjectTeacher($classSubjectTeacherId, $timetableId, $classId);
         }
 
-        return  $this->responseSuccess([], 'Thục hiện thành công');
-
+        return $this->responseSuccess([], 'Thục hiện thành công');
     }
 
     public function indexConfig()
@@ -108,21 +115,21 @@ class TimetableController extends BaseController
 
         $subjectTimetableConfigs = $this->timetableRepository->getSubjectTimeTableConfig();
 
-        return $this->responseSuccess( $this->timetableRepository->transformSubjectTimetableConfig($subjects, $subjectTimetableConfigs));
+        return $this->responseSuccess($this->timetableRepository->transformSubjectTimetableConfig($subjects,
+            $subjectTimetableConfigs));
     }
 
-    public function editSubjectConfig(Request $request){
-
+    public function editSubjectConfig(Request $request)
+    {
         $data = $request->data;
         foreach ($data as $item) {
             $dataUpdate = [
                 "quantity" => $item['quantity'],
             ];
             SubjectTimetableConfig::query()->where('id', $item['id'])
-               ->update($dataUpdate);
+                ->update($dataUpdate);
         }
 
         return $this->responseSuccess($data);
-
     }
 }

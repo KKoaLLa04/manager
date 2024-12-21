@@ -158,6 +158,15 @@ class TimetableRepository
             ->first();
     }
 
+    public function countUserTimetable($classSubjectTeacherIds, $classId): int
+    {
+        return TeacherSubjectTimetable::query()
+            ->whereIn('class_subject_teacher_id', $classSubjectTeacherIds)
+            ->whereNot('class_id', $classId)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->count();
+    }
+
     public function checkUserExistTimetableOfClass($timetableId, $classId): bool
     {
         return TeacherSubjectTimetable::query()
@@ -216,5 +225,13 @@ class TimetableRepository
                 'quantity'                 => $subjectTimetableConfig->quantity,
             ];
         });
+    }
+
+    public function subjectConfig(int $subjectId)
+    {
+        return SubjectTimetableConfig::query()
+            ->where('subject_id', $subjectId)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->first();
     }
 }

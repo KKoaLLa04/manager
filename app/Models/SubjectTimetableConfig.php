@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Domain\Subject\Models\Subject;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SubjectTimetableConfig extends Model
 {
