@@ -50,13 +50,12 @@ class TimetableController extends BaseController
         $classSubjectTeacherId = $request->classSubjectTeacherId;
 
         $classSubjectTeacher          = $this->timetableRepository->getClassSubjectTeachersByUserIdAndClassId($userId);
-        $classSubjectTeachersId       = $classSubjectTeacher->pluck('id')->toArray();
-        $teacherSubjectTimeTable      = $this->timetableRepository->checkUserExistTimetable($classSubjectTeachersId,
+        $classSubjectTeacherIds       = $classSubjectTeacher->pluck('id')->toArray();
+        $teacherSubjectTimeTable      = $this->timetableRepository->checkUserExistTimetable($classSubjectTeacherIds,
             $timetableId,
             $classId);
-        $countTeacherSubjectTimetable = $this->timetableRepository->countUserTimetable($classSubjectTeachersId,
+        $countTeacherSubjectTimetable = $this->timetableRepository->countUserTimetable($classSubjectTeacherId,
             $classId);
-
         $quantitySubjectConfig = $this->timetableRepository->subjectConfig($subjectId);
         if ($countTeacherSubjectTimetable >= $quantitySubjectConfig->quantity){
             return $this->responseError('Môn học đã đủ ' . $quantitySubjectConfig->quantity .' tiết');

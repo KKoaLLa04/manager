@@ -56,7 +56,6 @@ class TimetableRepository
             $classSubjectTeacherId     = !is_null($teacherSubjectTimetable) ? $teacherSubjectTimetable->class_subject_teacher_id : 0;
             $teacherSubjectTimetableId = !is_null($teacherSubjectTimetable) ? $teacherSubjectTimetable->id : 0;
             $classSubjectTeacher       = $classSubjectTeachers->where('id', $classSubjectTeacherId)->first();
-            $teacherSubject            = [];
             $class_subject_teacher_id = "";
             $user_id = "";
             $user_name = "";
@@ -65,7 +64,7 @@ class TimetableRepository
             if (!is_null($classSubjectTeacher)) {
                 $class_subject_teacher_id = $classSubjectTeacherId;
                 $user_id = is_null($classSubjectTeacher->user) ? 0 : $classSubjectTeacher->user_id;
-                $user_name = is_null($classSubjectTeacher->user) ? "" : $classSubjectTeacher->user->name;
+                $user_name = is_null($classSubjectTeacher->user) ? "" : $classSubjectTeacher->user->fullname;
                 $subject_id = is_null($classSubjectTeacher->subject) ? 0 : $classSubjectTeacher->subject->id;
                 $subject_name = is_null($classSubjectTeacher->subject) ? "" : $classSubjectTeacher->subject->name;
             }
@@ -158,11 +157,11 @@ class TimetableRepository
             ->first();
     }
 
-    public function countUserTimetable($classSubjectTeacherIds, $classId): int
+    public function countUserTimetable(int $classSubjectTeacherId,int $classId): int
     {
         return TeacherSubjectTimetable::query()
-            ->whereIn('class_subject_teacher_id', $classSubjectTeacherIds)
-            ->whereNot('class_id', $classId)
+            ->where('class_subject_teacher_id', $classSubjectTeacherId)
+            ->where('class_id', $classId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->count();
     }
