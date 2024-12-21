@@ -4,7 +4,10 @@ namespace App\Domain\Timetable\Repository;
 
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
+use App\Domain\Subject\Models\Subject;
+use App\Models\ClassSubject;
 use App\Models\ClassSubjectTeacher;
+use App\Models\SubjectTimetableConfig;
 use App\Models\TeacherSubjectTimetable;
 use App\Models\Timetable;
 use Illuminate\Support\Collection;
@@ -28,7 +31,7 @@ class TimetableRepository
 
     public function getClassSubjectTeachers(array $ids, int $classId): Collection
     {
-        return  ClassSubjectTeacher::query()
+        return ClassSubjectTeacher::query()
             ->whereIn('id', $ids)
             ->where('status', StatusEnum::ACTIVE->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
@@ -49,28 +52,28 @@ class TimetableRepository
         Collection $classSubjectTeacherByClassId
     ) {
         $dataTimetable = $timetables->map(function ($timetable) use ($teacherSubjectTimetables, $classSubjectTeachers) {
-            $teacherSubjectTimetable = $teacherSubjectTimetables->where('timetable_id', $timetable->id)->first();
-            $classSubjectTeacherId = !is_null($teacherSubjectTimetable) ?  $teacherSubjectTimetable->class_subject_teacher_id : 0 ;
-            $teacherSubjectTimetableId = !is_null($teacherSubjectTimetable) ?  $teacherSubjectTimetable->id : 0 ;
-            $classSubjectTeacher = $classSubjectTeachers->where('id', $classSubjectTeacherId)->first();
-            $teacherSubject = [];
-            if (!is_null($classSubjectTeacher)){
+            $teacherSubjectTimetable   = $teacherSubjectTimetables->where('timetable_id', $timetable->id)->first();
+            $classSubjectTeacherId     = !is_null($teacherSubjectTimetable) ? $teacherSubjectTimetable->class_subject_teacher_id : 0;
+            $teacherSubjectTimetableId = !is_null($teacherSubjectTimetable) ? $teacherSubjectTimetable->id : 0;
+            $classSubjectTeacher       = $classSubjectTeachers->where('id', $classSubjectTeacherId)->first();
+            $teacherSubject            = [];
+            if (!is_null($classSubjectTeacher)) {
                 $teacherSubject = [
                     'class_subject_teacher_id' => $classSubjectTeacher->id,
-                    'user_id' => $classSubjectTeacher->user_id,
-                    'subject_id' => $classSubjectTeacher->subject->id,
-                    'subject_name' => $classSubjectTeacher->subject->name,
+                    'user_id'                  => $classSubjectTeacher->user_id,
+                    'subject_id'               => $classSubjectTeacher->subject->id,
+                    'subject_name'             => $classSubjectTeacher->subject->name,
                 ];
             }
             return [
-                'id' => $timetable->id,
-                'day' => $timetable->day,
-                'time' => $timetable->time,
-                'period' => $timetable->period,
-                'from_time' => $timetable->from_time,
-                'to_time' => $timetable->to_time,
+                'id'                           => $timetable->id,
+                'day'                          => $timetable->day,
+                'time'                         => $timetable->time,
+                'period'                       => $timetable->period,
+                'from_time'                    => $timetable->from_time,
+                'to_time'                      => $timetable->to_time,
                 'teacher_subject_timetable_id' => $teacherSubjectTimetableId,
-                'teacher_subject' => $teacherSubject,
+                'teacher_subject'              => $teacherSubject,
             ];
         });
 //        $dataTimetable = $dataTimetable->sortBy('day');
@@ -78,11 +81,11 @@ class TimetableRepository
 
         $data = [];
         foreach ($dataTimetables as $key => $timetable) {
-            $days = $timetable->groupBy('day');
+            $days     = $timetable->groupBy('day');
             $dayValue = [];
             foreach ($days as $keyDay => $day) {
                 $dayValue[] = [
-                    'day' => $keyDay,
+                    'day'    => $keyDay,
                     'period' => $day->sortBy('period')->toArray(),
                 ];
             }
@@ -95,21 +98,21 @@ class TimetableRepository
         $subjectClass = $classSubjectTeacherByClassId->map(function ($teacherSubjectTeacher) {
             return [
                 'class_subject_teacher_id' => $teacherSubjectTeacher->id,
-                'user_id' => $teacherSubjectTeacher->user_id,
-                'subject_id' => $teacherSubjectTeacher->subject->id,
-                'subject_name' => $teacherSubjectTeacher->subject->name,
+                'user_id'                  => $teacherSubjectTeacher->user_id,
+                'subject_id'               => $teacherSubjectTeacher->subject->id,
+                'subject_name'             => $teacherSubjectTeacher->subject->name,
             ];
         })->toArray();
 
         return [
-            'timetables' => $data,
+            'timetables'       => $data,
             'subject_teachers' => $subjectClass,
         ];
     }
 
-    public function getClassSubjectTeachersByClassId(int $classId):Collection
+    public function getClassSubjectTeachersByClassId(int $classId): Collection
     {
-        return  ClassSubjectTeacher::query()
+        return ClassSubjectTeacher::query()
             ->where('status', StatusEnum::ACTIVE->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->whereNull('end_date')
@@ -129,13 +132,13 @@ class TimetableRepository
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->whereNull('end_date')
             ->where('user_id', $userId);
-        if ($classId != 0){
+        if ($classId != 0) {
             $query->where('class_id', $classId);
         }
         return $query->get();
     }
 
-    public function checkUserExistTimetable($classSubjectTeacherIds, $timetableId,$classId)
+    public function checkUserExistTimetable($classSubjectTeacherIds, $timetableId, $classId)
     {
         return TeacherSubjectTimetable::query()
             ->whereIn('class_subject_teacher_id', $classSubjectTeacherIds)
@@ -146,7 +149,7 @@ class TimetableRepository
             ->first();
     }
 
-    public function checkUserExistTimetableOfClass($timetableId,$classId): bool
+    public function checkUserExistTimetableOfClass($timetableId, $classId): bool
     {
         return TeacherSubjectTimetable::query()
             ->where('timetable_id', $timetableId)
@@ -155,9 +158,9 @@ class TimetableRepository
             ->exists();
     }
 
-    public function updateTeacherSubjectTeacher($classSubjectTeacherId, $timetableId,$classId): void
+    public function updateTeacherSubjectTeacher($classSubjectTeacherId, $timetableId, $classId): void
     {
-         TeacherSubjectTimetable::query()
+        TeacherSubjectTimetable::query()
             ->where('timetable_id', $timetableId)
             ->where('class_id', $classId)
             ->update([
@@ -171,9 +174,35 @@ class TimetableRepository
             ->create(
                 [
                     'class_subject_teacher_id' => $classSubjectTeacherId,
-                    'timetable_id' => $timetableId,
-                    'class_id' => $classId,
+                    'timetable_id'             => $timetableId,
+                    'class_id'                 => $classId,
                 ]
             );
+    }
+
+    public function getSubject(): Collection
+    {
+        return Subject::query()
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->get();
+    }
+
+    public function getSubjectTimeTableConfig(): Collection
+    {
+        return SubjectTimetableConfig::query()
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->get();
+    }
+
+    public function transformSubjectTimetableConfig(Collection $subjects, Collection $subjectTimetableConfigs): Collection
+    {
+        return $subjects->map(function ($subject) use ($subjectTimetableConfigs) {
+            $subjectTimetableConfig = $subjectTimetableConfigs->where('subject_id', $subject->id)->first();
+            return [
+                'subject_id'   => $subject->id,
+                'subject_name' => $subject->name,
+                'quantity'     => $subjectTimetableConfig->quantity,
+            ];
+        });
     }
 }

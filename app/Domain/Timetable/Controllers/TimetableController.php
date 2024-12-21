@@ -4,6 +4,7 @@ namespace App\Domain\Timetable\Controllers;
 
 use App\Domain\Timetable\Repository\TimetableRepository;
 use App\Http\Controllers\BaseController;
+use App\Models\SubjectTimetableConfig;
 use App\Models\Timetable;
 use Illuminate\Http\Request;
 
@@ -14,10 +15,6 @@ class TimetableController extends BaseController
         protected TimetableRepository $timetableRepository
     ) {
         parent::__construct($request);
-    }
-
-    public function getClassTeacherSubject()
-    {
     }
 
     public function index(Request $request)
@@ -103,5 +100,29 @@ class TimetableController extends BaseController
         }
 
         return $this->responseSuccess($data);
+    }
+
+    public function getSubjectConfig()
+    {
+        $subjects = $this->timetableRepository->getSubject();
+
+        $subjectTimetableConfigs = $this->timetableRepository->getSubjectTimeTableConfig();
+
+        return $this->responseSuccess( $this->timetableRepository->transformSubjectTimetableConfig($subjects, $subjectTimetableConfigs));
+    }
+
+    public function editSubjectConfig(Request $request){
+
+        $data = $request->data;
+        foreach ($data as $item) {
+            $dataUpdate = [
+                "quantity" => $item['quantity'],
+            ];
+            SubjectTimetableConfig::query()->where('id', $item['id'])
+               ->update($dataUpdate);
+        }
+
+        return $this->responseSuccess($data);
+
     }
 }
