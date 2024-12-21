@@ -64,10 +64,10 @@ class TimetableRepository
             $subject_name = "";
             if (!is_null($classSubjectTeacher)) {
                 $class_subject_teacher_id = $classSubjectTeacherId;
-                $user_id = is_null($classSubjectTeacher->user) ? 0 : $classSubjectTeacher->user_id,
-                $user_name = is_null($classSubjectTeacher->user) ? "" : $classSubjectTeacher->user->name,
-                $subject_id = is_null($classSubjectTeacher->subject) ? 0 : $classSubjectTeacher->subject->id,
-                $subject_name = is_null($classSubjectTeacher->subject) ? "" : $classSubjectTeacher->subject->name,
+                $user_id = is_null($classSubjectTeacher->user) ? 0 : $classSubjectTeacher->user_id;
+                $user_name = is_null($classSubjectTeacher->user) ? "" : $classSubjectTeacher->user->name;
+                $subject_id = is_null($classSubjectTeacher->subject) ? 0 : $classSubjectTeacher->subject->id;
+                $subject_name = is_null($classSubjectTeacher->subject) ? "" : $classSubjectTeacher->subject->name;
             }
             return [
                 'id'                           => $timetable->id,
