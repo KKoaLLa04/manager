@@ -57,14 +57,17 @@ class TimetableRepository
             $teacherSubjectTimetableId = !is_null($teacherSubjectTimetable) ? $teacherSubjectTimetable->id : 0;
             $classSubjectTeacher       = $classSubjectTeachers->where('id', $classSubjectTeacherId)->first();
             $teacherSubject            = [];
+            $class_subject_teacher_id = "";
+            $user_id = "";
+            $user_name = "";
+            $subject_id = "";
+            $subject_name = "";
             if (!is_null($classSubjectTeacher)) {
-                $teacherSubject = [
-                    'class_subject_teacher_id' => $classSubjectTeacher->id,
-                    'user_id'                  => is_null($classSubjectTeacher->user) ? 0 : $classSubjectTeacher->user_id,
-                    'user_name'                => is_null($classSubjectTeacher->user) ? "" : $classSubjectTeacher->user->name,
-                    'subject_id'               => is_null($classSubjectTeacher->subject) ? 0 : $classSubjectTeacher->subject->id,
-                    'subject_name'             => is_null($classSubjectTeacher->subject) ? "" : $classSubjectTeacher->subject->name,
-                ];
+                $class_subject_teacher_id = $classSubjectTeacherId;
+                $user_id = is_null($classSubjectTeacher->user) ? 0 : $classSubjectTeacher->user_id,
+                $user_name = is_null($classSubjectTeacher->user) ? "" : $classSubjectTeacher->user->name,
+                $subject_id = is_null($classSubjectTeacher->subject) ? 0 : $classSubjectTeacher->subject->id,
+                $subject_name = is_null($classSubjectTeacher->subject) ? "" : $classSubjectTeacher->subject->name,
             }
             return [
                 'id'                           => $timetable->id,
@@ -74,7 +77,11 @@ class TimetableRepository
                 'from_time'                    => $timetable->from_time,
                 'to_time'                      => $timetable->to_time,
                 'teacher_subject_timetable_id' => $teacherSubjectTimetableId,
-                'teacher_subject'              => $teacherSubject,
+                'class_subject_teacher_id'     => $class_subject_teacher_id,
+                'user_id'                      => $user_id,
+                'user_name'                    => $user_name,
+                'subject_id'                   => $subject_id,
+                'subject_name'                 => $subject_name,
             ];
         });
 //        $dataTimetable = $dataTimetable->sortBy('day');
@@ -100,7 +107,7 @@ class TimetableRepository
             return [
                 'class_subject_teacher_id' => $teacherSubjectTeacher->id,
                 'user_id'                  => is_null($teacherSubjectTeacher->user) ? 0 : $teacherSubjectTeacher->user_id,
-                'user_name'                => is_null($teacherSubjectTeacher->user) ? "" : $teacherSubjectTeacher->user->name,
+                'user_name'                => is_null($teacherSubjectTeacher->user) ? "" : $teacherSubjectTeacher->user->fullname,
                 'subject_id'               => is_null($teacherSubjectTeacher->subject) ? 0 : $teacherSubjectTeacher->subject->id,
                 'subject_name'             => is_null($teacherSubjectTeacher->subject) ? "" : $teacherSubjectTeacher->subject->name,
             ];
