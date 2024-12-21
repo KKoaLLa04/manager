@@ -1,9 +1,9 @@
 <?php
-namespace App\Domain\DiemDanh\Requests;
+namespace App\Domain\Timetable\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class DiemDanhRequest extends FormRequest 
+class TimetableRequest extends FormRequest 
 {
     public function __construct()
     {

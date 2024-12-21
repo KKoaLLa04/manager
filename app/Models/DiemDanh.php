@@ -51,5 +51,9 @@ class DiemDanh extends Model
         return  $this->hasOne(Classes::class, 'id', 'class_id');
     }
 
+    public function subject(){
+        return $this->belongsTo(Subject::class, 'mon', 'id');
+    }
+
 }
 
