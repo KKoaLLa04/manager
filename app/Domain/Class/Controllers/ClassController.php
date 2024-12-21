@@ -287,7 +287,7 @@ class ClassController extends BaseController
 
         $subjectId = $request->get('subject_id');
         if (!$subjectId) {
-            return $this->responseError(trans('api.error.missing_subject_id'), ResponseAlias::HTTP_BAD_REQUEST);
+            return [];
         }
 
         $teachers = $this->getUserRepository->getTeachersBySubject($subjectId);
