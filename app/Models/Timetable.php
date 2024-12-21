@@ -13,8 +13,13 @@ class Timetable extends Model
         "time",
         "from_time",
         "to_time",
-        "person",
+        "period",
         "created_at",
         "updated_at",
     ];
+
+    public function teacherSubjectTimetable()
+    {
+        return $this->hasMany(TeacherSubjectTimetable::class, 'timetable_id', 'id');
+    }
 }
