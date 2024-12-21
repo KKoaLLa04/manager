@@ -27,4 +27,15 @@ class GetUserRepository {
             StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
     }
 
+    public function getTeachersBySubject($subjectId)
+    {
+        return User::where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('access_type', AccessTypeEnum::TEACHER->value)
+            ->whereHas('teacherSubjects', function ($query) use ($subjectId) {
+                $query->where('subject_id', $subjectId); // Lọc theo môn học
+            })
+            ->get();
+    }
+
+
 }

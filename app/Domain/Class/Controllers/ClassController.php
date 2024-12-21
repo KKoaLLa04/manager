@@ -77,7 +77,7 @@ class ClassController extends BaseController
         $classSubjects = $this->classRepository->getSubjectOfClass($request->class_id);
 
         $subjectTeacher = $this->classRepository->getClassSubjectTeacher($classSubjects->pluck('id')->toArray());
-        
+
         return $this->responseSuccess($this->classRepository->transformDetailClass($class, $students, $classSubjects,
             $subjectTeacher));
     }
@@ -218,19 +218,35 @@ class ClassController extends BaseController
         return $this->responseSuccess();
     }
 
+    // public function formCreateSubjectForClass(FormCreateSubjectForClassRequest $request)
+    // {
+    //     if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+    //         return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+    //     }
+    //     $teachers          = $this->getUserRepository->getTeachers();
+    //     $subjectIdsOfClass = $this->classRepository->getSubjectOfClass($request->class_id)
+    //         ->pluck('subject_id')
+    //         ->toArray();
+    //     $subjects          = $this->classRepository->getSubjectNotOfClass($subjectIdsOfClass);
+
+    //     return $this->responseSuccess($this->classRepository->transformCreateSubjectForClass($teachers, $subjects));
+    // }
     public function formCreateSubjectForClass(FormCreateSubjectForClassRequest $request)
     {
         if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
-        $teachers          = $this->getUserRepository->getTeachers();
+
+        $subjectId = $request->subject_id; // Môn học được chọn
+        $teachers = $this->getUserRepository->getTeachersBySubject($subjectId); // Lấy danh sách giáo viên theo môn học
         $subjectIdsOfClass = $this->classRepository->getSubjectOfClass($request->class_id)
             ->pluck('subject_id')
             ->toArray();
-        $subjects          = $this->classRepository->getSubjectNotOfClass($subjectIdsOfClass);
+        $subjects = $this->classRepository->getSubjectNotOfClass($subjectIdsOfClass);
 
         return $this->responseSuccess($this->classRepository->transformCreateSubjectForClass($teachers, $subjects));
     }
+
 
     public function createSubjectForClass(CreateSubjectOfClassRequest $request)
     {
