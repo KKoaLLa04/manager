@@ -60,9 +60,10 @@ class TimetableRepository
             if (!is_null($classSubjectTeacher)) {
                 $teacherSubject = [
                     'class_subject_teacher_id' => $classSubjectTeacher->id,
-                    'user_id'                  => $classSubjectTeacher->user_id,
-                    'subject_id'               => $classSubjectTeacher->subject->id,
-                    'subject_name'             => $classSubjectTeacher->subject->name,
+                    'user_id'                  => is_null($classSubjectTeacher->user) ? 0 : $classSubjectTeacher->user_id,
+                    'user_name'                => is_null($classSubjectTeacher->user) ? "" : $classSubjectTeacher->user->name,
+                    'subject_id'               => is_null($classSubjectTeacher->subject) ? 0 : $classSubjectTeacher->subject->id,
+                    'subject_name'             => is_null($classSubjectTeacher->subject) ? "" : $classSubjectTeacher->subject->name,
                 ];
             }
             return [
@@ -98,9 +99,10 @@ class TimetableRepository
         $subjectClass = $classSubjectTeacherByClassId->map(function ($teacherSubjectTeacher) {
             return [
                 'class_subject_teacher_id' => $teacherSubjectTeacher->id,
-                'user_id'                  => $teacherSubjectTeacher->user_id,
-                'subject_id'               => $teacherSubjectTeacher->subject->id,
-                'subject_name'             => $teacherSubjectTeacher->subject->name,
+                'user_id'                  => is_null($teacherSubjectTeacher->user) ? 0 : $teacherSubjectTeacher->user_id,
+                'user_name'                => is_null($teacherSubjectTeacher->user) ? "" : $teacherSubjectTeacher->user->name,
+                'subject_id'               => is_null($teacherSubjectTeacher->subject) ? 0 : $teacherSubjectTeacher->subject->id,
+                'subject_name'             => is_null($teacherSubjectTeacher->subject) ? "" : $teacherSubjectTeacher->subject->name,
             ];
         })->toArray();
 
