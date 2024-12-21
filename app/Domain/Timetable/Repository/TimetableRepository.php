@@ -194,14 +194,17 @@ class TimetableRepository
             ->get();
     }
 
-    public function transformSubjectTimetableConfig(Collection $subjects, Collection $subjectTimetableConfigs): Collection
-    {
+    public function transformSubjectTimetableConfig(
+        Collection $subjects,
+        Collection $subjectTimetableConfigs
+    ): Collection {
         return $subjects->map(function ($subject) use ($subjectTimetableConfigs) {
             $subjectTimetableConfig = $subjectTimetableConfigs->where('subject_id', $subject->id)->first();
             return [
-                'subject_id'   => $subject->id,
-                'subject_name' => $subject->name,
-                'quantity'     => $subjectTimetableConfig->quantity,
+                'subjectTimetableConfigId' => $subjectTimetableConfig->id,
+                'subject_id'               => $subject->id,
+                'subject_name'             => $subject->name,
+                'quantity'                 => $subjectTimetableConfig->quantity,
             ];
         });
     }
