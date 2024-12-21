@@ -35,6 +35,6 @@ class RollCall extends Model
     }
 
     public function timetable(){
-       return $this->hasOne(DiemDanh::class, 'id', 'diemdanh_id'); 
+       return $this->belongsTo(DiemDanh::class, 'diemdanh_id', 'id'); 
     }
 }

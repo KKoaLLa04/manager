@@ -117,7 +117,7 @@ class GuardianController extends BaseController
     $students = $this->guardianRepository->getStudent($keyword, $pageIndex, $pageSize);
 
     if (!empty($students)) {
-        return $this->responseSuccess($students['data'], 'Lấy danh sách học sinh thành công');
+        return $this->responseSuccess($students, 'Lấy danh sách học sinh thành công');
     } else {
         return $this->responseError('Lấy danh sách học sinh thất bại');
     }
@@ -275,16 +275,12 @@ public function unassignStudent(Request $request, int $guardianId, GetUserReposi
     }
     $studentIds = $request->input('student_id');
 
-    try {
-       $this->guardianRepository->unassignStudent($guardianId, $studentIds);
 
-        return response()->json([
-            'message' => 'Học sinh đã được gỡ khỏi phụ huynh thành công.'
-        ], 200);
-    } catch (Exception $e) {
-        return response()->json([
-            'message' => 'Học sinh này đã được gỡ',
-        ], 400);
+    $student = $this->guardianRepository->unassignStudent($guardianId, $studentIds);
+    if ($student) {
+        return $this->responseSuccess([], trans('api.guardian.unassign_student.success'));
+    } else {
+        return $this->responseError(trans('api.guardian.unassign_student.errors'));
     }
 }
 
