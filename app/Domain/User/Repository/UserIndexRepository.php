@@ -12,9 +12,12 @@ class UserIndexRepository {
 
         $list = User::where('is_deleted', DeleteEnum::NOT_DELETE->value)->whereIn('access_type', [AccessTypeEnum::MANAGER->value, AccessTypeEnum::TEACHER->value])->where("fullname", "like", "%".$keyword."%")->orWhere("code", "like", "%".$keyword."%")->get();
 
-        if($list->count() > 0){
+        if ($list->count() > 0) {
             return $list->map(function ($item) {
-                return $item->infoMainTearchWithClass();
+                $subjectName = $item->teacherSubjects->first() ? $item->teacherSubjects->first()->subject->name : null;
+                $teacherInfo = $item->infoMainTearchWithClass();
+                $teacherInfo['subject'] = $subjectName;
+                return $teacherInfo;
             });
         }
 

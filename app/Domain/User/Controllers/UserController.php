@@ -3,7 +3,10 @@
 namespace App\Domain\User\Controllers;
 
 use App\Common\Enums\AccessTypeEnum;
+use App\Common\Enums\DeleteEnum;
+use App\Common\Enums\StatusEnum;
 use App\Common\Repository\GetUserRepository;
+use App\Domain\Subject\Models\Subject;
 use App\Domain\User\Repository\ChooseClassToMainTearchRepository;
 use App\Domain\User\Repository\UserAddRepository;
 use App\Domain\User\Repository\UserChangePasswordRepository;
@@ -17,6 +20,7 @@ use App\Domain\User\Requests\UserRequest;
 use App\Http\Controllers\BaseController;
 use App\Models\ClassSubject;
 use App\Models\ClassSubjectTeacher;
+use App\Models\TeacherSubject;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -238,36 +242,48 @@ class UserController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-        // Kiểm tra xem môn học có tồn tại không
-        $classSubject = ClassSubject::where('subject_id', $request->subject_id)  // Sử dụng 'subject_id' thay vì 'class_subject_id'
-            ->where('is_deleted', 0)
+        $teacher = User::where('id', $id)
+        ->where('access_type', AccessTypeEnum::TEACHER->value)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->first();
+            if (!$teacher) {
+                return $this->responseError(trans('Người dùng không phải là giáo viên hoặc không tồn tại.'));
+            }
+
+        $subject = Subject::where('id', $request->subject_id)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->first();
 
-        if (!$classSubject) {
-            return $this->responseError(trans('api.error.class_subject_not_found'));
+        if (!$subject) {
+            return $this->responseError(trans('Môn học không tồn tại'));
         }
 
-        // Chuẩn bị dữ liệu cho việc gán giáo viên
+        $existingAssignment = TeacherSubject::where('user_id', $id)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->first();
+
+        if ($existingAssignment) {
+        return $this->responseError(trans('Giáo viên đã được gán vào một môn học khác và không thể gán thêm.'));
+        }
+
+
         $data = [
-            'class_subject_id' => $classSubject->id,  // Sử dụng ID môn học tìm được
-            'class_id'         => null, // Lớp học là null vì chỉ gán môn học cho giáo viên
-            'user_id'          => $id, // Lấy ID giáo viên từ tham số route
-            'start_date'       => now(), // Ngày bắt đầu là ngày hiện tại
-            'end_date'         => null, // Ngày kết thúc là null
-            'status'           => 1, // Giáo viên đang dạy
-            'access_type'      => AccessTypeEnum::TEACHER->value, // Quyền giáo viên
-            'is_deleted'       => 0, // Giáo viên chưa bị xóa
-            'created_user_id'  => $user_id, // Người tạo
+            'subject_id'      => $subject->id,
+            'user_id'         => $id,
+            'status'          => StatusEnum::ACTIVE->value,
+            'is_deleted'      => DeleteEnum::NOT_DELETE->value,
+            'created_user_id' => $user_id,
+
         ];
 
-        // Gọi repository để gán giáo viên vào môn học
-        $result = $this->classSubjectTeacherRepository->assignTeacherToSubject($data);
+        $result = TeacherSubject::create($data);
 
         if ($result) {
-            return $this->responseSuccess([], trans('api.alert.together.assign_success'));
+            return $this->responseSuccess([], trans('Gán môn học cho giáo viên thành công'));
         } else {
-            return $this->responseError(trans('giáo viên đã được gán môn học'));
+            return $this->responseError(trans('Giáo viên đã được gán vào môn học hoặc lỗi xảy ra.'));
         }
+
     }
 
 
