@@ -46,7 +46,7 @@ class ClassSubjectTeacher extends Model
 
     public function class()
     {
-        return $this->hasOne(Classes::class, 'class_id', 'id');
+        return $this->hasOne(Classes::class, 'id', 'class_id');
     }
     
     //tai khoan
