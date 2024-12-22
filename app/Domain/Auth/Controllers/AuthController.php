@@ -38,7 +38,8 @@ class AuthController extends BaseController
         }
         $studentOfUser = $this->loginRepository->getStudentOfUser($user);
         $schoolYear = $this->getSchoolYearRepository->getSchoolYear();
-        $dataResponse = $this->loginRepository->transform($user, $studentOfUser, $token,$schoolYear);
+        $classTeachers = $this->loginRepository->getClassTeacher($user->id);
+        $dataResponse = $this->loginRepository->transform($user, $studentOfUser, $token,$schoolYear,$classTeachers);
         return $this->responseSuccess($dataResponse);
     }
 
