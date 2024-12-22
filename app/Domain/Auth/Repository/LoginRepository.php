@@ -7,6 +7,7 @@ use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use App\Models\Classes;
+use App\Models\ClassSubjectTeacher;
 use App\Models\StudentClassHistory;
 use App\Models\User;
 use Carbon\Carbon;
@@ -30,11 +31,11 @@ class LoginRepository
         if ($user->access_type == AccessTypeEnum::GUARDIAN->value && $user->students->isNotEmpty()) {
             $students = [];
             foreach ($user->students as $student) {
-                $class = $this->getClassOfStudent($student->id);
+                $class      = $this->getClassOfStudent($student->id);
                 $students[] = [
                     'id'           => $student->id,
-                    'classId'     => isset($class) ? $class->id : 0,
-                    'className'   => isset($class) ? $class->name : "",
+                    'classId'      => isset($class) ? $class->id : 0,
+                    'className'    => isset($class) ? $class->name : "",
                     'student_code' => !is_null($student->student_code) ? $student->student_code : "",
                     'fullname'     => !is_null($student->fullname) ? $student->fullname : "",
                     'dob'          => !is_null($student->dob) ? Carbon::parse($student->dob)->timestamp : "",
@@ -53,9 +54,13 @@ class LoginRepository
             StatusEnum::ACTIVE->value)->get();
     }
 
-    public function transform(?User $user, array $studentOfUser, string $token, Collection $schoolYear): array
-    {
-
+    public function transform(
+        ?User      $user,
+        array      $studentOfUser,
+        string     $token,
+        Collection $schoolYear,
+        array      $classTeachers
+    ): array {
         return [
             'token'      => $token,
             "user"       => [
@@ -69,7 +74,8 @@ class LoginRepository
                 'address'     => !is_null($user->address) ? $user->address : "",
                 'email'       => !is_null($user->email) ? $user->email : "",
                 'username'    => !is_null($user->username) ? $user->username : "",
-                'students'    => $studentOfUser
+                'students'    => $studentOfUser,
+                'classes'     => $classTeachers
             ],
             "schoolYear" => $this->transformSchoolYear($schoolYear),
         ];
@@ -97,6 +103,24 @@ class LoginRepository
                 "name"       => $schoolYear->name,
                 "start_date" => Carbon::parse($schoolYear->start_date)->timestamp,
                 "end_date"   => Carbon::parse($schoolYear->end_date)->timestamp,
+            ];
+        })->toArray();
+    }
+
+    public function getClassTeacher(int $userId): array
+    {
+        $classSubjectTeachers = ClassSubjectTeacher::query()
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->whereNull('end_date')
+            ->with('class')
+            ->where('user_id', $userId)
+            ->get();
+
+        return $classSubjectTeachers->map(function ($classSubjectTeacher) {
+            return [
+                'classId'   => $classSubjectTeacher->class->id,
+                'className' => $classSubjectTeacher->class->name,
             ];
         })->toArray();
     }
