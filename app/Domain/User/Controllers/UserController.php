@@ -258,14 +258,15 @@ class UserController extends BaseController
             return $this->responseError(trans('Môn học không tồn tại'));
         }
 
+        ClassSubjectTeacher::Where('user_id', $id)->update(['status' => StatusEnum::UN_ACTIVE->value , 'end_date' => now()]);
+
         $existingAssignment = TeacherSubject::where('user_id', $id)
         ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
         ->first();
 
         if ($existingAssignment) {
-        return $this->responseError(trans('Giáo viên đã được gán vào một môn học khác và không thể gán thêm.'));
+            $existingAssignment->update(['is_deleted' => DeleteEnum::DELETED->value]);
         }
-
 
         $data = [
             'subject_id'      => $subject->id,

@@ -32,7 +32,8 @@ class GetUserRepository {
         return User::where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->where('access_type', AccessTypeEnum::TEACHER->value)
             ->whereHas('teacherSubjects', function ($query) use ($subjectId) {
-                $query->where('subject_id', $subjectId);
+                $query->where('subject_id', $subjectId)
+                ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
             })
             ->get()
             ->map(function ($teacher) {
