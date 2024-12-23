@@ -27,7 +27,7 @@ class GuardianRepository
             });
         }
 
-        $paginatedResult = $query->paginate($pageSize);
+        $paginatedResult = $query->paginate($pageSize, ['*'], 'page', $pageIndex);
 
         $mappedData = $paginatedResult->getCollection()->map(function ($guardian) {
             return [

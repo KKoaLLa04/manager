@@ -22,6 +22,7 @@ class LeaveRequestGuardianRepository
             'students.fullname as student_name',
             'classes.name as class_name',
             'leave_request.note',
+            'leave_request.refuse_note',
              DB::raw("CONCAT(leave_request.leave_date, ' ', leave_request.time) as leave_date_time"),
              'leave_request.status',
         )

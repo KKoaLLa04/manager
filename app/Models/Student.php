@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Domain\AcademicYear\Models\AcademicYear;
+use App\Domain\RollCall\Models\RollCall;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -66,5 +67,9 @@ class Student extends Model
 
     public function classHistories(){
         return $this->hasMany(StudentClassHistory::class, 'student_id', 'id');
+    }
+
+    public function rollCall(){
+        return $this->hasMany(RollCall::class,'student_id', 'id');
     }
 }

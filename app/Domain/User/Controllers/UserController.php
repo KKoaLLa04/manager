@@ -3,7 +3,10 @@
 namespace App\Domain\User\Controllers;
 
 use App\Common\Enums\AccessTypeEnum;
+use App\Common\Enums\DeleteEnum;
+use App\Common\Enums\StatusEnum;
 use App\Common\Repository\GetUserRepository;
+use App\Domain\Subject\Models\Subject;
 use App\Domain\User\Repository\ChooseClassToMainTearchRepository;
 use App\Domain\User\Repository\UserAddRepository;
 use App\Domain\User\Repository\UserChangePasswordRepository;
@@ -13,7 +16,11 @@ use App\Domain\User\Repository\UserEditRepository;
 use App\Domain\User\Repository\UserIndexRepository;
 use App\Domain\User\Requests\UserAddRequest;
 use App\Domain\User\Requests\UserEditRequest;
+use App\Domain\User\Requests\UserRequest;
 use App\Http\Controllers\BaseController;
+use App\Models\ClassSubject;
+use App\Models\ClassSubjectTeacher;
+use App\Models\TeacherSubject;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,13 +29,13 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class UserController extends BaseController
 {
-
+    protected $classSubjectTeacherRepository;
     private $user;
 
-    public function __construct(Request $request)
+    public function __construct(Request $request,  ChooseClassToMainTearchRepository $classSubjectTeacherRepository)
     {
         // dd(Auth::user());
-
+        $this->classSubjectTeacherRepository = $classSubjectTeacherRepository;
         $this->user = new GetUserRepository();
 
         parent::__construct($request);
@@ -226,6 +233,64 @@ class UserController extends BaseController
             return $this->responseError(trans('api.alert.together.edit_failed'));
         }
     }
+
+    public function assignTeacher(UserRequest $request, $id)
+    {
+        // Kiểm tra quyền của user
+        $user_id = Auth::user()->id;
+        if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $teacher = User::where('id', $id)
+        ->where('access_type', AccessTypeEnum::TEACHER->value)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->first();
+            if (!$teacher) {
+                return $this->responseError(trans('Người dùng không phải là giáo viên hoặc không tồn tại.'));
+            }
+
+        $subject = Subject::where('id', $request->subject_id)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->first();
+
+        if (!$subject) {
+            return $this->responseError(trans('Môn học không tồn tại'));
+        }
+
+        $existingAssignment = TeacherSubject::where('user_id', $id)
+        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+        ->first();
+
+        if ($existingAssignment) {
+        return $this->responseError(trans('Giáo viên đã được gán vào một môn học khác và không thể gán thêm.'));
+        }
+
+
+        $data = [
+            'subject_id'      => $subject->id,
+            'user_id'         => $id,
+            'status'          => StatusEnum::ACTIVE->value,
+            'is_deleted'      => DeleteEnum::NOT_DELETE->value,
+            'created_user_id' => $user_id,
+
+        ];
+
+        $result = TeacherSubject::create($data);
+
+        if ($result) {
+            return $this->responseSuccess([], trans('Gán môn học cho giáo viên thành công'));
+        } else {
+            return $this->responseError(trans('Giáo viên đã được gán vào môn học hoặc lỗi xảy ra.'));
+        }
+
+    }
+
+
+
+
+
+
 
 
 }
