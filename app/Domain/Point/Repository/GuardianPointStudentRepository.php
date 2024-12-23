@@ -152,6 +152,7 @@ class GuardianPointStudentRepository
                 "examName"    => $item->name,
                 "examPeriods" => !isset($examPeriod) ? [] : $examPeriod->map(function ($item) {
                     return [
+                        "examPeriodId"   => $item->id,
                         "examPeriodDate" => $item->date,
                         "examPeriodName" => $item->name,
                     ];
