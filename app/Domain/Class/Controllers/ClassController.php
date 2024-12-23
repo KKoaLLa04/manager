@@ -218,19 +218,7 @@ class ClassController extends BaseController
         return $this->responseSuccess();
     }
 
-    // public function formCreateSubjectForClass(FormCreateSubjectForClassRequest $request)
-    // {
-    //     if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
-    //         return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
-    //     }
-    //     $teachers          = $this->getUserRepository->getTeachers();
-    //     $subjectIdsOfClass = $this->classRepository->getSubjectOfClass($request->class_id)
-    //         ->pluck('subject_id')
-    //         ->toArray();
-    //     $subjects          = $this->classRepository->getSubjectNotOfClass($subjectIdsOfClass);
 
-    //     return $this->responseSuccess($this->classRepository->transformCreateSubjectForClass($teachers, $subjects));
-    // }
     public function formCreateSubjectForClass(FormCreateSubjectForClassRequest $request)
     {
         if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {

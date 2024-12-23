@@ -14,7 +14,12 @@ class UserIndexRepository {
 
         if ($list->count() > 0) {
             return $list->map(function ($item) {
-                $subjectName = $item->teacherSubjects->first() ? $item->teacherSubjects->first()->subject->name : null;
+                $subjectName = $item->teacherSubjects()
+                ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+                ->with(['subject' => function ($query) {
+                    $query->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+                }])
+                ->first()?->subject?->name;
                 $teacherInfo = $item->infoMainTearchWithClass();
                 $teacherInfo['subject'] = $subjectName;
                 return $teacherInfo;
