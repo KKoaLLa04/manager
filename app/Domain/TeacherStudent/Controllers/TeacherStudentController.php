@@ -185,6 +185,8 @@ class TeacherStudentController extends BaseController
         $studentArray['parents_email'] = $parent ? $parent->email : "";
         $studentArray['parents_dob'] = $parent ? strtotime($parent->dob) : "";
         $studentArray['parents_address'] = $parent ? $parent->address : "";
+        $studentArray['parents_status'] = $parent ? $parent->status : "";
+        $studentArray['parents_username'] = $parent ? $parent->username : "";
 
         return response()->json([
             'message' => 'Lấy thông tin học sinh thành công',
