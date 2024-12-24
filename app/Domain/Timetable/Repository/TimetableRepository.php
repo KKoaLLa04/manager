@@ -36,6 +36,7 @@ class TimetableRepository
             ->where('status', StatusEnum::ACTIVE->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->whereNull('end_date')
+            ->whereNotNull('class_subject_id')
             ->where('class_id', $classId)
             ->with(
                 [
@@ -124,6 +125,7 @@ class TimetableRepository
             ->where('status', StatusEnum::ACTIVE->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->whereNull('end_date')
+            ->whereNotNull('class_subject_id')
             ->where('class_id', $classId)
             ->with(
                 [
@@ -139,6 +141,7 @@ class TimetableRepository
             ->where('status', StatusEnum::ACTIVE->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->whereNull('end_date')
+            ->whereNotNull('class_subject_id')
             ->where('user_id', $userId);
         if ($classId != 0) {
             $query->where('class_id', $classId);
