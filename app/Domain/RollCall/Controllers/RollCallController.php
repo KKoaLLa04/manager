@@ -66,7 +66,7 @@ class RollCallController extends BaseController
         ) {
             $rollcalls              = $teacherSubjectTimetable->rollcalls;
             $totalChecked = $rollcalls->whereIn('student_id',$studentIds)->count();
-            $attendanceLog          = $this->rollCallRepository->getAttendanceLog($teacherSubjectTimetable->id,
+            $attendanceLogs          = $this->rollCallRepository->getAttendanceLog($teacherSubjectTimetable->id,
                 $teacherSubjectTimetable->class_id, $date);
             $getClassSubjectTeacher = $getClassSubjectTeachers->where('id', $teacherSubjectTimetable->class_subject_teacher_id)->first();
             $timetable              = $timetables->where('id', $teacherSubjectTimetable->timetable_id)->first();
@@ -83,7 +83,14 @@ class RollCallController extends BaseController
                 'subject_name'        => $getClassSubjectTeacher->subject->name,
                 'totalChecked'        => $totalChecked,
                 'totalStudent'        => count($studentIds),
-                'attendance_checked'  => is_null($attendanceLog) ? 0 : 1,
+                'attendance_checked'  => $attendanceLogs->isEmpty() ? 0 : 1,
+                'attendance_histories'=> $attendanceLogs->map(function ($attendanceLog) {
+                    return [
+                        'user_name' => $attendanceLog->user->fullname,
+                        'type' => $attendanceLog->type,
+                        'time' => Carbon::parse($attendanceLog->time)->format('d-m-Y H:i:s'),
+                    ];
+                })->sortBy('type')->toArray(),
             ];
         })->toArray();
         return $this->responseSuccess($data);

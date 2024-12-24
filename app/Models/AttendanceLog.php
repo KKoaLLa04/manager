@@ -12,9 +12,16 @@ class AttendanceLog extends Model
         'user_id',
         'class_id',
         'date',
+        'roll_call_id',
+        'type',
         'teacher_subject_timetable_id',
         'is_deleted',
         'updated_at',
         'created_at',
     ];
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
 }

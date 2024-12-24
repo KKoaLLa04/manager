@@ -268,6 +268,17 @@ class RollCallRepository
                 [
                     'class_id'                     => $classId,
                     'date'                         => $date->toDateString(),
+                    'type'                         => 1,
+                    'user_id'                      => $user_id,
+                    'teacher_subject_timetable_id' => $teacher_subject_timetable_id
+                ]
+            );
+        }else{
+            AttendanceLog::query()->create(
+                [
+                    'class_id'                     => $classId,
+                    'date'                         => $date->toDateString(),
+                    'type'                         => 2,
                     'user_id'                      => $user_id,
                     'teacher_subject_timetable_id' => $teacher_subject_timetable_id
                 ]
@@ -496,13 +507,14 @@ class RollCallRepository
             ->get()->pluck('student_id')->toArray();
     }
 
-    public function getAttendanceLog(int $teacherSubjectTimetableId, int $classId, Carbon $date)
+    public function getAttendanceLog(int $teacherSubjectTimetableId, int $classId, Carbon $date): Collection
     {
         return AttendanceLog::query()
             ->where('class_id', $classId)
             ->where('teacher_subject_timetable_id', $teacherSubjectTimetableId)
             ->where('date', $date->toDateString())
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->first();
+            ->with('user')
+            ->get();
     }
 }
