@@ -15,9 +15,12 @@ use App\Jobs\CreateNotification;
 use App\jobs\NotificationJob;
 use App\Models\AttendanceLog;
 use App\Models\Classes;
+use App\Models\ClassSubjectTeacher;
 use App\Models\DiemDanh;
 use App\Models\Student;
 use App\Models\StudentClassHistory;
+use App\Models\TeacherSubjectTimetable;
+use App\Models\Timetable;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -134,12 +137,20 @@ class RollCallRepository
     }
 
 
-    public function getStudent($class_id, $diemdanh_id,Carbon $date, $name = null, $student_code = null)
-    {
-        $diemdanh = DiemDanh::query()
-            ->where('id', $diemdanh_id)
-            ->with(['classSubjectTeacher.subject'])
+    public function getStudent(
+        $class_id,
+        $teacher_subject_timetable_id,
+        Carbon $date,
+        $name = null,
+        $student_code = null
+    ) {
+        $teacherSubjectTimetable = TeacherSubjectTimetable::query()
+            ->where('id', $teacher_subject_timetable_id)
+            ->with(['classSubjectTeacher.subject', 'timetable'])
             ->first();
+        $timetable               = $teacherSubjectTimetable->timetable;
+
+
         // Truy vấn học sinh trong lớp
         $studentsQuery = StudentClassHistory::where('class_id', $class_id)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
@@ -176,29 +187,33 @@ class RollCallRepository
             DeleteEnum::NOT_DELETE->value)->get();
         $totalStudent = $students->count();
         // Lấy số học sinh đã điểm danh
-        $studentAttendances      = RollCall::where('class_id', $class_id)
-            ->where('diemdanh_id', $diemdanh_id)
+        $studentAttendances = RollCall::where('class_id', $class_id)
+            ->where('teacher_subject_timetable_id', $teacher_subject_timetable_id)
             ->where('date', $date->toDateString())
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->with('student')
             ->get();
 
-        $toltalStudentAttendance = $studentAttendances->where('status',1)->count();
+        $toltalStudentAttendance = $studentAttendances->where('status', 1)->count();
 
-        if($studentAttendances->isEmpty() && ((int) $diemdanh->tiet) > 1){
-            $diemdanhtruoc = DiemDanh::query()
-                ->where('tiet',((int) $diemdanh->tiet) - 1)
-                ->where('class_id', $diemdanh->class_id)
-                ->where('thu', $diemdanh->thu)
-                ->where('buoi', $diemdanh->buoi)
+        if ($studentAttendances->isEmpty() && ((int)$timetable->period) > 1) {
+            $diemdanhtruoc = Timetable::query()
+                ->where('period', ((int)$timetable->period) - 1)
+                ->where('day', $timetable->day)
+                ->where('time', $timetable->time)
                 ->first();
-            if(!is_null($diemdanhtruoc)){
-                $studentAttendances      = RollCall::where('class_id', $class_id)
-                    ->where('diemdanh_id', $diemdanhtruoc->id)
-                    ->where('date', $date->toDateString())
-                    ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-                    ->with('student')
-                    ->get();
+            if (!is_null($diemdanhtruoc)) {
+                $teacherSubjectTimetable = TeacherSubjectTimetable::query()->where('class_id', $class_id)
+                    ->where('timetable_id'.$diemdanhtruoc->id, $timetable->id)
+                    ->first();
+                if (!is_null($teacherSubjectTimetable)) {
+                    $studentAttendances = RollCall::where('class_id', $class_id)
+                        ->where('teacher_subject_timetable_id', $teacherSubjectTimetable->id)
+                        ->where('date', $date->toDateString())
+                        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+                        ->with('student')
+                        ->get();
+                }
             }
         }
         // Trả về dữ liệu
@@ -218,13 +233,18 @@ class RollCallRepository
                         'note'         => is_null($studentAttendance) ? "" : $studentAttendance->note ?? "",
                     ];
             })->toArray(),
-            'timetable'               => $diemdanh
+            'timetable'               => $teacherSubjectTimetable
         ];
     }
 
 
-    public function attendanceStudentOfClass($diemdanhId, $classId, $rollCallData = [], $user_id, Carbon $date)
-    {
+    public function attendanceStudentOfClass(
+        $teacher_subject_timetable_id,
+        $classId,
+        $rollCallData = [],
+        $user_id,
+        Carbon $date
+    ) {
         // Đếm tổng số học sinh trong lớp
         $studentIds     = StudentClassHistory::where('class_id', $classId)
             ->whereNull('end_date')
@@ -233,23 +253,23 @@ class RollCallRepository
             ->get()->pluck('student_id')->toArray();
         $studentRecords = RollCall::query()
             ->where('class_id', $classId)
-            ->where('diemdanh_id', $diemdanhId)
+            ->where('teacher_subject_timetable_id', $teacher_subject_timetable_id)
             ->where('date', $date->toDateString())
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->get()->keyBy('student_id');
 
         $attendanceLog = AttendanceLog::query()->where('date', $date->toDateString())
             ->where('class_id', $classId)
-            ->where('diemdanh_id', $diemdanhId)
+            ->where('teacher_subject_timetable_id', $teacher_subject_timetable_id)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->first();
         if (is_null($attendanceLog)) {
             AttendanceLog::query()->create(
                 [
-                    'class_id'    => $classId,
-                    'date'        => $date->toDateString(),
-                    'user_id'     => $user_id,
-                    'diemdanh_id' => $diemdanhId
+                    'class_id'                     => $classId,
+                    'date'                         => $date->toDateString(),
+                    'user_id'                      => $user_id,
+                    'teacher_subject_timetable_id' => $teacher_subject_timetable_id
                 ]
             );
         }
@@ -261,14 +281,14 @@ class RollCallRepository
 
             if (!is_null($rollCall)) {
                 $dataUpdate = [
-                    "student_id"       => $data['studentID'],
-                    "note"             => $data['note'],
-                    "class_id"         => $classId,
-                    "date"             => $date->toDateString(),
-                    "time"             => now()->toTimeString(),
-                    "status"           => $data['status'],
-                    "diemdanh_id"      => $diemdanhId,
-                    "modified_user_id" => $user_id,
+                    "student_id"                   => $data['studentID'],
+                    "note"                         => $data['note'],
+                    "class_id"                     => $classId,
+                    "date"                         => $date->toDateString(),
+                    "time"                         => now()->toTimeString(),
+                    "status"                       => $data['status'],
+                    "teacher_subject_timetable_id" => $teacher_subject_timetable_id,
+                    "modified_user_id"             => $user_id,
                 ];
                 RollCall::query()->where('id', $rollCall->id)->update($dataUpdate);
                 $dataInsertRollCallHistory[] = [
@@ -285,14 +305,14 @@ class RollCallRepository
                 ];
             } else {
                 $dataInsert = [
-                    "student_id"      => $data['studentID'],
-                    "note"            => $data['note'],
-                    "class_id"        => $classId,
-                    "date"            => $date->toDateString(),
-                    "time"            => now()->toTimeString(),
-                    "status"          => $data['status'],
-                    "diemdanh_id"     => $diemdanhId,
-                    "created_user_id" => $user_id,
+                    "student_id"                   => $data['studentID'],
+                    "note"                         => $data['note'],
+                    "class_id"                     => $classId,
+                    "date"                         => $date->toDateString(),
+                    "time"                         => now()->toTimeString(),
+                    "status"                       => $data['status'],
+                    "teacher_subject_timetable_id" => $teacher_subject_timetable_id,
+                    "created_user_id"              => $user_id,
                 ];
                 $rollCall   = RollCall::query()->create($dataInsert);
                 CreateNotification::dispatch($rollCall);
@@ -320,6 +340,25 @@ class RollCallRepository
             ->where('diemdanh_id', $diemdanhId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->exists();
+    }
+
+    public function getTeacherSubjectTimetable(
+        array $classSubjectTeacherIds,
+        array $timetableIds
+    ): Collection {
+        return TeacherSubjectTimetable::query()
+            ->whereIn('timetable_id', $timetableIds)
+            ->whereIn('class_subject_teacher_id', $classSubjectTeacherIds)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->with([
+                'rollcalls',
+                'class'
+            ])->get();
+    }
+
+    public function getClassById(int $classId): ?Classes
+    {
+        return Classes::query()->where("id", $classId)->first();
     }
 
 
@@ -430,5 +469,40 @@ class RollCallRepository
                 'note'     => $note,
             ];
         })->toArray();
+    }
+
+    public function getClassSubjectTeacher($classId)
+    {
+        return ClassSubjectTeacher::query()
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->whereNull('end_date')
+            ->whereNotNull('class_subject_id')
+            ->where('class_id', $classId)
+            ->with(
+                [
+                    'teacher',
+                    'subject'
+                ]
+            )->get();
+    }
+
+    public function getStudentInClass($classId): array
+    {
+        return StudentClassHistory::where('class_id', $classId)
+            ->whereNull('end_date')
+            ->where('status', StatusClassStudentEnum::STUDYING->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->get()->pluck('student_id')->toArray();
+    }
+
+    public function getAttendanceLog(int $teacherSubjectTimetableId, int $classId, Carbon $date)
+    {
+        return AttendanceLog::query()
+            ->where('class_id', $classId)
+            ->where('teacher_subject_timetable_id', $teacherSubjectTimetableId)
+            ->where('date', $date->toDateString())
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->first();
     }
 }

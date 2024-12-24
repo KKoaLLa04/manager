@@ -12,7 +12,7 @@ class AttendanceLog extends Model
         'user_id',
         'class_id',
         'date',
-        'diemdanh_id',
+        'teacher_subject_timetable_id',
         'is_deleted',
         'updated_at',
         'created_at',

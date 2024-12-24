@@ -16,7 +16,7 @@ class RollCall extends Model
 
     public $table = "roll_call";
 
-    protected $fillable = ['student_id', 'date', 'time', 'note', 'status', 'class_id', 'is_deleted', 'created_user_id', 'modified_user_id','diemdanh_id'];
+    protected $fillable = ['student_id', 'date', 'time', 'note', 'status', 'class_id', 'is_deleted', 'created_user_id', 'modified_user_id','teacher_subject_timetable_id'];
 
     public function student()
     {
