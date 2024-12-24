@@ -57,10 +57,10 @@ class TimetableController extends BaseController
         $countTeacherSubjectTimetable = $this->timetableRepository->countUserTimetable($classSubjectTeacherId,
             $classId);
         $quantitySubjectConfig = $this->timetableRepository->subjectConfig($subjectId);
-        if ($countTeacherSubjectTimetable >= $quantitySubjectConfig->quantity){
+        if ($subjectId != 0 && $countTeacherSubjectTimetable >= $quantitySubjectConfig->quantity){
             return $this->responseError('Môn học đã đủ ' . $quantitySubjectConfig->quantity .' tiết');
         }
-        if (!is_null($teacherSubjectTimeTable)) {
+        if ($userId != 0 && !is_null($teacherSubjectTimeTable)) {
             return $this->responseError('Giáo viên đag có tiết dạy ở lớp: '.$teacherSubjectTimeTable->class->name);
         }
         $checkTeacherSubjectTimeTableExits = $this->timetableRepository->checkUserExistTimetableOfClass($timetableId,
