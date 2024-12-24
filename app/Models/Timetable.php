@@ -22,4 +22,9 @@ class Timetable extends Model
     {
         return $this->hasMany(TeacherSubjectTimetable::class, 'timetable_id', 'id');
     }
+    public function timetable()
+    {
+        return $this->belongsTo(Timetable::class, 'timetable_id', 'id');
+    }
+
 }

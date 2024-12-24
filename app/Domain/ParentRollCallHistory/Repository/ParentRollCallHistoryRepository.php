@@ -20,107 +20,88 @@ class ParentRollCallHistoryRepository
         $studentIds = UserStudent::where('user_id', $userId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->pluck('student_id');
-    
+
         if ($studentIds->isEmpty()) {
-            return [
-                'message' => 'Không có học sinh nào',
-                'status' => 'error',
-                'data' => [],
-                'total' => 0,
-                'pageIndex' => 1,
-                'pageSize' => $pageSize,
-            ];
+            return $this->responseError('Không có học sinh nào', $pageSize);
         }
-    
-        // Kiểm tra nếu truyền vào student_id không tồn tại trong danh sách studentIds
+
         if ($studentId && !$studentIds->contains($studentId)) {
-            return [
-                'message' => 'Học sinh không tồn tại hoặc không thuộc quyền quản lý của phụ huynh này',
-                'status' => 'error',
-                'data' => [],
-                'total' => 0,
-                'pageIndex' => 1,
-                'pageSize' => $pageSize,
-            ];
+            return $this->responseError('Học sinh không tồn tại hoặc không thuộc quyền quản lý của phụ huynh này', $pageSize);
         }
-    
-        // Nếu không truyền student_id, lấy student_id đầu tiên
+
         $studentId = $studentId ?? $studentIds->first();
-    
-        // Tạo truy vấn lấy lịch sử điểm danh cho student_id
+
         $rollCallHistoriesQuery = ParentRollCallHistory::where('student_id', $studentId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->with(['user' => function ($query) {
-                $query->select('id', 'fullname', 'email');
-            }, 'classes' => function ($query) {
-                $query->select('id', 'name'); // Chọn các trường cần thiết của bảng classes
-            }])  // Thêm quan hệ classes để lấy tên lớp
+            ->with([
+                'rollCall.teacherSubjectTimetable.timetable',
+                'rollCall.teacherSubjectTimetable.classSubjectTeacher.subject',
+                'rollCall.teacherSubjectTimetable.classSubjectTeacher.user',
+            ])
             ->orderBy('date', 'desc');
-    
-        // Lọc theo từ khóa nếu có
+
         if ($keyWord) {
-            $rollCallHistoriesQuery->whereHas('user', function ($query) use ($keyWord) {
-                $query->where('fullname', 'like', '%' . $keyWord . '%')
-                    ->orWhere('email', 'like', '%' . $keyWord . '%');
+            $rollCallHistoriesQuery->whereHas('rollCall.teacherSubjectTimetable.classSubjectTeacher.user', function ($query) use ($keyWord) {
+                $query->where('fullname', 'like', "%$keyWord%")
+                    ->orWhere('email', 'like', "%$keyWord%");
             });
         }
-    
-        // Lọc theo ngày nếu có
+
         if ($date) {
             $rollCallHistoriesQuery->whereDate('date', $date);
         }
-    
-        // Lấy kết quả lịch sử điểm danh
-        $rollCallHistories = $rollCallHistoriesQuery->get()->groupBy(function ($history) {
-            return Carbon::parse($history->date)->toDateString();
-        });
-    
-        // Nếu không có lịch sử điểm danh cho học sinh này
+
+        $rollCallHistories = $rollCallHistoriesQuery->get()->groupBy(fn($history) => Carbon::parse($history->date)->toDateString());
+
         if ($rollCallHistories->isEmpty()) {
-            return [
-                'message' => 'Con của phụ huynh chưa có lịch sử điểm danh.',
-                'status' => 'error',
-                'data' => [],
-                'total' => 0,
-                'pageIndex' => 1,
-                'pageSize' => $pageSize,
-            ];
+            return $this->responseError('Con của phụ huynh chưa có lịch sử điểm danh.', $pageSize);
         }
-    
-        // Biến đếm tổng số lần có mặt và vắng mặt
-        $totalPresent = 0;
-        $totalAbsent = 0;
-        $totalLate = 0;
-    
-        // Xử lý dữ liệu lịch sử điểm danh
-        $data = $rollCallHistories->map(function ($historiesPerDay) use (&$totalPresent, &$totalAbsent, &$totalLate) {
-            $firstHistory = $historiesPerDay->first();
-            $timestamp = Carbon::parse($firstHistory->date)->timestamp;
-    
-            if ($firstHistory->status === StatusStudentEnum::PRESENT->value) {
-                $totalPresent++;
-            } elseif ($firstHistory->status === StatusStudentEnum::UN_PRESENT->value) {
-                $totalAbsent++;
-            } elseif ($firstHistory->status === StatusStudentEnum::LATE->value){
-                $totalLate++;
-            } 
-    
+
+        $totals = ['present' => 0, 'absent' => 0, 'late' => 0];
+
+        $data = $rollCallHistories->map(function ($histories) use (&$totals) {
+            $firstHistory = $histories->first();
+            $rollCall = $firstHistory->rollCall;
+            $teacherSubjectTimetable = $rollCall->teacherSubjectTimetable;
+            $timetable = $teacherSubjectTimetable->timetable;
+
+            $this->incrementTotals($totals, $firstHistory->status);
+
             return [
-                'note' => $firstHistory->note,  
-                'date' => $timestamp,  
+                'note' => $firstHistory->note,
+                'date' => Carbon::parse($firstHistory->date)->timestamp,
                 'status' => $firstHistory->status,
+                'period' => $timetable->period ?? 'N/A',
+                'day' => $timetable->day ?? 'N/A',
+                'from_time' => $timetable->from_time ?? 'N/A',
+                'to_time' => $timetable->to_time ?? 'N/A',
+                'subject' => $teacherSubjectTimetable->subject->name ?? 'N/A',
+                'teacher' => $teacherSubjectTimetable->user->fullname ?? 'N/A',
+                'email' => $teacherSubjectTimetable->user->email ?? 'N/A',
+                'phone' => $teacherSubjectTimetable->user->phone ?? 'N/A',
+
             ];
         })->values();
-    
-        // Tên học sinh và lớp học (tách ra ngoài data)
+
         $studentName = $rollCallHistories->first()->first()->student->fullname ?? 'Chưa có học sinh';
         $className = $rollCallHistories->first()->first()->classes->name ?? 'Chưa có lớp';
-    
-        // Phân trang dữ liệu
+
+        return $this->paginateResponse($data, $totals, $pageSize, $studentName, $className);
+    }
+
+    private function incrementTotals(&$totals, $status)
+    {
+        if ($status === StatusStudentEnum::PRESENT->value) $totals['present']++;
+        elseif ($status === StatusStudentEnum::UN_PRESENT->value) $totals['absent']++;
+        elseif ($status === StatusStudentEnum::LATE->value) $totals['late']++;
+    }
+
+    private function paginateResponse($data, $totals, $pageSize, $studentName, $className)
+    {
         $totalDays = $data->count();
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $paginatedData = $data->slice(($currentPage - 1) * $pageSize, $pageSize)->values();
-    
+
         $paginator = new LengthAwarePaginator(
             $paginatedData,
             $totalDays,
@@ -128,34 +109,52 @@ class ParentRollCallHistoryRepository
             $currentPage,
             ['path' => LengthAwarePaginator::resolveCurrentPath()]
         );
-    
-        // Trả về kết quả với student_name và class_name ra ngoài data
+
         return [
             'message' => 'Lấy lịch sử điểm danh thành công',
             'status' => 'success',
-            'student_name' => $studentName,  
-            'class_name' => $className,  
-            'total_present' => $totalPresent,  
-            'total_absent' => $totalAbsent,  
-            'total_late' => $totalLate,  
+            'student_name' => $studentName,
+            'class_name' => $className,
+            'total_present' => $totals['present'],
+            'total_absent' => $totals['absent'],
+            'total_late' => $totals['late'],
             'data' => $paginator->items(),
             'total' => $paginator->total(),
             'pageIndex' => $paginator->currentPage(),
             'pageSize' => $paginator->perPage(),
         ];
     }
-    
-    
+
+    private function responseError($message, $pageSize)
+    {
+        return [
+            'message' => $message,
+            'status' => 'error',
+            'data' => [],
+            'total' => 0,
+            'pageIndex' => 1,
+            'pageSize' => $pageSize,
+        ];
+    }
 
 
-    
-    
-    
 
 
-    
-    
-    
-    
-    
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
