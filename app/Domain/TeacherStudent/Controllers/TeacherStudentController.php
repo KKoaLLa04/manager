@@ -161,12 +161,10 @@ class TeacherStudentController extends BaseController
         }
 
         $parent = null;
-
+        $parent = $student->parents->first();
         $userStudent =  UserStudent::where('student_id', $student->id)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
 
-        if ($userStudent) {
-            $parent = User::find($userStudent->id);
-        }
+        
 
         unset($studentArray['parents']);
         unset($studentArray['class_history']);
