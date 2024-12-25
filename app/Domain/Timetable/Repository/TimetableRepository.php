@@ -10,6 +10,7 @@ use App\Models\ClassSubjectTeacher;
 use App\Models\SubjectTimetableConfig;
 use App\Models\TeacherSubjectTimetable;
 use App\Models\Timetable;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class TimetableRepository
@@ -74,8 +75,8 @@ class TimetableRepository
                 'day'                          => $timetable->day,
                 'time'                         => $timetable->time,
                 'period'                       => $timetable->period,
-                'from_time'                    => $timetable->from_time,
-                'to_time'                      => $timetable->to_time,
+                'from_time'                    => Carbon::parse($timetable->from_time)->translatedFormat('H:i'),
+                'to_time'                      => Carbon::parse($timetable->to_time)->translatedFormat('H:i'),
                 'teacher_subject_timetable_id' => $teacherSubjectTimetableId,
                 'class_subject_teacher_id'     => $class_subject_teacher_id,
                 'user_id'                      => $user_id,
