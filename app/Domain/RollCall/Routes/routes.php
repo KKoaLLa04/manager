@@ -17,6 +17,6 @@ Route::group(['prefix' => 'teacher/rollcall', 'middleware' => 'auth:api'], funct
     Route::post('/', [RollCallTeacherController::class, 'index']);
     Route::get('/class', [RollCallTeacherController::class, 'getClass']);
     Route::get('student/{class_id}/{teacher_subject_timetable_id}', [RollCallTeacherController::class, 'studentInClass']);
-    Route::post('attendaced/student/{id}', [RollCallController::class, 'rollCall']);
+    Route::post('attendaced/student/{id}', [RollCallTeacherController::class, 'rollCall']);
 
 });
