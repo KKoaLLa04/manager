@@ -204,7 +204,7 @@ class RollCallRepository
                 ->first();
             if (!is_null($diemdanhtruoc)) {
                 $teacherSubjectTimetable = TeacherSubjectTimetable::query()->where('class_id', $class_id)
-                    ->where('timetable_id'.$diemdanhtruoc->id, $timetable->id)
+                    ->where('timetable_id', $timetable->id)
                     ->first();
                 if (!is_null($teacherSubjectTimetable)) {
                     $studentAttendances = RollCall::where('class_id', $class_id)
