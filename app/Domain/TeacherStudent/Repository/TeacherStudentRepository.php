@@ -70,13 +70,7 @@ class TeacherStudentRepository {
 
             $parent = null;
 
-            $userStudent = UserStudent::where('student_id', $student->id)
-                ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-                ->first();
-
-            if ($userStudent) {
-                $parent = User::find($userStudent->id);
-            }
+            $parent = $student->parents->first();
 
             return [
                 'id' => $student->id,
