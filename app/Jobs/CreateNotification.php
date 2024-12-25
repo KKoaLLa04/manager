@@ -99,7 +99,9 @@ class CreateNotification implements ShouldQueue
                 'parents',
                 'classHistories.class',
                 'rollCall.attendanceBy',
-                'rollCall.timetable.classSubjectTeacher.subject'
+                'rollCall.timetable.classSubjectTeacher.subject',
+                'rollCall.teacherSubjectTimetable.subject',
+                'rollCall.teacherSubjectTimetable.timetable'
             ])
             ->first();
 
@@ -119,17 +121,16 @@ class CreateNotification implements ShouldQueue
         foreach ($rollCalls as $rollCall) {
             $attendanceBy = optional($rollCall->attendanceBy)->fullname ?? 'Không xác định';
             $note = $rollCall->note ?? 'Không có ghi chú';
-            $tiet = optional($rollCall->timetable)->tiet ?? 'Không xác định';
-            $thu = optional($rollCall->timetable)->thu ?? 'Không xác định';
-            $mon = optional($rollCall->timetable)->mon ?? 'Không xác định';
+            $tiet = optional($rollCall->teacherSubjectTimetable->timetable)->period ?? 'Không xác định';
+            $thu = optional($rollCall->teacherSubjectTimetable->timetable)->day ?? 'Không xác định';
+            $subjectName = optional($rollCall->teacherSubjectTimetable->subject)->name ?? 'Môn không xác định';
 
-            $buoi = optional($rollCall->timetable)->buoi;
+            $buoi = optional($rollCall->teacherSubjectTimetable->timetable)->time;
             $buoiText = [
                 1 => 'Buổi sáng',
                 2 => 'Buổi chiều'
             ][$buoi] ?? 'Không xác định';
 
-            $subjectName = optional(optional($rollCall->timetable)->classSubjectTeacher->subject)->name ?? 'Môn không xác định';
 
             $dataNotiList[] = [
                 "title" => "Học sinh: " . $student->fullname . " học lớp " . $className . " " . StatusStudentEnum::transform($this->notification->status) . " môn " . $subjectName . " vào thứ " . $thu . " buổi " . $buoiText . " tiết " . $tiet . ", được điểm danh bởi " . $attendanceBy . ". Ghi chú: " . $note,
