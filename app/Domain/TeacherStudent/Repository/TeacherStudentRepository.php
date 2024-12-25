@@ -28,7 +28,7 @@ class TeacherStudentRepository {
 
     }
 
-    public function paginateStudents($pageSize, $class_id = 0, $keyWord = null)
+    public function paginateStudents($pageIndex,$pageSize, $class_id = 0, $keyWord = null)
     {
         $classFind = Classes::find($class_id);
 
@@ -57,7 +57,7 @@ class TeacherStudentRepository {
             });
         }
 
-        $students = $studentsQuery->paginate($pageSize);
+        $students = $studentsQuery->paginate($pageSize, ['*'], 'page', $pageIndex);
 
         // Lấy tất cả lớp và chuyển đổi thành mảng với key là id
         $classes = ClassModel::with('academicYear')->get()->keyBy('id');
