@@ -22,7 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
-class RollCallController extends BaseController
+class RollCallTeacherController extends BaseController
 {
 
     protected $rollCallRepository;
@@ -38,14 +38,15 @@ class RollCallController extends BaseController
     {
         $user_id = Auth::user()->id;
         $type    = AccessTypeEnum::MANAGER->value;
+        $classId  = $request->classId;
+        $date     = isset($request->date) ? Carbon::parse($request->date) : Carbon::now();
+        $dayQuery      = $date->dayOfWeek;
 
         $showUser = $getUserRepository->getUser($user_id, $type);
         if (!$showUser) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
-        $classId  = $request->classId;
-        $date     = isset($request->date) ? Carbon::parse($request->date) : Carbon::now();
-        $dayQuery      = $date->dayOfWeek;
+
 
         $class = $this->rollCallRepository->getClassById($classId);
         if (is_null($class)) {
