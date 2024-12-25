@@ -44,7 +44,7 @@ class RollCallController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
         $classId  = $request->classId;
-        $date     = isset($request->date) ? Carbon::parse(1734971033) : Carbon::now();
+        $date     = isset($request->date) ? Carbon::parse($request->date) : Carbon::now();
         $dayQuery      = $date->dayOfWeek;
 
         $class = $this->rollCallRepository->getClassById($classId);
