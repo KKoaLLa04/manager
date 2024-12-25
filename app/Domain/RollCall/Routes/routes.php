@@ -15,5 +15,5 @@ Route::group(['prefix' => 'manager/rollcall', 'middleware' => 'auth:api'], funct
 
 Route::group(['prefix' => 'teacher/rollcall', 'middleware' => 'auth:api'], function () {
     Route::post('/', [RollCallTeacherController::class, 'index']);
-    Route::get('/class', [RollCallTeacherController::class, 'index']);
+    Route::get('/class', [RollCallTeacherController::class, 'getClass']);
 });

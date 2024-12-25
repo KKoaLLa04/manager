@@ -71,6 +71,7 @@ class RollCallController extends BaseController
             $getClassSubjectTeacher = $getClassSubjectTeachers->where('id', $teacherSubjectTimetable->class_subject_teacher_id)->first();
             $timetable              = $timetables->where('id', $teacherSubjectTimetable->timetable_id)->first();
             return [
+                'teacher_subject_timetable_id' => $teacherSubjectTimetable->id,
                 'timetable_id'        => $timetable->id,
                 'timetable_time'      => $timetable->time,
                 'timetable_period'    => $timetable->period,

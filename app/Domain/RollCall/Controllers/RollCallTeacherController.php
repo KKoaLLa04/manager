@@ -11,6 +11,7 @@ use App\Common\Repository\GetUserRepository;
 use App\Domain\Class\Repository\ClassRepository;
 use App\Domain\RollCall\Models\RollCall;
 use App\Domain\RollCall\Repository\RollCallRepository;
+use App\Domain\RollCall\Repository\RollCallTeacherRepository;
 use App\Domain\RollCall\Requests\RollCallRequest;
 use App\Http\Controllers\BaseController;
 use App\Models\Classes;
@@ -28,7 +29,7 @@ class RollCallTeacherController extends BaseController
     protected $rollCallRepository;
 
     public function __construct(
-        RollCallRepository        $rollCallRepository,
+        RollCallTeacherRepository        $rollCallRepository,
         protected ClassRepository $classRepository,
     ) {
         $this->rollCallRepository = $rollCallRepository;
@@ -39,6 +40,7 @@ class RollCallTeacherController extends BaseController
         $user_id = Auth::user()->id;
         $type    = AccessTypeEnum::MANAGER->value;
         $classId  = $request->classId;
+        $statusTeacher  = $request->status_teacher;
         $date     = isset($request->date) ? Carbon::parse($request->date) : Carbon::now();
         $dayQuery      = $date->dayOfWeek;
 
@@ -54,7 +56,7 @@ class RollCallTeacherController extends BaseController
         }
         $timetables                  = Timetable::query()->where('day', $dayQuery)->get();
         $timetableIds                = $timetables->pluck('id')->toArray();
-        $getClassSubjectTeachers     = $this->rollCallRepository->getClassSubjectTeacher($classId);
+        $getClassSubjectTeachers     = $this->rollCallRepository->getClassSubjectTeacher($classId,$user_id,$statusTeacher);
         $classSubjectTeacherIds      = $getClassSubjectTeachers->pluck('id')->toArray();
         $getTeacherSubjectTimetables = $this->rollCallRepository->getTeacherSubjectTimetable($classSubjectTeacherIds,
             $timetableIds);
@@ -93,8 +95,23 @@ class RollCallTeacherController extends BaseController
                     ];
                 })->sortBy('type')->toArray(),
             ];
-        })->toArray();
+        });
         return $this->responseSuccess($data);
+    }
+
+    public function getClass(Request $request, GetUserRepository $getUserRepository)
+    {
+        $user_id = Auth::user()->id;
+        $type    = AccessTypeEnum::MANAGER->value;
+
+
+        $showUser = $getUserRepository->getUser($user_id, $type);
+        if (!$showUser) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $classTeachers = $this->rollCallRepository->getClassTeacher($user_id);
+        return $this->responseSuccess($classTeachers);
     }
 
 
