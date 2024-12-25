@@ -65,16 +65,17 @@ class TeacherStudentController extends BaseController
 
 
         // Lấy kích thước trang
+        $pageIndex = $request->input('pageIndex',1);
         $pageSize = $request->input('pageSize', 10);
         if (!is_numeric($pageSize) || $pageSize <= 0) {
             // $pageSize = 10; // Mặc định về 10 bản ghi
             return response()->json(['message' => 'yêu cầu nhập số lượng lớn hơn 1']);
         }
-        $keyWord = $request->input('keyWord', null);
+        $keyWord = $request->input('keyword', null);
         $studentRepository = new TeacherStudentRepository();
 
         // Lấy danh sách sinh viên
-        $students = $studentRepository->paginateStudents($pageSize, $request->class_id, $keyWord);
+        $students = $studentRepository->paginateStudents($pageIndex,$pageSize, $request->class_id, $keyWord);
         if ($students->count() > 0) {
             return response()->json([
                 'status' => 'success',
