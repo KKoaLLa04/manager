@@ -30,6 +30,7 @@ class ParentRollCallHistoryRepository
         }
 
         $studentId = $studentId ?? $studentIds->first();
+        $date = $date ? Carbon::parse($date) : Carbon::now();
 
         $rollCallHistoriesQuery = ParentRollCallHistory::where('student_id', $studentId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
@@ -37,8 +38,10 @@ class ParentRollCallHistoryRepository
                 'rollCall.teacherSubjectTimetable.timetable',
                 'rollCall.teacherSubjectTimetable.classSubjectTeacher.subject',
                 'rollCall.teacherSubjectTimetable.classSubjectTeacher.user',
+                'rollCall.createdUser' // Thêm quan hệ đến giáo viên qua created_user_id
             ])
-            ->orderBy('date', 'desc');
+            ->orderBy('date', 'desc'); // Lấy bản mới nhất trước
+
 
         if ($keyWord) {
             $rollCallHistoriesQuery->whereHas('rollCall.teacherSubjectTimetable.classSubjectTeacher.user', function ($query) use ($keyWord) {
@@ -59,28 +62,59 @@ class ParentRollCallHistoryRepository
 
         $totals = ['present' => 0, 'absent' => 0, 'late' => 0];
 
-        $data = $rollCallHistories->map(function ($histories) use (&$totals) {
-            $firstHistory = $histories->first();
-            $rollCall = $firstHistory->rollCall;
-            $teacherSubjectTimetable = $rollCall->teacherSubjectTimetable;
-            $timetable = $teacherSubjectTimetable->timetable;
+        $data = $rollCallHistories->map(function ($histories, $date) use (&$totals) {
+            $histories = $histories->sortBy('period');
 
-            $this->incrementTotals($totals, $firstHistory->status);
+            $morningTimetable = [];
+            $afternoonTimetable = [];
+
+            $morningTimetable = collect($morningTimetable)->unique(function ($item) {
+                return $item['period'] . $item['from_time'] . $item['to_time']; // Kết hợp period, from_time và to_time
+            });
+
+            $afternoonTimetable = collect($afternoonTimetable)->unique(function ($item) {
+                return $item['period'] . $item['from_time'] . $item['to_time']; // Kết hợp period, from_time và to_time
+            });
+
+            foreach ($histories as $history) {
+                $rollCall = $history->rollCall;
+                $teacherSubjectTimetable = $rollCall->teacherSubjectTimetable;
+
+                // Kiểm tra nếu teacherSubjectTimetable và timetable có tồn tại
+                if (!$teacherSubjectTimetable || !$teacherSubjectTimetable->timetable) {
+                    continue; // Nếu không có timetable thì bỏ qua bản ghi này
+                }
+
+                $timetable = $teacherSubjectTimetable->timetable;
+                $createdUser = $rollCall->createdUser; // Lấy thông tin giáo viên từ created_user_id
+
+                $fromTime = Carbon::parse($timetable->from_time);
+                $toTime = Carbon::parse($timetable->to_time);
+
+                // Xác định buổi sáng hay chiều (giả sử buổi sáng từ 7:00 AM - 12:00 PM, chiều từ 12:00 PM - 6:00 PM)
+                $formattedTimetable = $this->formatTimetableData($totals, $history, $teacherSubjectTimetable, $timetable, $createdUser);
+
+                // Lọc các tiết trùng lặp dựa trên 'period' hoặc 'from_time', 'to_time'
+                if ($fromTime->hour >= 7 && $fromTime->hour < 12) {
+                    $morningTimetable[] = $formattedTimetable;
+                } elseif ($fromTime->hour >= 12 && $fromTime->hour < 18) {
+                    $afternoonTimetable[] = $formattedTimetable;
+                }
+            }
+
+            // Lọc bỏ các tiết trùng lặp trong buổi sáng và chiều
+            $morningTimetable = $this->removeDuplicatePeriods($morningTimetable);
+            $afternoonTimetable = $this->removeDuplicatePeriods($afternoonTimetable);
 
             return [
-                'note' => $firstHistory->note,
-                'date' => Carbon::parse($firstHistory->date)->timestamp,
-                'status' => $firstHistory->status,
-                'period' => $timetable->period ?? 'N/A',
-                'day' => $timetable->day ?? 'N/A',
-                'from_time' => $timetable->from_time ?? 'N/A',
-                'to_time' => $timetable->to_time ?? 'N/A',
-                'subject' => $teacherSubjectTimetable->subject->name ?? 'N/A',
-                'teacher' => $teacherSubjectTimetable->user->fullname ?? 'N/A',
-                'email' => $teacherSubjectTimetable->user->email ?? 'N/A',
-                'phone' => $teacherSubjectTimetable->user->phone ?? 'N/A',
-
+                'date' => Carbon::parse($date)->timestamp,
+                'morning_timetable' => $morningTimetable,
+                'afternoon_timetable' => $afternoonTimetable,
             ];
+
+            // Hàm lọc các tiết trùng lặp
+
+
         })->values();
 
         $studentName = $rollCallHistories->first()->first()->student->fullname ?? 'Chưa có học sinh';
@@ -88,6 +122,30 @@ class ParentRollCallHistoryRepository
 
         return $this->paginateResponse($data, $totals, $pageSize, $studentName, $className);
     }
+    
+    private function removeDuplicatePeriods($timetable) {
+        return $timetable->unique(function ($item) {
+            return $item['period'] . $item['from_time'] . $item['to_time']; // Kết hợp period, from_time và to_time
+        });
+    }
+
+    private function formatTimetableData(&$totals, $history, $teacherSubjectTimetable, $timetable, $createdUser)
+    {
+        $this->incrementTotals($totals, $history->status);
+
+        return [
+            'period' => $timetable->period ?? 'unknow',
+            'from_time' => $timetable->from_time ?? null,
+            'to_time' => $timetable->to_time ?? null,
+            'day' => $timetable->day ?? null,
+            'subject' => $history->rollCall->teacherSubjectTimetable->classSubjectTeacher->subject->name ?? 'unknow',
+            'status' => $history->status,
+            'note' => $history->note ?? 'unknow',
+            'teacher_name' => $createdUser->fullname ?? 'unknow',
+            'teacher_phone' => $createdUser->phone ?? 'unknow',
+        ];
+    }
+
 
     private function incrementTotals(&$totals, $status)
     {
