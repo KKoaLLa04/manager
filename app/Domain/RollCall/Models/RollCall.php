@@ -48,4 +48,9 @@ class RollCall extends Model
     }
 
 
+    public function createdUser()
+    {
+        return $this->belongsTo(User::class, 'created_user_id');
+    }
+
 }
