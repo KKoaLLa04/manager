@@ -48,7 +48,7 @@ class ClassSubjectTeacher extends Model
     {
         return $this->hasOne(Classes::class, 'id', 'class_id');
     }
-    
+
     //tai khoan
     public function subject()
 {
@@ -62,7 +62,7 @@ class ClassSubjectTeacher extends Model
     )->where('class_subject.is_deleted', DeleteEnum::NOT_DELETE->value)
      ->where('subjects.is_deleted', DeleteEnum::NOT_DELETE->value);
 }
-    
+
     public function classSubject(): HasOne
     {
         return $this->hasOne(ClassSubject::class, 'id', 'class_subject_id')

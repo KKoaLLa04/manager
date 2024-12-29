@@ -236,7 +236,6 @@ class UserController extends BaseController
 
     public function assignTeacher(UserRequest $request, $id)
     {
-        // Kiểm tra quyền của user
         $user_id = Auth::user()->id;
         if (!$this->user->getUser($user_id, AccessTypeEnum::MANAGER->value)) {
             return $this->responseError(trans('api.error.user_not_permission'));
@@ -250,9 +249,12 @@ class UserController extends BaseController
                 return $this->responseError(trans('Người dùng không phải là giáo viên hoặc không tồn tại.'));
             }
 
-        $subject = Subject::where('id', $request->subject_id)
-            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            $subject = Subject::query()->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->whereNotIn('id', [16, 17])
+            ->whereNotIn('name', ['Chào cờ', 'Sinh hoạt'])
+            ->where('id', $request->subject_id)
             ->first();
+
 
         if (!$subject) {
             return $this->responseError(trans('Môn học không tồn tại'));

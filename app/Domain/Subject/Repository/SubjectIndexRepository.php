@@ -9,7 +9,9 @@ class SubjectIndexRepository {
 
     public function handle () {
 
-        $lists = Subject::where('is_deleted', DeleteEnum::NOT_DELETE)->get();
+        $lists = Subject::where('is_deleted', DeleteEnum::NOT_DELETE)
+        // ->whereNotIn('name', ['Chào cờ', 'Sinh hoạt'])
+        ->get();
 
         if($lists->count() > 0){
             return $lists->map(function ($item) {

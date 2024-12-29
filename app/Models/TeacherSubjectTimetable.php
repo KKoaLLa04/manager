@@ -42,7 +42,7 @@ class TeacherSubjectTimetable extends Model
         return $this->belongsTo(Subject::class, 'subject_id', 'id');
     }
 
-    
+
     public function rollcalls()
     {
         return $this->hasMany(RollCall::class,'teacher_subject_timetable_id','id');

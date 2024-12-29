@@ -42,5 +42,10 @@ class RollCall extends Model
     {
         return $this->belongsTo(TeacherSubjectTimetable::class, 'teacher_subject_timetable_id', 'id');
     }
+    public function createdUser()
+    {
+        return $this->belongsTo(User::class, 'created_user_id');
+    }
+
 
 }
