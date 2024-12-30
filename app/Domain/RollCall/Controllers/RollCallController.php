@@ -44,7 +44,7 @@ class RollCallController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
         $classId  = $request->classId;
-        $date     = isset($request->date) ? Carbon::parse(1734971033) : Carbon::now();
+        $date     = isset($request->date) ? Carbon::parse($request->date) : Carbon::now();
         $dayQuery      = $date->dayOfWeek;
 
         $class = $this->rollCallRepository->getClassById($classId);
@@ -70,12 +70,15 @@ class RollCallController extends BaseController
                 $teacherSubjectTimetable->class_id, $date);
             $getClassSubjectTeacher = $getClassSubjectTeachers->where('id', $teacherSubjectTimetable->class_subject_teacher_id)->first();
             $timetable              = $timetables->where('id', $teacherSubjectTimetable->timetable_id)->first();
+            $from_time = Carbon::parse($timetable->from_time);
+            $to_time = Carbon::parse($timetable->to_time);
             return [
+                'teacher_subject_timetable_id' => $teacherSubjectTimetable->id,
                 'timetable_id'        => $timetable->id,
                 'timetable_time'      => $timetable->time,
                 'timetable_period'    => $timetable->period,
-                'timetable_from_time' => $timetable->from_time,
-                'timetable_to_time'   => $timetable->to_time,
+                'timetable_from_time' => $from_time->translatedFormat('H:i'),
+                'timetable_to_time'   =>  $to_time->translatedFormat('H:i'),
                 'teacher_id'          => $getClassSubjectTeacher->teacher->id,
                 'teacher_name'        => $getClassSubjectTeacher->teacher->fullname,
                 'teacher_email'       => $getClassSubjectTeacher->teacher->email,

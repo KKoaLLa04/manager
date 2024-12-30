@@ -26,7 +26,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
-class RollCallRepository
+class RollCallTeacherRepository
 {
     public function getClass($pageIndex = 1, $pageSize = 10, $keyWord = null, $date = null)
     {
@@ -372,6 +372,44 @@ class RollCallRepository
         return Classes::query()->where("id", $classId)->first();
     }
 
+    public function getClassTeacher($user_id): array
+    {
+        $classSubjectTeachers = ClassSubjectTeacher::query()
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->whereNull('end_date')
+            ->with(
+                [
+                    'class',
+                    'class.schoolYear',
+                    'class.grade',
+                    'class.academicYear',
+                    'class.user'
+                ])
+            ->where('user_id', $user_id)
+            ->get();
+
+        return $classSubjectTeachers->map(function ($classSubjectTeacher) {
+            $class = $classSubjectTeacher->class;
+            return [
+                'classId'   => $classSubjectTeacher->class->id,
+                'className' => $classSubjectTeacher->class->name,
+                "schoolYear"     => is_null($class->schoolYear->name) ? "" : $class->schoolYear->name,
+                "school_year_id" => is_null($class->schoolYear) ? 0 : $class->schoolYear->id,
+                "grade"          => is_null($class->grade->name) ? "" : $class->grade->name,
+                "grade_id"       => is_null($class->grade) ? 0 : $class->grade->id,
+                "academic_name"  => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
+                "academic_id"    => is_null($class->academicYear) ? 0 : $class->academicYear->id,
+                "academic_code"  => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
+                "teacher_id"     => is_null($class->user->first()) ? "" : (is_null($class->user->first()->id) ? "" : $class->user->first()->id),
+                "teacher_name"   => is_null($class->user->first()) ? "" : (is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname),
+                "teacher_email"  => is_null($class->user->first()) ? "" : (is_null($class->user->first()->email) ? "" : $class->user->first()->email),
+                "status"         => is_null($class->status) ? "1" : $class->status,
+                "status_teacher" => $classSubjectTeacher->access_type
+            ];
+        })->toArray();
+    }
+
 
     private function attendanceLog($classId)
     {
@@ -482,9 +520,9 @@ class RollCallRepository
         })->toArray();
     }
 
-    public function getClassSubjectTeacher($classId)
+    public function getClassSubjectTeacher($classId,$user_id,$statusTeacher)
     {
-        return ClassSubjectTeacher::query()
+        $query = ClassSubjectTeacher::query()
             ->where('status', StatusEnum::ACTIVE->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->whereNull('end_date')
@@ -495,7 +533,11 @@ class RollCallRepository
                     'teacher',
                     'subject'
                 ]
-            )->get();
+            );
+        if ($statusTeacher == StatusTeacherEnum::TEACHER->value){
+            $query = $query->where('user_id',$user_id);
+        }
+        return $query->get();
     }
 
     public function getStudentInClass($classId): array

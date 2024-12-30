@@ -6,6 +6,7 @@ use App\Common\Enums\StatusStudentEnum;
 use App\Domain\RollCall\Models\RollCall;
 use App\Models\Student;
 use App\Common\Enums\WebAppTypeEnum;
+use App\Models\TeacherSubjectTimetable;
 use App\Models\User;
 use App\Models\UserNotification;
 use Illuminate\Bus\Queueable;
@@ -27,6 +28,7 @@ class CreateNotification implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private RollCall $notification;
+
     /**
      * Create a new job instance.
      */
@@ -34,7 +36,6 @@ class CreateNotification implements ShouldQueue
     {
         $this->notification = $notification;
     }
-
 
 
     private function getUserDevice(array $userIds): Collection
@@ -55,19 +56,19 @@ class CreateNotification implements ShouldQueue
         $token       = $credentials->fetchAuthToken(\Google\Auth\HttpHandler\HttpHandlerFactory::build());
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'Authorization: Bearer ' . $token['access_token']
+            'Authorization: Bearer '.$token['access_token']
         ]);
-        $dataNoti =  [
-            "type" => $notification->type,
-            "itemId" => $notification->item_id,
-            "userId" => $notification->user_id,
+        $dataNoti = [
+            "type"           => $notification->type,
+            "itemId"         => $notification->item_id,
+            "userId"         => $notification->user_id,
             "additionalData" => $notification->data,
         ];
-        $message = [
+        $message  = [
             "message" => [
                 "token" => $userDevice->device_token,
-                "data" => [
-                    "body" => json_encode($dataNoti),
+                "data"  => [
+                    "body"  => json_encode($dataNoti),
                     "image" => "https://cdn.shopify.com/s/files/1/1061/1924/files/Smiling_with_Sweat_Emoji_Icon_60x60.png?14173495976923716614"
 
                 ]
@@ -92,14 +93,24 @@ class CreateNotification implements ShouldQueue
         Log::info("Start creating notification job");
 
         // Lấy thông tin học sinh
-        $studentId = $this->notification->student_id;
-        $student = Student::query()
+        $studentId                 = $this->notification->student_id;
+        $teacherSubjectTimetableId = $this->notification->teacher_subject_timetable_id;
+        $teacherSubjectTimetable   = TeacherSubjectTimetable::query()
+            ->where('id', $teacherSubjectTimetableId)
+            ->with([
+                'timetable',
+                'subject'
+            ])
+            ->first();
+        $rollCall = RollCall::query()
+            ->where('id',$this->notification->id )
+            ->with('attendanceBy')
+            ->first();
+        $student                   = Student::query()
             ->where('id', $studentId)
             ->with([
                 'parents',
                 'classHistories.class',
-                'rollCall.attendanceBy',
-                'rollCall.timetable.classSubjectTeacher.subject'
             ])
             ->first();
 
@@ -108,38 +119,32 @@ class CreateNotification implements ShouldQueue
             return;
         }
 
-        
+
         $className = optional($student->classHistories->first())->class->name ?? 'Lớp không xác định';
 
-        
-        $rollCalls = $student->rollCall ?? collect();
 
-       
         $dataNotiList = [];
-        foreach ($rollCalls as $rollCall) {
-            $attendanceBy = optional($rollCall->attendanceBy)->fullname ?? 'Không xác định';
-            $note = $rollCall->note ?? 'Không có ghi chú';
-            $tiet = optional($rollCall->timetable)->tiet ?? 'Không xác định';
-            $thu = optional($rollCall->timetable)->thu ?? 'Không xác định';
-            $mon = optional($rollCall->timetable)->mon ?? 'Không xác định';
+        $attendanceBy = optional($rollCall->attendanceBy)->fullname ?? 'Không xác định';
+        $note         = $rollCall->note ?? 'Không có ghi chú';
+        $tiet         = $teacherSubjectTimetable->timetable->period ?? 'Không xác định';
+        $thu          = $teacherSubjectTimetable->timetable->day ?? 'Không xác định';
+        $subjectName  = $teacherSubjectTimetable->subject->name ?? 'Môn không xác định';
 
-            $buoi = optional($rollCall->timetable)->buoi;
-            $buoiText = [
-                1 => 'Buổi sáng',
-                2 => 'Buổi chiều'
-            ][$buoi] ?? 'Không xác định';
+        $buoi     = $teacherSubjectTimetable->timetable->time;
+        $buoiText = [
+            1 => 'Buổi sáng',
+            2 => 'Buổi chiều'
+        ][$buoi] ?? 'Không xác định';
 
-            $subjectName = optional(optional($rollCall->timetable)->classSubjectTeacher->subject)->name ?? 'Môn không xác định';
 
-            $dataNotiList[] = [
-                "title" => "Học sinh: " . $student->fullname . " học lớp " . $className . " " . StatusStudentEnum::transform($this->notification->status) . " môn " . $subjectName . " vào thứ " . $thu . " buổi " . $buoiText . " tiết " . $tiet . ", được điểm danh bởi " . $attendanceBy . ". Ghi chú: " . $note,
-                "title_en" => "Học sinh: " . $student->fullname . " " . StatusStudentEnum::transform($this->notification->status),
-                "class_id" => $this->notification->class_id ?? 0,
-                "time" => now(),
-            ];
-        }
+        $dataNotiList[] = [
+            "title"    => "Học sinh: ".$student->fullname." học lớp ".$className." ".StatusStudentEnum::transform($this->notification->status)." môn ".$subjectName." vào thứ ".$thu." buổi ".$buoiText." tiết ".$tiet.", được điểm danh bởi ".$attendanceBy.". Ghi chú: ".$note,
+            "title_en" => "Học sinh: ".$student->fullname." ".StatusStudentEnum::transform($this->notification->status),
+            "class_id" => $this->notification->class_id ?? 0,
+            "time"     => now(),
+        ];
 
-        
+
         $parent = $student->parents->first();
         if (!$parent) {
             Log::error("No parent found for student ID: {$studentId}");
@@ -147,21 +152,20 @@ class CreateNotification implements ShouldQueue
         }
 
         foreach ($dataNotiList as $dataNoti) {
-            
-            $data = [
-                "user_id" => $parent->id,
-                "item_id" => $this->notification->id,
-                "type" => 1,
-                "is_read" => 0,
-                "is_send" => 0,
+            $data         = [
+                "user_id"    => $parent->id,
+                "item_id"    => $this->notification->id,
+                "type"       => 1,
+                "is_read"    => 0,
+                "is_send"    => 0,
                 "is_convert" => 0,
-                "data" => json_encode($dataNoti),
-                "date" => now(),
+                "data"       => json_encode($dataNoti),
+                "date"       => now(),
             ];
             $notification = UserNotification::query()->create($data);
 
-            
-            $userDevices = $this->getUserDevice([$parent->id])->groupBy('user_id');
+
+            $userDevices              = $this->getUserDevice([$parent->id])->groupBy('user_id');
             $userDeviceOfNotification = $userDevices->get($notification->user_id);
 
             if (isset($userDeviceOfNotification)) {
@@ -171,7 +175,7 @@ class CreateNotification implements ShouldQueue
                     }
                 }
 
-                
+
                 $user = User::query()->find($parent->id);
                 if ($user && $user->email) {
                     $this->sendMailNotification($user->email, $dataNoti);
@@ -185,7 +189,6 @@ class CreateNotification implements ShouldQueue
         $email,
         $notification
     ) {
-
         $toEmail = $email;
         $subject = 'Hệ thống website sổ liên lạc điện tử học sinh techscholl';
 

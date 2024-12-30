@@ -5,10 +5,14 @@ namespace App\Domain\ParentRollCallHistory\Models;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusTeacherEnum;
+use App\Domain\RollCall\Models\RollCall;
 use App\Models\Classes;
 use App\Models\ClassModel;
 use App\Models\ClassSubjectTeacher;
+use App\Models\DiemDanh;
 use App\Models\Student;
+use App\Models\TeacherSubjectTimetable;
+use App\Models\Timetable;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -47,17 +51,29 @@ class ParentRollCallHistory extends Model
     {
         return $this->belongsTo(Classes::class, 'class_id');
     }
-    // public function classes()
-    // {
-    //     return $this->belongsTo(ClassModel::class, 'class_id'); // Giả sử 'class_id' là trường khóa ngoại liên kết với bảng classes
-    // }
 
-
-    /**
-     * Quan hệ với bảng student
-     */
     public function student()
     {
         return $this->belongsTo(Student::class, 'student_id');
+    }
+
+    public function teacherSubjectTimetable()
+    {
+        return $this->belongsTo(DiemDanh::class, 'teacher_subject_timetable_id', 'id');
+    }
+    public function rollCall()
+    {
+        return $this->belongsTo(RollCall::class, 'roll_call_id', 'id');
+    }
+    public function timetable()
+    {
+        return $this->hasOneThrough(
+            Timetable::class,
+            TeacherSubjectTimetable::class,
+            'id',
+            'id',
+            'teacher_subject_timetable_id',
+            'timetable_id'
+        );
     }
 }

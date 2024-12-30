@@ -15,7 +15,7 @@ class Student extends Model
     use HasFactory;
     public $table = 'students';
 
-    protected $fillable = [       
+    protected $fillable = [
         'fullname','address','student_code','dob','status','gender','is_deleted','created_user_id','modified_user_id','created_at','updated_at',
     ];
 
@@ -23,7 +23,7 @@ class Student extends Model
     {
         return $this->hasMany(StudentClassHistory::class, 'student_id')->where('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
-    
+
     public function parents()
     {
         return $this->belongsToMany(User::class, 'user_student', 'student_id', 'user_id')
@@ -32,14 +32,14 @@ class Student extends Model
                     ->select('users.id', 'fullname', 'phone', 'code', 'gender', 'email', 'dob') // Chỉ lấy các trường cần thiết
                     ->withPivot([]); // Không lấy thông tin pivot
     }
-    
+
     public function schoolYear()
     {
-        return $this->belongsTo(SchoolYear::class, 'school_year_name'); 
+        return $this->belongsTo(SchoolYear::class, 'school_year_name');
     }
     public function academic()
     {
-        return $this->belongsTo(AcademicYear::class, 'academic_year_name'); 
+        return $this->belongsTo(AcademicYear::class, 'academic_year_name');
     }
     protected static function boot()
     {

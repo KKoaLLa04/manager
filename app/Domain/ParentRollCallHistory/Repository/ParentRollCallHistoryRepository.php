@@ -20,107 +20,146 @@ class ParentRollCallHistoryRepository
         $studentIds = UserStudent::where('user_id', $userId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->pluck('student_id');
-    
+
         if ($studentIds->isEmpty()) {
-            return [
-                'message' => 'Không có học sinh nào',
-                'status' => 'error',
-                'data' => [],
-                'total' => 0,
-                'pageIndex' => 1,
-                'pageSize' => $pageSize,
-            ];
+            return $this->responseError('Không có học sinh nào', $pageSize);
         }
-    
-        // Kiểm tra nếu truyền vào student_id không tồn tại trong danh sách studentIds
+
         if ($studentId && !$studentIds->contains($studentId)) {
-            return [
-                'message' => 'Học sinh không tồn tại hoặc không thuộc quyền quản lý của phụ huynh này',
-                'status' => 'error',
-                'data' => [],
-                'total' => 0,
-                'pageIndex' => 1,
-                'pageSize' => $pageSize,
-            ];
+            return $this->responseError('Học sinh không tồn tại hoặc không thuộc quyền quản lý của phụ huynh này', $pageSize);
         }
-    
-        // Nếu không truyền student_id, lấy student_id đầu tiên
+
         $studentId = $studentId ?? $studentIds->first();
-    
-        // Tạo truy vấn lấy lịch sử điểm danh cho student_id
+        $date = $date ? Carbon::parse($date) : Carbon::now();
+
         $rollCallHistoriesQuery = ParentRollCallHistory::where('student_id', $studentId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->with(['user' => function ($query) {
-                $query->select('id', 'fullname', 'email');
-            }, 'classes' => function ($query) {
-                $query->select('id', 'name'); // Chọn các trường cần thiết của bảng classes
-            }])  // Thêm quan hệ classes để lấy tên lớp
-            ->orderBy('date', 'desc');
-    
-        // Lọc theo từ khóa nếu có
+            ->with([
+                'rollCall.teacherSubjectTimetable.timetable',
+                'rollCall.teacherSubjectTimetable.classSubjectTeacher.subject',
+                'rollCall.teacherSubjectTimetable.classSubjectTeacher.user',
+                'rollCall.createdUser' // Thêm quan hệ đến giáo viên qua created_user_id
+            ])
+            ->orderBy('date', 'desc'); // Lấy bản mới nhất trước
+
+
         if ($keyWord) {
-            $rollCallHistoriesQuery->whereHas('user', function ($query) use ($keyWord) {
-                $query->where('fullname', 'like', '%' . $keyWord . '%')
-                    ->orWhere('email', 'like', '%' . $keyWord . '%');
+            $rollCallHistoriesQuery->whereHas('rollCall.teacherSubjectTimetable.classSubjectTeacher.user', function ($query) use ($keyWord) {
+                $query->where('fullname', 'like', "%$keyWord%")
+                    ->orWhere('email', 'like', "%$keyWord%");
             });
         }
-    
-        // Lọc theo ngày nếu có
+
         if ($date) {
             $rollCallHistoriesQuery->whereDate('date', $date);
         }
-    
-        // Lấy kết quả lịch sử điểm danh
-        $rollCallHistories = $rollCallHistoriesQuery->get()->groupBy(function ($history) {
-            return Carbon::parse($history->date)->toDateString();
-        });
-    
-        // Nếu không có lịch sử điểm danh cho học sinh này
+
+        $rollCallHistories = $rollCallHistoriesQuery->get()->groupBy(fn($history) => Carbon::parse($history->date)->toDateString());
+
         if ($rollCallHistories->isEmpty()) {
-            return [
-                'message' => 'Con của phụ huynh chưa có lịch sử điểm danh.',
-                'status' => 'error',
-                'data' => [],
-                'total' => 0,
-                'pageIndex' => 1,
-                'pageSize' => $pageSize,
-            ];
+            return $this->responseError('Con của phụ huynh chưa có lịch sử điểm danh.', $pageSize);
         }
-    
-        // Biến đếm tổng số lần có mặt và vắng mặt
-        $totalPresent = 0;
-        $totalAbsent = 0;
-        $totalLate = 0;
-    
-        // Xử lý dữ liệu lịch sử điểm danh
-        $data = $rollCallHistories->map(function ($historiesPerDay) use (&$totalPresent, &$totalAbsent, &$totalLate) {
-            $firstHistory = $historiesPerDay->first();
-            $timestamp = Carbon::parse($firstHistory->date)->timestamp;
-    
-            if ($firstHistory->status === StatusStudentEnum::PRESENT->value) {
-                $totalPresent++;
-            } elseif ($firstHistory->status === StatusStudentEnum::UN_PRESENT->value) {
-                $totalAbsent++;
-            } elseif ($firstHistory->status === StatusStudentEnum::LATE->value){
-                $totalLate++;
-            } 
-    
+
+        $totals = ['present' => 0, 'absent' => 0, 'late' => 0];
+
+        $data = $rollCallHistories->map(function ($histories, $date) use (&$totals) {
+            $histories = $histories->sortBy('period');
+
+            $morningTimetable = [];
+            $afternoonTimetable = [];
+
+            $morningTimetable = collect($morningTimetable)->unique(function ($item) {
+                return $item['period'] . $item['from_time'] . $item['to_time']; // Kết hợp period, from_time và to_time
+            });
+
+            $afternoonTimetable = collect($afternoonTimetable)->unique(function ($item) {
+                return $item['period'] . $item['from_time'] . $item['to_time']; // Kết hợp period, from_time và to_time
+            });
+
+            foreach ($histories as $history) {
+                $rollCall = $history->rollCall;
+                $teacherSubjectTimetable = $rollCall->teacherSubjectTimetable;
+
+                // Kiểm tra nếu teacherSubjectTimetable và timetable có tồn tại
+                if (!$teacherSubjectTimetable || !$teacherSubjectTimetable->timetable) {
+                    continue; // Nếu không có timetable thì bỏ qua bản ghi này
+                }
+
+                $timetable = $teacherSubjectTimetable->timetable;
+                $createdUser = $rollCall->createdUser; // Lấy thông tin giáo viên từ created_user_id
+
+                $fromTime = Carbon::parse($timetable->from_time);
+                $toTime = Carbon::parse($timetable->to_time);
+
+                // Xác định buổi sáng hay chiều (giả sử buổi sáng từ 7:00 AM - 12:00 PM, chiều từ 12:00 PM - 6:00 PM)
+                $formattedTimetable = $this->formatTimetableData($totals, $history, $teacherSubjectTimetable, $timetable, $createdUser);
+
+                // Lọc các tiết trùng lặp dựa trên 'period' hoặc 'from_time', 'to_time'
+                if ($fromTime->hour >= 7 && $fromTime->hour < 12) {
+                    $morningTimetable[] = $formattedTimetable;
+                } elseif ($fromTime->hour >= 12 && $fromTime->hour < 18) {
+                    $afternoonTimetable[] = $formattedTimetable;
+                }
+            }
+
+            // Lọc bỏ các tiết trùng lặp trong buổi sáng và chiều
+            $morningTimetable = $this->removeDuplicatePeriods($morningTimetable);
+            $afternoonTimetable = $this->removeDuplicatePeriods($afternoonTimetable);
+
             return [
-                'note' => $firstHistory->note,  
-                'date' => $timestamp,  
-                'status' => $firstHistory->status,
+                'date' => Carbon::parse($date)->timestamp,
+                'morning_timetable' => $morningTimetable,
+                'afternoon_timetable' => $afternoonTimetable,
             ];
+
+            // Hàm lọc các tiết trùng lặp
+
+
         })->values();
-    
-        // Tên học sinh và lớp học (tách ra ngoài data)
+
         $studentName = $rollCallHistories->first()->first()->student->fullname ?? 'Chưa có học sinh';
         $className = $rollCallHistories->first()->first()->classes->name ?? 'Chưa có lớp';
+
+        return $this->paginateResponse($data, $totals, $pageSize, $studentName, $className);
+    }
     
-        // Phân trang dữ liệu
+    private function removeDuplicatePeriods($timetable) {
+        return $timetable->unique(function ($item) {
+            return $item['period'] . $item['from_time'] . $item['to_time']; // Kết hợp period, from_time và to_time
+        });
+    }
+
+    private function formatTimetableData(&$totals, $history, $teacherSubjectTimetable, $timetable, $createdUser)
+    {
+        $this->incrementTotals($totals, $history->status);
+
+        return [
+            'period' => $timetable->period ?? 'unknow',
+            'from_time' => $timetable->from_time ?? null,
+            'to_time' => $timetable->to_time ?? null,
+            'day' => $timetable->day ?? null,
+            'subject' => $history->rollCall->teacherSubjectTimetable->classSubjectTeacher->subject->name ?? 'unknow',
+            'status' => $history->status,
+            'note' => $history->note ?? 'unknow',
+            'teacher_name' => $createdUser->fullname ?? 'unknow',
+            'teacher_phone' => $createdUser->phone ?? 'unknow',
+        ];
+    }
+
+
+    private function incrementTotals(&$totals, $status)
+    {
+        if ($status === StatusStudentEnum::PRESENT->value) $totals['present']++;
+        elseif ($status === StatusStudentEnum::UN_PRESENT->value) $totals['absent']++;
+        elseif ($status === StatusStudentEnum::LATE->value) $totals['late']++;
+    }
+
+    private function paginateResponse($data, $totals, $pageSize, $studentName, $className)
+    {
         $totalDays = $data->count();
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $paginatedData = $data->slice(($currentPage - 1) * $pageSize, $pageSize)->values();
-    
+
         $paginator = new LengthAwarePaginator(
             $paginatedData,
             $totalDays,
@@ -128,34 +167,52 @@ class ParentRollCallHistoryRepository
             $currentPage,
             ['path' => LengthAwarePaginator::resolveCurrentPath()]
         );
-    
-        // Trả về kết quả với student_name và class_name ra ngoài data
+
         return [
             'message' => 'Lấy lịch sử điểm danh thành công',
             'status' => 'success',
-            'student_name' => $studentName,  
-            'class_name' => $className,  
-            'total_present' => $totalPresent,  
-            'total_absent' => $totalAbsent,  
-            'total_late' => $totalLate,  
+            'student_name' => $studentName,
+            'class_name' => $className,
+            'total_present' => $totals['present'],
+            'total_absent' => $totals['absent'],
+            'total_late' => $totals['late'],
             'data' => $paginator->items(),
             'total' => $paginator->total(),
             'pageIndex' => $paginator->currentPage(),
             'pageSize' => $paginator->perPage(),
         ];
     }
-    
-    
+
+    private function responseError($message, $pageSize)
+    {
+        return [
+            'message' => $message,
+            'status' => 'error',
+            'data' => [],
+            'total' => 0,
+            'pageIndex' => 1,
+            'pageSize' => $pageSize,
+        ];
+    }
 
 
-    
-    
-    
 
 
-    
-    
-    
-    
-    
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
