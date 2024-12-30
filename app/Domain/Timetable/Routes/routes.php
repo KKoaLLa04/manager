@@ -1,6 +1,7 @@
 
 <?php
 
+use App\Domain\Timetable\Controllers\CategoryTimetableController;
 use App\Domain\Timetable\Controllers\TimetableController;
 use App\Domain\Timetable\Controllers\TimetableGuardianController;
 use App\Domain\Timetable\Controllers\TimetableTeacherController;
@@ -21,4 +22,11 @@ Route::group(['prefix' => 'teacher/timetable'], function () {
 
 Route::group(['prefix' => 'guardian/timetable'], function () {
     Route::get('/', [TimetableGuardianController::class, 'index']);
+});
+
+Route::group(['prefix' => 'manager/category-timetable'], function () {
+    Route::get('/', [CategoryTimetableController::class, 'index']);
+    Route::post('/edit', [CategoryTimetableController::class, 'edit']);
+    Route::post('/store', [CategoryTimetableController::class, 'store']);
+    Route::post('/delete', [CategoryTimetableController::class, 'delete']);
 });

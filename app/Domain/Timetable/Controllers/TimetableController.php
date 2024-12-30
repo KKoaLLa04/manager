@@ -19,15 +19,13 @@ class TimetableController extends BaseController
 
     public function index(Request $request)
     {
-        $classId      = $request->classId;
-        $timetables   = $this->timetableRepository->getTimetable();
-        $timetableIds = $timetables->pluck('id')->toArray();
+        $classId             = $request->classId;
+        $timetables          = $this->timetableRepository->getTimetable();
+        $categoryTimetableId = $request->categoryTimetableId;
+        $timetableIds        = $timetables->pluck('id')->toArray();
 
-        $teacherSubjectTimetables = $this->timetableRepository->getTeacherSubjectTimetable($timetableIds, $classId);
-        $classSubjectTeacherIds   = $teacherSubjectTimetables->pluck('class_subject_teacher_id')->toArray();
-        $classSubjectTeacherIds   = array_unique($classSubjectTeacherIds);
-        $classSubjectTeacher      = $this->timetableRepository->getClassSubjectTeachers($classSubjectTeacherIds,
-            $classId);
+        $teacherSubjectTimetables = $this->timetableRepository->getTeacherSubjectTimetable($timetableIds, $classId,
+            $categoryTimetableId);
 
 
         $classSubjectTeacherByClassId = $this->timetableRepository->getClassSubjectTeachersByClassId($classId);
@@ -35,7 +33,6 @@ class TimetableController extends BaseController
         $data = $this->timetableRepository->transform(
             $timetables,
             $teacherSubjectTimetables,
-            $classSubjectTeacher,
             $classSubjectTeacherByClassId
         );
         return $this->responseSuccess($data);
@@ -48,28 +45,30 @@ class TimetableController extends BaseController
         $timetableId           = $request->timetableId;
         $subjectId             = $request->subjectId;
         $classSubjectTeacherId = $request->classSubjectTeacherId;
+        $categoryTimetableId   = $request->categoryTimetableId;
 
-        $classSubjectTeacher          = $this->timetableRepository->getClassSubjectTeachersByUserIdAndClassId($userId);
-        $classSubjectTeacherIds       = $classSubjectTeacher->pluck('id')->toArray();
-        $teacherSubjectTimeTable      = $this->timetableRepository->checkUserExistTimetable($classSubjectTeacherIds,
+        $teacherSubjectTimeTable      = $this->timetableRepository->checkUserExistTimetable($userId, $subjectId,
+            $categoryTimetableId,
             $timetableId,
             $classId);
-        $countTeacherSubjectTimetable = $this->timetableRepository->countUserTimetable($classSubjectTeacherId,
-            $classId);
-        $quantitySubjectConfig = $this->timetableRepository->subjectConfig($subjectId);
-        if ($subjectId != 0 && $countTeacherSubjectTimetable >= $quantitySubjectConfig->quantity){
-            return $this->responseError('Môn học đã đủ ' . $quantitySubjectConfig->quantity .' tiết');
+        $countTeacherSubjectTimetable = $this->timetableRepository->countUserTimetable($subjectId,
+            $categoryTimetableId, $classId);
+        $quantitySubjectConfig        = $this->timetableRepository->subjectConfig($subjectId);
+        if ($subjectId != 0 && $countTeacherSubjectTimetable >= $quantitySubjectConfig->quantity) {
+            return $this->responseError('Môn học đã đủ '.$quantitySubjectConfig->quantity.' tiết');
         }
         if ($userId != 0 && !is_null($teacherSubjectTimeTable)) {
             return $this->responseError('Giáo viên đag có tiết dạy ở lớp: '.$teacherSubjectTimeTable->class->name);
         }
         $checkTeacherSubjectTimeTableExits = $this->timetableRepository->checkUserExistTimetableOfClass($timetableId,
-            $classId);
+            $classId, $categoryTimetableId);
 
         if ($checkTeacherSubjectTimeTableExits) {
-            $this->timetableRepository->updateTeacherSubjectTeacher($classSubjectTeacherId, $timetableId, $classId);
+            $this->timetableRepository->updateTeacherSubjectTeacher($classSubjectTeacherId, $timetableId, $classId,
+                $userId, $subjectId, $categoryTimetableId);
         } else {
-            $this->timetableRepository->createTeacherSubjectTeacher($classSubjectTeacherId, $timetableId, $classId);
+            $this->timetableRepository->createTeacherSubjectTeacher($classSubjectTeacherId, $timetableId, $classId,
+                $userId, $subjectId, $categoryTimetableId);
         }
 
         return $this->responseSuccess([], 'Thục hiện thành công');
