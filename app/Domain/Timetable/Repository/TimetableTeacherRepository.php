@@ -5,6 +5,7 @@ namespace App\Domain\Timetable\Repository;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use App\Domain\Subject\Models\Subject;
+use App\Models\CategoryAttendance;
 use App\Models\ClassSubject;
 use App\Models\ClassSubjectTeacher;
 use App\Models\SubjectTimetableConfig;
@@ -22,10 +23,12 @@ class TimetableTeacherRepository
             ->get();
     }
 
-    public function getTeacherSubjectTimetable(array $classSubjectTeacherIds): Collection
+    public function getTeacherSubjectTimetable(int $userId,$categoryTimetableId): Collection
     {
         return TeacherSubjectTimetable::query()
-            ->whereIn('class_subject_teacher_id', $classSubjectTeacherIds)
+            ->where('user_id', $userId)
+            ->where('category_attendance_id', $categoryTimetableId)
+            ->with(['subjectTimetable','class'])
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->get();
     }
@@ -48,12 +51,9 @@ class TimetableTeacherRepository
     public function transform(
         Collection $timetables,
         Collection $teacherSubjectTimetables,
-        Collection $classSubjectTeachers,
     ) {
-        $data = $timetables->map(function ($timetable) use ($teacherSubjectTimetables, $classSubjectTeachers) {
+        $data = $timetables->map(function ($timetable) use ($teacherSubjectTimetables) {
             $teacherSubjectTimetable = $teacherSubjectTimetables->where('timetable_id', $timetable->id)->first();
-            $classSubjectTeachers    = $classSubjectTeachers->where('id',
-                $teacherSubjectTimetable->class_subject_teacher_id)->first();
             return [
                 'timetable_id'        => $timetable->id,
                 'timetable_day'       => $timetable->day,
@@ -61,15 +61,24 @@ class TimetableTeacherRepository
                 'timetable_period'    => $timetable->period,
                 'timetable_from_time' => Carbon::parse($timetable->from_time)->translatedFormat('H:i'),
                 'timetable_to_time'   => Carbon::parse($timetable->to_time)->translatedFormat('H:i'),
-                'subject_name'        => $classSubjectTeachers->subject->name,
-                'class_id'            => $classSubjectTeachers->class->id,
-                'class_name'          => $classSubjectTeachers->class->name,
+                'subject_name'        => !is_null($teacherSubjectTimetable->subjectTimetable) ? $teacherSubjectTimetable->subjectTimetable->name ?? "" : "",
+                'class_id'            => !is_null($teacherSubjectTimetable->class) ? $teacherSubjectTimetable->class->id ?? 0 : "",
+                'class_name'          => !is_null($teacherSubjectTimetable->class) ? $teacherSubjectTimetable->class->name ?? "" : "",
             ];
         });
 
         return [
             'timetables' => $data,
         ];
+    }
+
+    public function getCategoryTimetable(Carbon $date)
+    {
+        return CategoryAttendance::query()
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('from_date','<=', $date->toDateString())
+            ->where('to_date','>=', $date->toDateString())
+            ->first();
     }
 
 }

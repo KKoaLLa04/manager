@@ -7,6 +7,7 @@ use App\Domain\Timetable\Repository\TimetableTeacherRepository;
 use App\Http\Controllers\BaseController;
 use App\Models\SubjectTimetableConfig;
 use App\Models\Timetable;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,13 +20,15 @@ class TimetableTeacherController extends BaseController
         parent::__construct($request);
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $userId = Auth::user()->id;
-        $classSubjectTeachers = $this->timetableRepository->getClassSubjectTeachers($userId);
-        $classSubjectTeacherIds = $classSubjectTeachers->pluck('id')->toArray();
-
-        $teacherSubjectTimetables = $this->timetableRepository->getTeacherSubjectTimetable($classSubjectTeacherIds);
+        $date = isset($request->date) ? Carbon::parse($request->date) : Carbon::now();
+        $categoryTimetable = $this->timetableRepository->getCategoryTimetable($date);
+        if (is_null($categoryTimetable)){
+            return $this->responseSuccess(['timetables' => []]);
+        }
+        $teacherSubjectTimetables = $this->timetableRepository->getTeacherSubjectTimetable($userId,$categoryTimetable->id);
         $timetableIds = $teacherSubjectTimetables->pluck('timetable_id')->toArray();
 
 
@@ -33,7 +36,6 @@ class TimetableTeacherController extends BaseController
         $data = $this->timetableRepository->transform(
             $timetables,
             $teacherSubjectTimetables,
-            $classSubjectTeachers,
         );
         return $this->responseSuccess($data);
     }

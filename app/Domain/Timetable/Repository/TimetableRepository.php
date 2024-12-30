@@ -21,12 +21,17 @@ class TimetableRepository
             ->get();
     }
 
-    public function getTeacherSubjectTimetable(array $timetableIds, $classId): Collection
+    public function getTeacherSubjectTimetable(array $timetableIds, $classId, $categoryTimetableId): Collection
     {
         return TeacherSubjectTimetable::query()
             ->whereIn('timetable_id', $timetableIds)
             ->where('class_id', $classId)
+            ->where('category_attendance_id', $categoryTimetableId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->with([
+                'subjectTimetable',
+                'teacher',
+            ])
             ->get();
     }
 
@@ -50,26 +55,23 @@ class TimetableRepository
     public function transform(
         Collection $timetables,
         Collection $teacherSubjectTimetables,
-        Collection $classSubjectTeachers,
-        Collection $classSubjectTeacherByClassId
+        Collection $classSubjectTeacherByClassId,
     ) {
-        $dataTimetable = $timetables->map(function ($timetable) use ($teacherSubjectTimetables, $classSubjectTeachers) {
+        $dataTimetable = $timetables->map(function ($timetable) use ($teacherSubjectTimetables) {
             $teacherSubjectTimetable   = $teacherSubjectTimetables->where('timetable_id', $timetable->id)->first();
-            $classSubjectTeacherId     = !is_null($teacherSubjectTimetable) ? $teacherSubjectTimetable->class_subject_teacher_id : 0;
             $teacherSubjectTimetableId = !is_null($teacherSubjectTimetable) ? $teacherSubjectTimetable->id : 0;
-            $classSubjectTeacher       = $classSubjectTeachers->where('id', $classSubjectTeacherId)->first();
-            $class_subject_teacher_id = "";
-            $user_id = "";
-            $user_name = "";
-            $subject_id = "";
-            $subject_name = "";
-            if (!is_null($classSubjectTeacher)) {
-                $class_subject_teacher_id = $classSubjectTeacherId;
-                $user_id = is_null($classSubjectTeacher->user) ? 0 : $classSubjectTeacher->user_id;
-                $user_name = is_null($classSubjectTeacher->user) ? "" : $classSubjectTeacher->user->fullname;
-                $subject_id = is_null($classSubjectTeacher->subject) ? 0 : $classSubjectTeacher->subject->id;
-                $subject_name = is_null($classSubjectTeacher->subject) ? "" : $classSubjectTeacher->subject->name;
+            $class_subject_teacher_id  = "";
+            $user_id                   = "";
+            $user_name                 = "";
+            $subject_id                = "";
+            $subject_name              = "";
+            if (!is_null($teacherSubjectTimetable)) {
+                $user_id      = isset($teacherSubjectTimetable->teacher) ? $teacherSubjectTimetable->teacher->id : "";
+                $user_name    = isset($teacherSubjectTimetable->teacher) ? $teacherSubjectTimetable->teacher->fullname ?? "" : "";
+                $subject_id   = isset($teacherSubjectTimetable->subjectTimetable) ? $teacherSubjectTimetable->subjectTimetable->id : "";
+                $subject_name = isset($teacherSubjectTimetable->subjectTimetable) ? $teacherSubjectTimetable->subjectTimetable->name ?? "" : "";
             }
+
             return [
                 'id'                           => $timetable->id,
                 'day'                          => $timetable->day,
@@ -150,10 +152,12 @@ class TimetableRepository
         return $query->get();
     }
 
-    public function checkUserExistTimetable($classSubjectTeacherIds, $timetableId, $classId)
+    public function checkUserExistTimetable($userId, $subjectId, $categoryId, $timetableId, $classId)
     {
         return TeacherSubjectTimetable::query()
-            ->whereIn('class_subject_teacher_id', $classSubjectTeacherIds)
+            ->where('user_id', $userId)
+            ->where('subject_id', $subjectId)
+            ->where('category_attendance_id', $categoryId)
             ->where('timetable_id', $timetableId)
             ->whereNot('class_id', $classId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
@@ -161,40 +165,62 @@ class TimetableRepository
             ->first();
     }
 
-    public function countUserTimetable(int $classSubjectTeacherId,int $classId): int
+    public function countUserTimetable($subjectId, $categoryId, int $classId): int
     {
         return TeacherSubjectTimetable::query()
-            ->where('class_subject_teacher_id', $classSubjectTeacherId)
+            ->where('subject_id', $subjectId)
+            ->where('category_attendance_id', $categoryId)
             ->where('class_id', $classId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->count();
     }
 
-    public function checkUserExistTimetableOfClass($timetableId, $classId): bool
+    public function checkUserExistTimetableOfClass($timetableId, $classId, $categoryId): bool
     {
         return TeacherSubjectTimetable::query()
-            ->where('timetable_id', $timetableId)
+            ->where('category_attendance_id', $categoryId)
+            ->where('timetable_id', $categoryId)
             ->where('class_id', $classId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->exists();
     }
 
-    public function updateTeacherSubjectTeacher($classSubjectTeacherId, $timetableId, $classId): void
+    public function updateTeacherSubjectTeacher(
+        $classSubjectTeacherId,
+        $timetableId,
+        $classId,
+        $userId,
+        $subjectId,
+        $categoryId
+    ): void
     {
         TeacherSubjectTimetable::query()
             ->where('timetable_id', $timetableId)
+            ->where('category_attendance_id', $categoryId)
             ->where('class_id', $classId)
             ->update([
-                'class_subject_teacher_id' => $classSubjectTeacherId
+                'class_subject_teacher_id' => $classSubjectTeacherId,
+                'subject_id'               => $subjectId,
+                'user_id'                  => $userId,
+                'timetable_id'             => $timetableId,
             ]);
     }
 
-    public function createTeacherSubjectTeacher(int $classSubjectTeacherId, int $timetableId, int $classId): void
-    {
+    public function createTeacherSubjectTeacher(
+        int $classSubjectTeacherId,
+        int $timetableId,
+        int $classId,
+            $userId,
+            $subjectId,
+            $categoryId
+    ): void {
         TeacherSubjectTimetable::query()
             ->create(
                 [
                     'class_subject_teacher_id' => $classSubjectTeacherId,
+                    'category_attendance_id'   => $categoryId,
+                    'subject_id'               => $subjectId,
+                    'user_id'                  => $userId,
                     'timetable_id'             => $timetableId,
                     'class_id'                 => $classId,
                 ]
