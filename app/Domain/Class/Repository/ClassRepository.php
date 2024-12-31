@@ -54,7 +54,12 @@ class ClassRepository
                     'schoolYear',
                     'grade',
                     'academicYear',
-                    'user'
+                    'classSubjectTeachers' => function ($query) {
+                $query->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+                    ->where('access_type', AccessTypeEnum::TEACHER->value)
+                    ->orderBy('updated_at', 'desc')
+                    ->with('user');
+            }
                 ]
             )
             ->limit($size)
@@ -82,6 +87,7 @@ class ClassRepository
     public function transformClass(Collection $classes): array
     {
         return $classes->map(function ($class) {
+            $mainTeacher = $class->classSubjectTeachers->first()?->user;
             return [
                 "id"             => $class->id,
                 "name"           => is_null($class->name) ? "" : $class->name,
@@ -92,9 +98,9 @@ class ClassRepository
                 "academic_name"  => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
                 "academic_id"    => is_null($class->academicYear) ? 0 : $class->academicYear->id,
                 "academic_code"  => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
-                "teacher_id"     => is_null($class->user->first()) ? "" : (is_null($class->user->first()->id) ? "" : $class->user->first()->id),
-                "teacher_name"   => is_null($class->user->first()) ? "" : (is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname),
-                "teacher_email"  => is_null($class->user->first()) ? "" : (is_null($class->user->first()->email) ? "" : $class->user->first()->email),
+                "teacher_id"     => $mainTeacher->id ?? "",
+                "teacher_name"   => $mainTeacher->fullname ?? "",
+                "teacher_email"  => $mainTeacher->email ?? "",
                 "status"         => is_null($class->status) ? "1" : $class->status,
             ];
         })->toArray();
@@ -217,7 +223,7 @@ class ClassRepository
     {
         return Classes::where('id', $class_id)->where('is_deleted',
             DeleteEnum::NOT_DELETE->value)->with(
-            [
+            [   
                 'schoolYear',
                 'grade',
                 'academicYear',
@@ -303,7 +309,7 @@ class ClassRepository
                 "name" => is_null($subjectTeacher->user->fullname) ? "" : $subjectTeacher->user->fullname,
             ];
         }
-        
+
         return [];
     }
 
