@@ -5,6 +5,7 @@ namespace App\Domain\Timetable\Repository;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\StatusEnum;
 use App\Domain\Subject\Models\Subject;
+use App\Models\CategoryAttendance;
 use App\Models\ClassSubject;
 use App\Models\ClassSubjectTeacher;
 use App\Models\SubjectTimetableConfig;
@@ -21,12 +22,17 @@ class TimetableGuardianRepository
             ->get();
     }
 
-    public function getTeacherSubjectTimetable(array $timetableIds, $classId): Collection
+    public function getTeacherSubjectTimetable(array $timetableIds, $classId,$categoryTimetableId): Collection
     {
         return TeacherSubjectTimetable::query()
             ->whereIn('timetable_id', $timetableIds)
             ->where('class_id', $classId)
+            ->where('category_attendance_id', $categoryTimetableId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->with([
+                'subjectTimetable',
+                'teacher',
+            ])
             ->get();
     }
 
@@ -49,24 +55,22 @@ class TimetableGuardianRepository
     public function transform(
         Collection $timetables,
         Collection $teacherSubjectTimetables,
-        Collection $classSubjectTeachers,
     ) {
-        $dataTimetable = $timetables->map(function ($timetable) use ($teacherSubjectTimetables, $classSubjectTeachers) {
+        $dataTimetable = $timetables->map(function ($timetable) use ($teacherSubjectTimetables) {
             $teacherSubjectTimetable   = $teacherSubjectTimetables->where('timetable_id', $timetable->id)->first();
             $classSubjectTeacherId     = !is_null($teacherSubjectTimetable) ? $teacherSubjectTimetable->class_subject_teacher_id : 0;
             $teacherSubjectTimetableId = !is_null($teacherSubjectTimetable) ? $teacherSubjectTimetable->id : 0;
-            $classSubjectTeacher       = $classSubjectTeachers->where('id', $classSubjectTeacherId)->first();
             $class_subject_teacher_id = "";
             $user_id = "";
             $user_name = "";
             $subject_id = "";
             $subject_name = "";
-            if (!is_null($classSubjectTeacher)) {
+            if (!is_null($teacherSubjectTimetable)) {
                 $class_subject_teacher_id = $classSubjectTeacherId;
-                $user_id = is_null($classSubjectTeacher->user) ? 0 : $classSubjectTeacher->user_id;
-                $user_name = is_null($classSubjectTeacher->user) ? "" : $classSubjectTeacher->user->fullname;
-                $subject_id = is_null($classSubjectTeacher->subject) ? 0 : $classSubjectTeacher->subject->id;
-                $subject_name = is_null($classSubjectTeacher->subject) ? "" : $classSubjectTeacher->subject->name;
+                $user_id      = isset($teacherSubjectTimetable->teacher) ? $teacherSubjectTimetable->teacher->id : "";
+                $user_name    = isset($teacherSubjectTimetable->teacher) ? $teacherSubjectTimetable->teacher->fullname ?? "" : "";
+                $subject_id   = isset($teacherSubjectTimetable->subjectTimetable) ? $teacherSubjectTimetable->subjectTimetable->id : "";
+                $subject_name = isset($teacherSubjectTimetable->subjectTimetable) ? $teacherSubjectTimetable->subjectTimetable->name ?? "" : "";
             }
             return [
                 'id'                           => $timetable->id,
@@ -104,6 +108,15 @@ class TimetableGuardianRepository
         return [
             'timetables'       => $data,
         ];
+    }
+
+    public function getCategoryTimetable(Carbon $date)
+    {
+        return CategoryAttendance::query()
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->where('from_date','<=', $date->toDateString())
+            ->where('to_date','>=', $date->toDateString())
+            ->first();
     }
 
 

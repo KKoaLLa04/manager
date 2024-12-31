@@ -34,17 +34,17 @@ class Classes extends Model
 
     public function grade(): HasOne
     {
-        return $this->hasOne(Grade::class,'id','grade_id');
+        return $this->hasOne(Grade::class, 'id', 'grade_id');
     }
 
     public function schoolYear(): HasOne
     {
-        return $this->hasOne(SchoolYear::class,'id','school_year_id');
+        return $this->hasOne(SchoolYear::class, 'id', 'school_year_id');
     }
 
     public function academicYear(): HasOne
     {
-        return $this->hasOne(AcademicYear::class,'id','academic_year_id');
+        return $this->hasOne(AcademicYear::class, 'id', 'academic_year_id');
     }
 
 
@@ -64,7 +64,7 @@ class Classes extends Model
     public function students()
     {
         return $this->belongsToMany(Student::class, 'student_class', 'class_id', 'student_id')
-                    ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value);
+            ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
     public function classSubjectTeacher()
     {
@@ -78,11 +78,13 @@ class Classes extends Model
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
 
-    public function rollCalls(){
+    public function rollCalls()
+    {
         return $this->hasMany(RollCall::class, 'class_id', 'id');
     }
 
-    public function attendanceLog(){
+    public function attendanceLog()
+    {
         return $this->hasMany(AttendanceLog::class, 'class_id', 'id');
     }
 
@@ -93,4 +95,3 @@ class Classes extends Model
 
 
 }
-

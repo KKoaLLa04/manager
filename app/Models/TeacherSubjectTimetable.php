@@ -13,8 +13,11 @@ class TeacherSubjectTimetable extends Model
     protected $fillable = [
         "id",
         "class_subject_teacher_id",
+        "category_attendance_id",
         "timetable_id",
         "class_id",
+        "subject_id",
+        "user_id",
         "is_deleted",
         "created_at",
         "updated_at",
@@ -40,6 +43,13 @@ class TeacherSubjectTimetable extends Model
 
     public function subject(){
         return $this->belongsTo(Subject::class, 'subject_id', 'id');
+    }
+    public function subjectTimetable(){
+        return $this->hasOne(Subject::class, 'id', 'subject_id');
+    }
+
+    public function teacher(){
+        return $this->hasOne(User::class, 'id', 'user_id');
     }
 
 

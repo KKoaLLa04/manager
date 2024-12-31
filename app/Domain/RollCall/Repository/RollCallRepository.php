@@ -14,6 +14,7 @@ use App\Domain\RollCallHistory\Models\RollCallHistory;
 use App\Jobs\CreateNotification;
 use App\jobs\NotificationJob;
 use App\Models\AttendanceLog;
+use App\Models\CategoryAttendance;
 use App\Models\Classes;
 use App\Models\ClassSubjectTeacher;
 use App\Models\DiemDanh;
