@@ -46,7 +46,7 @@ class Classes extends Model
     {
         return $this->hasOne(AcademicYear::class,'id','academic_year_id');
     }
-    
+
 
     public function user(): BelongsToMany
     {
@@ -86,7 +86,11 @@ class Classes extends Model
         return $this->hasMany(AttendanceLog::class, 'class_id', 'id');
     }
 
-    
-    
+    public function classSubjectTeachers()
+    {
+        return $this->hasMany(ClassSubjectTeacher::class, 'class_id', 'id');
+    }
+
+
 }
 

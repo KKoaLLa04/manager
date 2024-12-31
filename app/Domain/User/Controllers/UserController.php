@@ -259,25 +259,64 @@ class UserController extends BaseController
         if (!$subject) {
             return $this->responseError(trans('Môn học không tồn tại'));
         }
+// Danh sách ID hoặc tên các môn học mặc định
+$defaultSubjects = ['Chào cờ', 'Sinh hoạt'];
 
-        ClassSubjectTeacher::Where('user_id', $id)->update(['status' => StatusEnum::UN_ACTIVE->value , 'end_date' => now()]);
+ClassSubjectTeacher::where('user_id', $id)
+    ->whereNotIn('class_subject_id', function ($query) use ($defaultSubjects) {
+        $query->select('id')
+              ->from('class_subject')
+              ->whereIn('subject_id', function ($subQuery) use ($defaultSubjects) {
+                  $subQuery->select('id')
+                           ->from('subjects')
+                           ->whereIn('name', $defaultSubjects);
+              });
+    })
+    ->update([
+        'status' => StatusEnum::UN_ACTIVE->value,
+        'end_date' => now()
+    ]);
 
-        $existingAssignment = TeacherSubject::where('user_id', $id)
-        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-        ->first();
+// Lấy bản ghi cũ của giáo viên
+$oldRecord = ClassSubjectTeacher::where('user_id', $id)
+    ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+    ->latest('start_date')
+    ->first();
 
-        if ($existingAssignment) {
-            $existingAssignment->update(['is_deleted' => DeleteEnum::DELETED->value]);
-        }
+if (!$oldRecord) {
+    return $this->responseError(trans('Không tìm thấy bản ghi cũ của giáo viên.'));
+}
 
-        $data = [
-            'subject_id'      => $subject->id,
-            'user_id'         => $id,
-            'status'          => StatusEnum::ACTIVE->value,
-            'is_deleted'      => DeleteEnum::NOT_DELETE->value,
-            'created_user_id' => $user_id,
+// Tạo bản ghi mới
+ClassSubjectTeacher::create([
+    'subject_id' => $subject->id,
+    'class_id'      => $oldRecord->class_id,
+    'user_id'    => $id,
+    'access_type'   => $oldRecord->access_type,
+    'status'     => StatusEnum::ACTIVE->value,
+    'start_date' => now(),
+    'end_date'   => null,
+    'is_deleted' => DeleteEnum::NOT_DELETE->value,
+    'created_user_id' => $user_id,
+]);
 
-        ];
+// Xử lý gán môn học trong TeacherSubject
+$existingAssignment = TeacherSubject::where('user_id', $id)
+    ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+    ->first();
+
+if ($existingAssignment) {
+    $existingAssignment->update(['is_deleted' => DeleteEnum::DELETED->value]);
+}
+
+$data = [
+    'subject_id'      => $subject->id,
+    'user_id'         => $id,
+    'status'          => StatusEnum::ACTIVE->value,
+    'is_deleted'      => DeleteEnum::NOT_DELETE->value,
+    'created_user_id' => $user_id,
+];
+
 
         $result = TeacherSubject::create($data);
 
