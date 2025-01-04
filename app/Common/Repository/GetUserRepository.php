@@ -21,11 +21,29 @@ class GetUserRepository {
             ->where('status', StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
     }
 
-    public function getTeachers(): Collection
+    // public function getTeachers(): Collection
+    // {
+    //     return User::query()->where('access_type', AccessTypeEnum::TEACHER->value)->where('status',
+    //         StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
+    // }
+
+    public function getTeachers($subjectId = null): Collection
     {
-        return User::query()->where('access_type', AccessTypeEnum::TEACHER->value)->where('status',
-            StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
+        $query = User::query()
+            ->where('access_type', AccessTypeEnum::TEACHER->value)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+
+        if ($subjectId) {
+            $query->whereHas('classSubjectTeachers', function ($subQuery) use ($subjectId) {
+                $subQuery->where('subject_id', $subjectId)
+                    ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+                    ->where('status', StatusEnum::ACTIVE->value);
+            });
+        }
+        return $query->get();
     }
+
 
     public function getTeachersBySubject($subjectId)
     {
