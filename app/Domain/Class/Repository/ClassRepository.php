@@ -223,7 +223,7 @@ class ClassRepository
     {
         return Classes::where('id', $class_id)->where('is_deleted',
             DeleteEnum::NOT_DELETE->value)->with(
-            [   
+            [
                 'schoolYear',
                 'grade',
                 'academicYear',
@@ -382,21 +382,60 @@ class ClassRepository
             );
     }
 
+    // public function updateClassSubjectTeacher(int $classId, int $teacherId, int $classSubjectId)
+    // {
+    //     ClassSubjectTeacher::query()
+    //         ->create(
+    //             [
+    //                 "class_id"         => $classId,
+    //                 "class_subject_id" => $classSubjectId,
+    //                 "user_id"          => $teacherId,
+    //                 "access_type"      => StatusTeacherEnum::TEACHER->value,
+    //                 "is_deleted"       => DeleteEnum::NOT_DELETE->value,
+    //                 "status"           => StatusEnum::ACTIVE->value,
+    //                 "start_date"       => now(),
+    //                 "created_user_id"  => Auth::id(),
+    //             ]
+    //         );
+    // }
     public function updateClassSubjectTeacher(int $classId, int $teacherId, int $classSubjectId)
     {
-        ClassSubjectTeacher::query()
-            ->create(
-                [
-                    "class_id"         => $classId,
-                    "class_subject_id" => $classSubjectId,
-                    "user_id"          => $teacherId,
-                    "access_type"      => StatusTeacherEnum::TEACHER->value,
-                    "is_deleted"       => DeleteEnum::NOT_DELETE->value,
-                    "status"           => StatusEnum::ACTIVE->value,
-                    "start_date"       => now(),
-                    "created_user_id"  => Auth::id(),
-                ]
-            );
+        $existing = ClassSubjectTeacher::query()
+            ->where('class_id', $classId)
+            ->where('class_subject_id', $classSubjectId)
+            ->where('user_id', $teacherId)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->first();
+
+        if ($existing) {
+            $existing->update([
+                'status' => StatusEnum::ACTIVE->value,
+                'updated_user_id' => Auth::id(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            ClassSubjectTeacher::query()->create([
+                "class_id"         => $classId,
+                "class_subject_id" => $classSubjectId,
+                "user_id"          => $teacherId,
+                "access_type"      => StatusTeacherEnum::TEACHER->value,
+                "is_deleted"       => DeleteEnum::NOT_DELETE->value,
+                "status"           => StatusEnum::ACTIVE->value,
+                "start_date"       => now(),
+                "created_user_id"  => Auth::id(),
+            ]);
+        }
+    }
+    public function getTeachersBySubject(int $subjectId): Collection
+    {
+        return User::query()
+            ->whereHas('classSubjectTeachers', function ($query) use ($subjectId) {
+                $query->where('class_subject_id', $subjectId)
+                      ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+            })
+            ->where('access_type', AccessTypeEnum::TEACHER->value)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->get();
     }
 
     public function getSubjectNotOfClass(array $subjectIdsOfClass): Collection

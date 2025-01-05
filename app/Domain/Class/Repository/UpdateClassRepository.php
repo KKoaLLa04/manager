@@ -19,6 +19,7 @@ class UpdateClassRepository extends ClassRepository
     {
         $dataUpdate = [
             "name"            => isset($request->name) ? $request->name : "",
+            "status"          => isset($request->status) ? $request->status : "",
             "code"            => now()->timestamp,
             "grade_id"        => isset($request->grade_id) ? $request->grade_id : null,
             "modified_user_id" => Auth::user()->id

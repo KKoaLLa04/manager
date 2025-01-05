@@ -181,11 +181,50 @@ class ClassController extends BaseController
         return $this->responseSuccess();
     }
 
-    public function formUpdateTeacherForSubject()
+    // public function formUpdateTeacherForSubject()
+    // {
+    //     $teachers = $this->getUserRepository->getTeachers();
+    //     return $this->responseSuccess($this->classRepository->transformTeacher($teachers));
+    // }
+    public function formUpdateTeacherForSubject(Request $request)
     {
-        $teachers = $this->getUserRepository->getTeachers();
+        $subjectId = $request->get('subject_id');
+        $teachers = $this->getUserRepository->getTeachers($subjectId);
+
         return $this->responseSuccess($this->classRepository->transformTeacher($teachers));
     }
+
+
+    // public function updateTeacherForSubject(UpdateTeacherForSubjectOfClassRequest $request)
+    // {
+    //     if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+    //         return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+    //     }
+
+    //     $class_subject_id = 0;
+
+    //     if ($this->classRepository->checkClassSubject($request->class_id, $request->teacher_id,
+    //     $request->subject_id)) {
+    //         $class_subject_id = $this->classRepository->classSubject($request->class_id, $request->teacher_id,
+    //         $request->subject_id)->id;
+    //     } else {
+    //         $class_subject_id = $this->classRepository->createClassSubject($request->class_id, $request->subject_id)->id;
+    //     }
+
+
+    //     if ($this->classRepository->checkClassSubjectTeacher($request->class_id, $request->teacher_id,
+    //         $class_subject_id)) {
+    //         return $this->responseSuccess();
+    //     }
+
+
+    //     $this->classRepository->changeStatusClassSubjectTeacher($request->class_id, $class_subject_id);
+
+    //     $this->classRepository->updateClassSubjectTeacher($request->class_id, $request->teacher_id,
+    //         $class_subject_id);
+
+    //     return $this->responseSuccess();
+    // }
 
     public function updateTeacherForSubject(UpdateTeacherForSubjectOfClassRequest $request)
     {
@@ -193,31 +232,26 @@ class ClassController extends BaseController
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
-        $class_subject_id = 0;
+        // Kiểm tra xem môn học đã được gán cho lớp chưa
+        $classSubject = $this->classRepository->classSubject($request->class_id, $request->teacher_id, $request->subject_id);
 
-        if ($this->classRepository->checkClassSubject($request->class_id, $request->teacher_id,
-        $request->subject_id)) {
-            $class_subject_id = $this->classRepository->classSubject($request->class_id, $request->teacher_id,
-            $request->subject_id)->id;
+        if ($classSubject) {
+            // Nếu giáo viên hoặc môn học thay đổi, cập nhật lại
+            if ($classSubject->user_id !== $request->teacher_id || $classSubject->subject_id !== $request->subject_id) {
+                $this->classRepository->updateClassSubjectTeacher(
+                    $request->class_id,
+                    $request->teacher_id,
+                    $classSubject->id
+                );
+            }
         } else {
-            $class_subject_id = $this->classRepository->createClassSubject($request->class_id, $request->subject_id)->id;
+            // Nếu chưa có môn học, tạo mới
+            $classSubjectId = $this->classRepository->createClassSubject($request->class_id, $request->subject_id)->id;
+            $this->classRepository->updateClassSubjectTeacher($request->class_id, $request->teacher_id, $classSubjectId);
         }
-
-
-        if ($this->classRepository->checkClassSubjectTeacher($request->class_id, $request->teacher_id,
-            $class_subject_id)) {
-            return $this->responseSuccess();
-        }
-
-
-        $this->classRepository->changeStatusClassSubjectTeacher($request->class_id, $class_subject_id);
-
-        $this->classRepository->updateClassSubjectTeacher($request->class_id, $request->teacher_id,
-            $class_subject_id);
 
         return $this->responseSuccess();
     }
-
 
     public function formCreateSubjectForClass(FormCreateSubjectForClassRequest $request)
     {

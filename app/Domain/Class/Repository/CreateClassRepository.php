@@ -21,6 +21,7 @@ class CreateClassRepository extends ClassRepository
     {
         $dataInsert = [
             "name"            => isset($request->name) ? $request->name : "",
+            "status"          => isset($request->status) ? $request->status : "",
             "code"            => now()->timestamp,
             "school_year_id"  => isset($request->school_year_id) ? $request->school_year_id : null,
             "academic_year_id"     => isset($request->academic_id) ? $request->academic_id : null,
