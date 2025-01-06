@@ -179,7 +179,7 @@ class TimetableRepository
     {
         return TeacherSubjectTimetable::query()
             ->where('category_attendance_id', $categoryId)
-            ->where('timetable_id', $categoryId)
+            ->where('timetable_id', $timetableId)
             ->where('class_id', $classId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->exists();
