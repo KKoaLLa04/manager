@@ -26,8 +26,8 @@ class CategoryTimetableController extends BaseController
             return [
                 'id' => $item->id,
                 'name' => $item->name,
-                'from_date' => $item->from_date,
-                'to_date' => $item->to_date,
+                'from_date' => Carbon::parse($item->from_date)->format('d-m-Y'),
+                'to_date' => Carbon::parse($item->to_date)->format('d-m-Y'),
             ];
         });
         return $this->responseSuccess($data);
