@@ -18,7 +18,7 @@ class GuardianLayoutTeacherRequest extends FormRequest
         'phone' => ['regex:/^0[0-9]{9}$/'],
         'status' => ['required', 'integer'],
         'gender' => ['required', 'integer'],
-        'email' => ['email', 'unique:users,email'],
+        'email' => ['email', 'unique:users,email'. $this->route('id')],
     ];
 
     return $rules;
