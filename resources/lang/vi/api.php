@@ -120,5 +120,20 @@ return [
         'show.access_denied' => 'Đây không phải là trang tài khoản của bạn',
         'update.success'=> 'Cập nhập thông tin thành công!',
         'update.errors'=> 'Cập nhập thông tin thất bại!'
+    ],
+
+    'StatisAttendance' => [
+        'showSchool.success'=> 'Lấy danh sách điểm danh trong ngày của trường thành công',
+        'showSchool.errors'=> 'Lấy danh sách điểm danh trong ngày của trường thất bại',
+        'showShoolOnWeek.success'=> 'Lấy danh sách điểm danh trong tuần của trường thành công',
+        'showShoolOnWeek.errors'=> 'Lấy danh sách điểm danh trong tuần của trường thành công',
+        'showShoolOnMonth.success'=> 'Lấy danh sách điểm danh trong tháng của trường thành công',
+        'showShoolOnMonth.errors'=> 'Lấy danh sách điểm danh trong tháng của trường thất bại',
+        'showShoolOnDayWithClass.success'=> 'Lấy danh sách điểm danh trong ngày của lớp thành công',
+        'showShoolOnDayWithClass.errors'=> 'Lấy danh sách điểm danh trong ngày của lớp thất bại',
+        'showShoolOnWeekWithClass.success'=> 'Lấy danh sách điểm danh trong tuần của lớp thành công',
+        'showShoolOnWeekWithClass.errors'=> 'Lấy danh sách điểm danh trong tuần của lớp thất bại',
+        'showShoolOnMonthWithClass.success'=> 'Lấy danh sách điểm danh trong tháng của lớp thất công',
+        'showShoolOnMonthWithClass.errors'=> 'Lấy danh sách điểm danh trong tháng của lớp thất bại',
     ]
 ];
