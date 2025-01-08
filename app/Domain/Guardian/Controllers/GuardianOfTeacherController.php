@@ -23,7 +23,7 @@ class GuardianOfTeacherController extends BaseController
 
     public function LockGuardian(int $id, GetUserRepository $getUserRepository, Request $request){
         $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
+        $type = AccessTypeEnum::TEACHER->value;
 
 
         $getUser = $getUserRepository->getUser($user_id, $type);
@@ -41,7 +41,7 @@ class GuardianOfTeacherController extends BaseController
 
     public function UnLockGuardian(int $id, GetUserRepository $getUserRepository, Request $request){
         $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
+        $type = AccessTypeEnum::TEACHER->value;
 
         $getUser = $getUserRepository->getUser($user_id, $type);
         if (!$getUser) {
@@ -59,7 +59,7 @@ class GuardianOfTeacherController extends BaseController
     public function changePasswordGuardian(int $id, GetUserRepository $getUserRepository, Request $request)
     {
         $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
+        $type = AccessTypeEnum::TEACHER->value;
 
 
         $getUser = $getUserRepository->getUser($user_id, $type);
@@ -86,7 +86,7 @@ class GuardianOfTeacherController extends BaseController
 
     public function update(int $id, GuardianLayoutTeacherRequest $request, GetUserRepository $getUserRepository) {
         $user_id = Auth::user()->id;
-        $type = AccessTypeEnum::MANAGER->value;
+        $type = AccessTypeEnum::TEACHER->value;
 
 
         $getUser = $getUserRepository->getUser($user_id, $type);
