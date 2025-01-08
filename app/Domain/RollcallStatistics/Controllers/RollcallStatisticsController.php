@@ -5,6 +5,7 @@ use App\Common\Enums\AccessTypeEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\RollcallStatistics\Repository\RollcallStatisticsRepository;
 use App\Http\Controllers\BaseController;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -75,13 +76,12 @@ class RollcallStatisticsController extends BaseController
             return response()->json(['message' => 'Yêu cầu nhập số lượng lớn hơn 0'], 400);
         }
 
-        $date = $request->input('date', null);
-       
-
+        $fromDate = !is_null($request->from_date) ? Carbon::parse($request->from_date) : clone Carbon::now()->startOfMonth();
+        $toDate = !is_null($request->to_date) ? Carbon::parse($request->to_date) : Carbon::now();
+        $time = !is_null($request->time) ? $request->time : 1;
         // Gọi repository
-        $histories = $this->rollCallStatistics->getClassRollCall($classId, $pageSize, $date);
+        $histories = $this->rollCallStatistics->getClassRollCall($classId, $pageSize, $fromDate,$toDate,$time);
    
         return response()->json($histories);
     }
 }
-            
