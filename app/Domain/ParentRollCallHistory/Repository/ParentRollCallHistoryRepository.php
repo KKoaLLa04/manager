@@ -134,15 +134,15 @@ class ParentRollCallHistoryRepository
         $this->incrementTotals($totals, $history->status);
 
         return [
-            'period' => $timetable->period ?? 'unknow',
+            'period' => $timetable->period ?? null,
             'from_time' => $timetable->from_time ?? null,
             'to_time' => $timetable->to_time ?? null,
             'day' => $timetable->day ?? null,
-            'subject' => $history->rollCall->teacherSubjectTimetable->classSubjectTeacher->subject->name ?? 'unknow',
+            'subject' => $history->rollCall->teacherSubjectTimetable->classSubjectTeacher->subject->name ?? null,
             'status' => $history->status,
-            'note' => $history->note ?? 'unknow',
-            'teacher_name' => $createdUser->fullname ?? 'unknow',
-            'teacher_phone' => $createdUser->phone ?? 'unknow',
+            'note' => $history->note ?? null,
+            'teacher_name' => $createdUser->fullname ?? null,
+            'teacher_phone' => $createdUser->phone ?? null,
         ];
     }
 
