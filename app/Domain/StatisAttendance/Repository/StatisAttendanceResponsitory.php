@@ -174,7 +174,7 @@ class StatisAttendanceResponsitory
                 'className' => $class->name,
                 'allAtten' => $allAtten,
                 'allUnattend' => $allUnattend,
-                'allunpresentper' => $allunpresentper,
+                'unpresentper' => $allunpresentper,
                 'allLate' => $allLate
             ];
         });
@@ -219,7 +219,7 @@ class StatisAttendanceResponsitory
                 'className' => $class->name,
                 'allAtten' => $allAtten,
                 'allUnattend' => $allUnattend,
-                'allunpresentper' => $allUnpresentPer,
+                'unpresentper' => $allUnpresentPer,
                 'allLate' => $allLate
             ];
         });
@@ -264,7 +264,7 @@ class StatisAttendanceResponsitory
                 'className' => $class->name,
                 'allAtten' => $allAtten,
                 'allUnattend' => $allUnattend,
-                'allunpresentper' => $allUnpresentPer,
+                'unpresentper' => $allUnpresentPer,
                 'allLate' => $allLate
             ];
         });

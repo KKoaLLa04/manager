@@ -12,3 +12,7 @@ Route::group(['prefix' => 'manager/statisattendance', 'middleware' => 'auth:api'
     Route::get('week-class',[StatisAttendanceController::class, 'getAllAttendanceOnWeekyWithClass']);
     Route::get('month-class',[StatisAttendanceController::class, 'getAllAttendanceOnMonthyWithClass']);
 });
+
+Route::group(['prefix' => 'teacher/statisattendance', 'middleware' => 'auth:api'], function () {
+    
+});
