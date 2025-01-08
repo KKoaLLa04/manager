@@ -74,7 +74,7 @@ class StatisAttendanceResponsitory
         return [
             'allAttendances' => $allAtten,
             'allUnattend' => $allUnattend,
-            'allunpresentper' => $allunpresentper,
+            'unpresentper' => $allunpresentper,
             'allLate' => $allLate,
         ];
     }
@@ -108,7 +108,7 @@ class StatisAttendanceResponsitory
         return [
             'allAttendances' => $allAtten,
             'allUnattend' => $allUnattend,
-            'allunpresentper' => $allunpresentper,
+            'unpresentper' => $allunpresentper,
             'allLate' => $allLate,
         ];
     }
@@ -172,7 +172,7 @@ class StatisAttendanceResponsitory
 
             return [
                 'className' => $class->name,
-                'allAtten' => $allAtten,
+                'allAttendances' => $allAtten,
                 'allUnattend' => $allUnattend,
                 'unpresentper' => $allunpresentper,
                 'allLate' => $allLate
@@ -217,7 +217,7 @@ class StatisAttendanceResponsitory
 
             return [
                 'className' => $class->name,
-                'allAtten' => $allAtten,
+                'allAttendances' => $allAtten,
                 'allUnattend' => $allUnattend,
                 'unpresentper' => $allUnpresentPer,
                 'allLate' => $allLate
@@ -262,9 +262,9 @@ class StatisAttendanceResponsitory
 
             return [
                 'className' => $class->name,
-                'allAtten' => $allAtten,
+                'allAttendances' => $allAtten,
                 'allUnattend' => $allUnattend,
-                'unpresentper' => $allUnpresentPer,
+                'allunpresentper' => $allUnpresentPer,
                 'allLate' => $allLate
             ];
         });
