@@ -119,10 +119,12 @@ class ParentRollCallHistoryRepository
 
         $studentName = $rollCallHistories->first()->first()->student->fullname ?? 'Chưa có học sinh';
         $className = $rollCallHistories->first()->first()->classes->name ?? 'Chưa có lớp';
+        $code = $rollCallHistories->first()->first()->student->student_code?? null;
+        $dob = $rollCallHistories->first()->first()->student->dob?? null;
 
-        return $this->paginateResponse($data, $totals, $pageSize, $studentName, $className);
+        return $this->paginateResponse($data, $totals, $pageSize, $studentName, $className, $code, $dob);
     }
-    
+
     private function removeDuplicatePeriods($timetable) {
         return $timetable->unique(function ($item) {
             return $item['period'] . $item['from_time'] . $item['to_time']; // Kết hợp period, from_time và to_time
@@ -154,7 +156,7 @@ class ParentRollCallHistoryRepository
         elseif ($status === StatusStudentEnum::LATE->value) $totals['late']++;
     }
 
-    private function paginateResponse($data, $totals, $pageSize, $studentName, $className)
+    private function paginateResponse($data, $totals, $pageSize, $studentName, $className, $code, $dob)
     {
         $totalDays = $data->count();
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
@@ -173,6 +175,8 @@ class ParentRollCallHistoryRepository
             'status' => 'success',
             'student_name' => $studentName,
             'class_name' => $className,
+            'code' => $code,
+            'dob' => $dob ? Carbon::parse($dob)->format('d/m/Y') : null,
             'total_present' => $totals['present'],
             'total_absent' => $totals['absent'],
             'total_late' => $totals['late'],
