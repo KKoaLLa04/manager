@@ -407,7 +407,7 @@ class RollCallTeacherRepository
                 "status"         => is_null($class->status) ? "1" : $class->status,
                 "status_teacher" => $classSubjectTeacher->access_type
             ];
-        })->toArray();
+        })->unique('classId')->toArray();
     }
 
 
