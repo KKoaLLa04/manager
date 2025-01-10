@@ -2,6 +2,7 @@
 <?php
 
 use App\Domain\StatisAttendance\Controllers\StatisAttendanceController;
+use App\Domain\StatisAttendance\Controllers\StatisAttendanceTeacherController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'manager/statisattendance', 'middleware' => 'auth:api'], function () {
@@ -14,5 +15,7 @@ Route::group(['prefix' => 'manager/statisattendance', 'middleware' => 'auth:api'
 });
 
 Route::group(['prefix' => 'teacher/statisattendance', 'middleware' => 'auth:api'], function () {
-    
+    Route::get('day', [StatisAttendanceTeacherController::class, 'index']);
+    Route::get('week', [StatisAttendanceTeacherController::class, 'index']);
+    Route::get('month', [StatisAttendanceTeacherController::class, 'index']);
 });
