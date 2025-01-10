@@ -8,6 +8,7 @@ use App\Http\Controllers\BaseController;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class RollcallStatisticsController extends BaseController
 {
@@ -63,12 +64,8 @@ class RollcallStatisticsController extends BaseController
 
     public function showClassRollCall(Request $request, $classId)
     {
-        $userId = Auth::id();
-        $type = AccessTypeEnum::MANAGER->value;
-
-        // Kiểm tra quyền truy cập
-        if (!$this->user->getUser($userId, $type)) {
-            return response()->json(['message' => 'Bạn không có quyền truy cập'], 403);
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value && Auth::user()->access_type != AccessTypeEnum::TEACHER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
         $pageSize = $request->input('pageSize', 10);
