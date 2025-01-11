@@ -6,14 +6,18 @@ use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\GenderEnum;
 use App\Common\Enums\PaginateEnum;
+use App\Common\Enums\StatusClassStudentEnum;
 use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusStudentEnum;
 use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\RollCallHistory\Models\RollCallHistory;
 use App\Models\Classes;
 use App\Models\ClassModel;
+use App\Models\ClassSubjectTeacher;
 use App\Models\Student;
 use App\Models\StudentClassHistory;
+use App\Models\TeacherSubjectTimetable;
+use App\Models\Timetable;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -160,7 +164,7 @@ class RollCallHistoryRepository
                 // Lọc các tiết trùng lặp dựa trên 'period' hoặc 'from_time', 'to_time'
                 if ($fromTime->hour >= 7 && $fromTime->hour < 12) {
                     $morningTimetable[] = $formattedTimetable;
-                } elseif ($fromTime->hour >= 12 && $fromTime->hour < 18) {
+                } elseif ($fromTime->hour >= 2 && $fromTime->hour < 6) {
                     $afternoonTimetable[] = $formattedTimetable;
                 }
             }
@@ -210,6 +214,7 @@ class RollCallHistoryRepository
     {
 
         return [
+            'id' => $timetable->id,
             'period' => $timetable->period ?? 'unknow',
             'from_time' => $timetable->from_time ?? null,
             'to_time' => $timetable->to_time ?? null,
@@ -229,87 +234,65 @@ class RollCallHistoryRepository
 
 
 
-    public function getClassRollCallHistoryDetailsByDate($classId, $date = null)
+    public function getClassRollCallHistoryDetailsByDate($classId, $timetableId, $date)
     {
-        // Nếu không có ngày được truyền vào, mặc định là ngày hôm nay
-        if (!$date) {
-            $date = Carbon::today()->toDateString();
-        }
-
-        $totalStudents = StudentClassHistory::where('class_id', $classId)
-            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->where(function ($query) use ($date) {
-                $query->whereNull('end_date')                // Học sinh chưa rời lớp
-                    ->orWhereDate('end_date', '>', $date);   // Hoặc còn học trong lớp sau ngày `$date`
-            })
-            ->count();
-
+        // Lấy tên lớp và thời khóa biểu
         $class = Classes::find($classId);
-        $className = $class ? $class->name : 'Unknown';
+        $timeTable = ClassSubjectTeacher::find($timetableId);
 
-        // Lấy danh sách lịch sử điểm danh theo class_id và ngày cụ thể
-        $rollCallHistories = RollCallHistory::where('class_id', $classId)
+        // Lấy danh sách học sinh trong lớp (đã được đăng ký) theo classId
+        $students = StudentClassHistory::where('class_id', $classId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->whereDate('date', $date)
-            ->with(['student' => function ($query) {
-                // Lấy thông tin chi tiết của học sinh
-                $query->select('id', 'student_code', 'fullname', 'dob', 'gender');
-            }])
-            ->orderBy('time', 'asc')
+            ->whereNull('end_date') // Chỉ lấy học sinh chưa hết hạn
             ->get();
 
-        // Kiểm tra nếu không có dữ liệu
-        if ($rollCallHistories->isEmpty()) {
+        // Lấy danh sách lịch sử điểm danh với điều kiện theo classId, timetableId và ngày
+        $rollCallHistoriesQuery = RollCallHistory::where('class_id', $classId)
+            ->whereHas('rollCall', function ($query) use ($timetableId) {
+                $query->where('teacher_subject_timetable_id', $timetableId); // Lọc theo timetableId
+            })
+            ->whereDate('date', $date)  // Lọc theo ngày
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->with([
+                'user' => function ($query) {
+                    $query->select('id', 'fullname', 'email');
+                },
+                'rollCall.teacherSubjectTimetable.timetable',
+                'rollCall.teacherSubjectTimetable.classSubjectTeacher.subject',
+                'rollCall.teacherSubjectTimetable.classSubjectTeacher.user',
+                'rollCall',
+                'student'  // Lấy thông tin học sinh
+            ])
+            ->orderBy('date', 'desc');
+
+        // Thực hiện truy vấn
+        $rollCallHistories = $rollCallHistoriesQuery->get();
+
+        // Nhóm theo tiết học (period)
+        $groupedByPeriod = $rollCallHistories->groupBy(function ($history) {
+            return $history->rollCall->teacherSubjectTimetable->period; // Nhóm theo period của tiết học
+        });
+
+        // Duyệt qua các kết quả và lấy thông tin học sinh, ngày sinh và trạng thái điểm danh
+        $result = $groupedByPeriod->map(function ($histories, $period) use ($students) {
+            // Mảng chứa tất cả học sinh theo tiết
+            $studentStatuses = $students->map(function ($student) use ($histories) {
+                // Kiểm tra nếu học sinh có điểm danh trong tiết này
+                $history = $histories->firstWhere('student_id', $student->id);
+                return [
+                    'student_name' => $student->fullname,
+                    'dob' => $student->dob,
+                    'status' => $history ? $history->status : 'Chưa điểm danh', // Trạng thái điểm danh (nếu có, nếu không là 'Chưa điểm danh')
+                    'is_in_class' => true, // Học sinh có trong lớp
+                ];
+            });
+
             return [
-                'message' => 'Không có lịch sử điểm danh cho ngày này',
-                'status' => 'error',
-            ];
-        }
-
-        // Chuẩn bị các biến đếm số lượng học sinh
-        $totalRollCalledStudents = 0; // Số học sinh đã điểm danh (có mặt)
-        $totalStudentNotAttendance = 0; // Số học sinh vắng mặt không phép
-        $totalStudentPolicy = 0; // Số học sinh đi muộn có phép
-
-        // Chuẩn bị mảng dữ liệu trả về
-        $data = $rollCallHistories->map(function ($history) use (&$totalRollCalledStudents, &$totalStudentNotAttendance, &$totalStudentPolicy) {
-            $gender = $history->student->gender;
-
-            // Kiểm tra trạng thái điểm danh và cập nhật các biến đếm
-            switch ($history->status) {
-                case StatusStudentEnum::PRESENT->value:
-                    $totalRollCalledStudents++; // Học sinh có mặt
-                    break;
-                case StatusStudentEnum::UN_PRESENT->value:
-                    $totalStudentNotAttendance++; // Học sinh vắng mặt không phép
-                    break;
-                case StatusStudentEnum::LATE->value:
-                case StatusStudentEnum::UN_PRESENT_PER->value:
-                    $totalStudentPolicy++; // Học sinh đến muộn có phép
-                    break;
-            }
-
-            return [
-                'fullname' => $history->student ? $history->student->fullname : 'Unknown',
-                'student_code' => $history->student ? $history->student->student_code : 'Unknown',
-                'dob' => $history->student ? strtotime($history->student->dob) : null, // Ngày sinh
-                'gender' => $gender,
-                'note' => $history->note ?? 'Không có ghi chú', // Ghi chú nếu có
-                'status' => StatusStudentEnum::from($history->status)->value, // Trạng thái điểm danh (PRESENT, UN_PRESENT, etc.)
+                'period' => $period,
+                'students' => $studentStatuses,
             ];
         });
 
-        return [
-            'message' => 'Lấy chi tiết lịch sử điểm danh thành công',
-            'status' => 'success',
-            'date' => Carbon::parse($date)->translatedFormat('l, d/m/Y'), // Hiển thị ngày đã chọn
-            'class_id' => $classId,
-            'class_name' => $className,
-            'total_students' => $totalStudents, // Tổng số học sinh
-            'total_Students_Attended' => $totalRollCalledStudents, // Tổng số học sinh đã điểm danh
-            'total_Student_NotAttendance' => $totalStudentNotAttendance, // Số học sinh vắng mặt không phép
-            'total_Student_Policy' => $totalStudentPolicy, // Số học sinh đến muộn có phép
-            'data' => $data, // Dữ liệu chi tiết của các học sinh đã điểm danh
-        ];
+        return $result;
     }
 }

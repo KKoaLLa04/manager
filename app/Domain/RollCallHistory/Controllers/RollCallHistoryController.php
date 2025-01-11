@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Domain\RollCallHistory\Controllers;
 
 use App\Common\Enums\AccessTypeEnum;
@@ -21,13 +22,13 @@ class RollCallHistoryController extends BaseController
         $this->user = new GetUserRepository();
         $this->rollCallHistoryRepository = $rollCallHistoryRepository;
     }
-  
+
 
     public function index(Request $request)
     {
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-        
+
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
@@ -38,7 +39,7 @@ class RollCallHistoryController extends BaseController
             return response()->json(['message' => 'Yêu cầu nhập số lượng lớn hơn 0'], 400);
         }
         $keyWord = $request->input('keyWord', null);
-      
+
         $classes = $this->rollCallHistoryRepository->getClassesWithRollCallHistories($pageSize, $keyWord);
 
         return response()->json([
@@ -57,7 +58,7 @@ class RollCallHistoryController extends BaseController
     {
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-        
+
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
@@ -69,29 +70,33 @@ class RollCallHistoryController extends BaseController
 
         $keyWord = $request->input('keyword', null);
         $Date = $request->input('date', null);
-        $histories = $this->rollCallHistoryRepository->getClassRollCallHistories($classId, $pageSize, $keyWord,$Date);
+        $histories = $this->rollCallHistoryRepository->getClassRollCallHistories($classId, $pageSize, $keyWord, $Date);
 
         return response()->json($histories);
     }
 
-    public function showRollCallHistoryDetails(Request $request, $classId)
-{
-    $user_id = Auth::user()->id;
-    $type = AccessTypeEnum::MANAGER->value;
-    
-    // Kiểm tra quyền truy cập của người dùng
-    if (!$this->user->getUser($user_id, $type)) {
-        return $this->responseError(trans('api.error.user_not_permission'));
+    public function showRollCallHistoryDetails(Request $request)
+    {
+        $user_id = Auth::user()->id;
+        $type = AccessTypeEnum::MANAGER->value;
+
+        // Kiểm tra quyền truy cập của người dùng
+        if (!$this->user->getUser($user_id, $type)) {
+            return $this->responseError(trans('api.error.user_not_permission'));
+        }
+
+        $classId = $request->input('class_id');
+        $timetableId = $request->input('timetable_id');
+        $date = $request->input('date', Carbon::now()->toDateString()); // Lấy ngày nếu có, mặc định là ngày hiện tại
+
+        // Lấy lịch sử điểm danh lớp
+        $rollCallHistory = $this->rollCallHistoryRepository->getClassRollCallHistoryDetailsByDate($classId, $timetableId, $date);
+
+        // Trả kết quả nếu có dữ liệu
+        if ($rollCallHistory->isNotEmpty()) {
+            return $this->responseSuccess($rollCallHistory, trans('api.rollcall.history.success'));
+        } else {
+            return $this->responseError(trans('api.rollcall.history.not_found'));
+        }
     }
-
-    // Lấy ngày từ request, nếu không có thì mặc định là hôm nay
-    $date = $request->input('date',null);
-
-    // Gọi tới repository để lấy chi tiết điểm danh
-    $details = $this->rollCallHistoryRepository->getClassRollCallHistoryDetailsByDate($classId, $date);
-
-    return response()->json($details);
-}
-
-
 }

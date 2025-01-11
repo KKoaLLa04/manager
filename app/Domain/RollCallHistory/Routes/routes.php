@@ -8,6 +8,5 @@ Route::group(['prefix' => 'manager/rollcallhistory', 'middleware' => 'auth:api']
 
     Route::get('/', [RollCallHistoryController::class, 'index']);
     Route::get('showclass/{classId}', [RollCallHistoryController::class, 'showRollCallHistories']);
-    Route::get('/showclassdetail/{classId}', [RollCallHistoryController::class, 'showRollCallHistoryDetails']);
-
+    Route::get('class/{classId}/roll-call-history/{timetableId}/{date}', [RollCallHistoryController::class, 'showRollCallHistoryDetails']);
 });
