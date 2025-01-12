@@ -64,7 +64,8 @@ class RollCallHistoryTeacherRepository
                 "teacher_id"     => is_null($class->user->first()) ? "" : (is_null($class->user->first()->id) ? "" : $class->user->first()->id),
                 "teacher_name"   => is_null($class->user->first()) ? "" : (is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname),
                 "teacher_email"  => is_null($class->user->first()) ? "" : (is_null($class->user->first()->email) ? "" : $class->user->first()->email),
-                "status_teacher" => $classSubjectTeacher->access_type
+                "status_teacher" => $classSubjectTeacher->access_type,
+                "status"         => is_null($class->status) ? "1" : $class->status,
             ];
         })->toArray();
     }
