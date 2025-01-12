@@ -3,7 +3,9 @@
 namespace App\Domain\Guardian\Controllers;
 
 use App\Common\Enums\AccessTypeEnum;
+use App\Common\Enums\DeleteEnum;
 use App\Common\Repository\GetUserRepository;
+use App\Domain\Guardian\Models\Guardian;
 use App\Domain\Guardian\Repository\GuardianOfTeacherRepository;
 use App\Domain\Guardian\Requests\GuardianLayoutTeacherRequest;
 use App\Domain\Guardian\Requests\GuardianRequest;
@@ -107,10 +109,21 @@ class GuardianOfTeacherController extends BaseController
             'updated_at' => now(),
         ];
 
+        if ($request->email) {
+            $existingGuardian = Guardian::where('email', $request->email)
+                ->where('access_type', AccessTypeEnum::GUARDIAN->value)
+                ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+                ->where('id', '!=', $id)
+                ->first();
+
+            if ($existingGuardian) {
+                return $this->responseError('Email đã tồn tại');
+            }
+        }
 
         $update = $this->guardianRepository->updateGuardian($id, $dataUpdate);
         if ($update) {
-            return $this->responseSuccess(['data' => []], trans('api.guardian.edit.success'));
+            return $this->responseSuccess(['data' => $dataUpdate], trans('api.guardian.edit.success'));
         } else {
             return $this->responseError(trans('api.guardian.edit.errors'));
         }
