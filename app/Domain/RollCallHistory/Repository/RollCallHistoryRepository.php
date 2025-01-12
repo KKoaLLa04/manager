@@ -276,15 +276,16 @@ class RollCallHistoryRepository
         $studentAttendances = RollCall::where('class_id', $class_id)
             ->where('teacher_subject_timetable_id', $teacher_subject_timetable_id)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->with(['student', 'rollCallHistories']) // Load rollCallHistories for each RollCall
+            ->with(['student', 'rollCallHistories','class']) // Load rollCallHistories for each RollCall
             ->get();
+        
 
         // Tính số học sinh đã điểm danh
         $toltalStudentAttendance = $studentAttendances->where('status', StatusStudentEnum::PRESENT->value)->count();
         $toltalStudentUnPresent = $studentAttendances->where('status', StatusStudentEnum::UN_PRESENT->value)->count();
         $toltalStudentUnPresentPer = $studentAttendances->where('status', StatusStudentEnum::UN_PRESENT_PER->value)->count();
         $toltalStudentLate = $studentAttendances->where('status', StatusStudentEnum::LATE->value)->count();
-
+        $className = $studentAttendances->first()->class;
         // Nếu không có điểm danh vào ngày hiện tại, tìm điểm danh của kỳ trước
         $period = optional($timetable)->period;
 
@@ -304,6 +305,7 @@ class RollCallHistoryRepository
             'toltalStudentUnPresent' => $toltalStudentUnPresent,
             'toltalStudentUnPresentPer' => $toltalStudentUnPresentPer,
             'toltalStudentLate' => $toltalStudentLate, 
+            'className' => $className->name ?? null,
             "data" => $students->map(function ($student) use ($studentAttendances) {
                 // Lấy trạng thái và ghi chú điểm danh từ rollCallHistories
                 $status = null;
