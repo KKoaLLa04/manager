@@ -224,13 +224,13 @@ class RollCallHistoryTeacherRepository
     {
 
         return [
-            'period' => $timetable->period ?? 'unknow',
+            'period' => $timetable->period ?? null,
             'from_time' => $timetable->from_time ?? null,
             'to_time' => $timetable->to_time ?? null,
             'day' => $timetable->day ?? null,
-            'subject' => $history->rollCall->teacherSubjectTimetable->classSubjectTeacher->subject->name ?? 'unknow',
-            'teacher_name' => $createdUser->fullname ?? 'unknow',
-            'teacher_email' => $createdUser->email ?? 'unknow',
+            'subject' => $history->rollCall->teacherSubjectTimetable->classSubjectTeacher->subject->name ?? null,
+            'teacher_name' => $createdUser->fullname ?? null,
+            'teacher_email' => $createdUser->email ?? null,
             'teacherSubject' => $teacherSubject
         ];
     }
