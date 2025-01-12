@@ -180,9 +180,9 @@ class RollcallStatisticsRepository
                             ->first();
                         return [
                             'period'       => $timetable->period,
-                            'subject_name' => is_null($teacherSubjectTimetable->subject) ? $teacherSubjectTimetable->subject->name : "",
-                            'user_name'    => is_null($rollCall) ? $rollCall->createdUser->fullname : "",
-                            'time'         => is_null($rollCall) ? $rollCall->time : "",
+                            'subject_name' => !is_null($teacherSubjectTimetable->subject) ? $teacherSubjectTimetable->subject->name : "",
+                            'user_name'    => !is_null($rollCall) ? $rollCall->createdUser->fullname : "",
+                            'time'         => !is_null($rollCall) ? $rollCall->time : "",
                             'status'       => is_null($rollCall) ? StatusStudentEnum::HOLIDAY->value : $rollCall->status,
                         ];
                     })->toArray();
