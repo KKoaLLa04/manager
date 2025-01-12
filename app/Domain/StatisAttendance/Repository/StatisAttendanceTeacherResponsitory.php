@@ -38,12 +38,12 @@ class StatisAttendanceTeacherResponsitory
 
         foreach ($classes as $class) {
             // Lấy tiết học cuối cùng trong ngày của lớp hiện tại
-            $lastTimetable = StatisAttendance::select('teacher_subject_timetable_id')
+                $lastTimetable = StatisAttendance::select('teacher_subject_timetable_id', 'created_at')
                 ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
                 ->whereDate('date', $today)
                 ->where('class_id', $class['class_id']) // Lọc theo lớp hiện tại
                 ->distinct() // Lọc ra các tiết học
-                ->latest('created_at') // Lấy tiết học cuối cùng
+                ->orderBy('created_at', 'desc') // Sắp xếp theo `created_at` giảm dần
                 ->first();
 
             if ($lastTimetable) {
