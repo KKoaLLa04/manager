@@ -18,7 +18,8 @@ class GuardianRepository
     {
         $query = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->with(['students.classHistories']);
+            ->with(['students.classHistories'])
+            ->orderBy('created_at', 'desc');
 
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {

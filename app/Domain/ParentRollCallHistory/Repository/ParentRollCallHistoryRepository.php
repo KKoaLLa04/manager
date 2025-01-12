@@ -97,7 +97,7 @@ class ParentRollCallHistoryRepository
                 // Lọc các tiết trùng lặp dựa trên 'period' hoặc 'from_time', 'to_time'
                 if ($fromTime->hour >= 7 && $fromTime->hour < 12) {
                     $morningTimetable[] = $formattedTimetable;
-                } elseif ($fromTime->hour >= 12 && $fromTime->hour < 18) {
+                } elseif ($fromTime->hour >= 2 && $fromTime->hour < 6) {
                     $afternoonTimetable[] = $formattedTimetable;
                 }
             }
@@ -111,8 +111,6 @@ class ParentRollCallHistoryRepository
                 'morning_timetable' => $morningTimetable,
                 'afternoon_timetable' => $afternoonTimetable,
             ];
-
-            // Hàm lọc các tiết trùng lặp
 
 
         })->values();
@@ -136,15 +134,15 @@ class ParentRollCallHistoryRepository
         $this->incrementTotals($totals, $history->status);
 
         return [
-            'period' => $timetable->period ?? 'unknow',
+            'period' => $timetable->period ?? null,
             'from_time' => $timetable->from_time ?? null,
             'to_time' => $timetable->to_time ?? null,
             'day' => $timetable->day ?? null,
-            'subject' => $history->rollCall->teacherSubjectTimetable->classSubjectTeacher->subject->name ?? 'unknow',
+            'subject' => $history->rollCall->teacherSubjectTimetable->classSubjectTeacher->subject->name ?? null,
             'status' => $history->status,
-            'note' => $history->note ?? 'unknow',
-            'teacher_name' => $createdUser->fullname ?? 'unknow',
-            'teacher_phone' => $createdUser->phone ?? 'unknow',
+            'note' => $history->note ?? null,
+            'teacher_name' => $createdUser->fullname ?? null,
+            'teacher_phone' => $createdUser->phone ?? null,
         ];
     }
 

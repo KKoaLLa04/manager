@@ -110,6 +110,7 @@ class RollCallTeacherController extends BaseController
     public function getClass(Request $request, GetUserRepository $getUserRepository)
     {
         $user_id = Auth::user()->id;
+        $user_id = 2;
         $type    = AccessTypeEnum::TEACHER->value;
 
 
@@ -119,7 +120,10 @@ class RollCallTeacherController extends BaseController
         }
 
         $classTeachers = $this->rollCallRepository->getClassTeacher($user_id);
-        return $this->responseSuccess($classTeachers);
+        return $this->responseSuccess(
+            $classTeachers
+
+        );
     }
 
 

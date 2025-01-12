@@ -5,8 +5,10 @@ use App\Common\Enums\AccessTypeEnum;
 use App\Common\Repository\GetUserRepository;
 use App\Domain\RollcallStatistics\Repository\RollcallStatisticsRepository;
 use App\Http\Controllers\BaseController;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class RollcallStatisticsController extends BaseController
 {
@@ -62,12 +64,8 @@ class RollcallStatisticsController extends BaseController
 
     public function showClassRollCall(Request $request, $classId)
     {
-        $userId = Auth::id();
-        $type = AccessTypeEnum::MANAGER->value;
-
-        // Kiểm tra quyền truy cập
-        if (!$this->user->getUser($userId, $type)) {
-            return response()->json(['message' => 'Bạn không có quyền truy cập'], 403);
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value && Auth::user()->access_type != AccessTypeEnum::TEACHER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
         $pageSize = $request->input('pageSize', 10);
@@ -75,13 +73,12 @@ class RollcallStatisticsController extends BaseController
             return response()->json(['message' => 'Yêu cầu nhập số lượng lớn hơn 0'], 400);
         }
 
-        $date = $request->input('date', null);
-       
-
+        $fromDate = !is_null($request->from_date) ? Carbon::parse($request->from_date) : clone Carbon::now()->startOfMonth();
+        $toDate = !is_null($request->to_date) ? Carbon::parse($request->to_date) : Carbon::now();
+        $time = !is_null($request->time) ? $request->time : 1;
         // Gọi repository
-        $histories = $this->rollCallStatistics->getClassRollCall($classId, $pageSize, $date);
+        $histories = $this->rollCallStatistics->getClassRollCall($classId, $pageSize, $fromDate,$toDate,$time);
    
         return response()->json($histories);
     }
 }
-            
