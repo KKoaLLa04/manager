@@ -64,7 +64,8 @@ class RollCallHistoryTeacherRepository
                 "teacher_id"     => is_null($class->user->first()) ? "" : (is_null($class->user->first()->id) ? "" : $class->user->first()->id),
                 "teacher_name"   => is_null($class->user->first()) ? "" : (is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname),
                 "teacher_email"  => is_null($class->user->first()) ? "" : (is_null($class->user->first()->email) ? "" : $class->user->first()->email),
-                "status_teacher" => $classSubjectTeacher->access_type
+                "status_teacher" => $classSubjectTeacher->access_type,
+                "status"         => is_null($class->status) ? "1" : $class->status,
             ];
         })->toArray();
     }
@@ -224,13 +225,13 @@ class RollCallHistoryTeacherRepository
     {
 
         return [
-            'period' => $timetable->period ?? 'unknow',
+            'period' => $timetable->period ?? null,
             'from_time' => $timetable->from_time ?? null,
             'to_time' => $timetable->to_time ?? null,
             'day' => $timetable->day ?? null,
-            'subject' => $history->rollCall->teacherSubjectTimetable->classSubjectTeacher->subject->name ?? 'unknow',
-            'teacher_name' => $createdUser->fullname ?? 'unknow',
-            'teacher_email' => $createdUser->email ?? 'unknow',
+            'subject' => $history->rollCall->teacherSubjectTimetable->classSubjectTeacher->subject->name ?? null,
+            'teacher_name' => $createdUser->fullname ?? null,
+            'teacher_email' => $createdUser->email ?? null,
             'teacherSubject' => $teacherSubject
         ];
     }
