@@ -2,6 +2,7 @@
 
 namespace App\Domain\RollCall\Models;
 
+use App\Domain\RollCallHistory\Models\RollCallHistory;
 use App\Models\Classes;
 use App\Models\DiemDanh;
 use App\Models\Student;
@@ -46,6 +47,11 @@ class RollCall extends Model
     {
         return $this->belongsTo(User::class, 'created_user_id');
     }
+
+    public function rollCallHistories()
+{
+    return $this->hasMany(RollCallHistory::class, 'roll_call_id', 'id');
+}
 
 
 }

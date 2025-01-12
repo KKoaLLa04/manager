@@ -7,6 +7,7 @@ use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\RollCall\Models\RollCall;
+use App\Domain\RollCallHistory\Models\RollCallHistory;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -91,6 +92,10 @@ class Classes extends Model
     public function classSubjectTeachers()
     {
         return $this->hasMany(ClassSubjectTeacher::class, 'class_id', 'id');
+    }
+
+    public function rollCallHistory(){
+        return $this->hasMany(RollCallHistory::class, 'class_id', 'id');
     }
 
 
