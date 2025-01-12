@@ -14,6 +14,7 @@ Route::group(['prefix' => 'manager/timetable'], function () {
     Route::get('/subject-config', [TimetableController::class, 'getSubjectConfig']);
     Route::post('/edit-subject-config', [TimetableController::class, 'editSubjectConfig']);
     Route::post('/edit-config', [TimetableController::class, 'editConfig'])->name('manager.timetable.index');
+    Route::post('/import', [TimetableController::class, 'import']);
 });
 
 Route::group(['prefix' => 'teacher/timetable'], function () {

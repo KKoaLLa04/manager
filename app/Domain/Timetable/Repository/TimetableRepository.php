@@ -138,6 +138,28 @@ class TimetableRepository
             )->get();
     }
 
+    public function getClassSubjectTeachersByClassIdAndSubjectId(int $classId, int $subjectId)
+    {
+        $classSubject = ClassSubject::query()
+            ->where('subject_id',$subjectId)
+            ->where('class_id',$classId)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->first();
+        if (is_null($classSubject)) {
+            return null;
+        }
+
+        $classSubjectId = $classSubject->id;
+        return ClassSubjectTeacher::query()
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->whereNull('end_date')
+            ->where('class_id', $classId)
+            ->where('class_subject_id', $classSubjectId)
+            ->first();
+    }
+
     public function getClassSubjectTeachersByUserIdAndClassId(int $userId, int $classId = 0): Collection
     {
         $query = ClassSubjectTeacher::query()
@@ -260,6 +282,22 @@ class TimetableRepository
     {
         return SubjectTimetableConfig::query()
             ->where('subject_id', $subjectId)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->first();
+    }
+
+    public function getTimetableByDayAndTime(int $time, int $day, int $period)
+    {
+        return Timetable::query()->where('time', $time)
+            ->where('day', $day)
+            ->where('period', $period)
+            ->first();
+    }
+
+    public function getSubjectByName(string $name)
+    {
+        return Subject::query()
+            ->where('name','like', $name)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->first();
     }

@@ -7,6 +7,7 @@ use App\Http\Controllers\BaseController;
 use App\Models\SubjectTimetableConfig;
 use App\Models\Timetable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TimetableController extends BaseController
 {
@@ -129,5 +130,71 @@ class TimetableController extends BaseController
         }
 
         return $this->responseSuccess($data);
+    }
+
+    public function import(Request $request)
+    {
+        $data                = $request->all();
+        $userId              = Auth::user()->id;
+        $classId             = $request->class_id;
+        $time                = $request->time;
+        $categoryTimetableId = $request->category_attendance;
+        $periods             = isset($data['periods']) ? $data['periods'] : [];
+        if (count($periods) > 5) {
+            return $this->responseError('Dữ liệu bảng sai cấu trúc');
+        }
+
+        foreach ($periods as $key => $period) {
+            $periodId = $period['period'];
+            foreach ($period['subjects'] as $subject) {
+
+                $name = $subject['name'];
+                $day = $subject['day'];
+                $subject = $this->timetableRepository->getSubjectByName($name);
+                if (is_null($subject)) {
+                    break;
+                }
+                $subjectId = $subject->id;
+                $classSubjectTeacher = $this->timetableRepository->getClassSubjectTeachersByClassIdAndSubjectId($classId, $subjectId);
+                if (is_null($classSubjectTeacher)) {
+
+                    break;
+                }
+
+                $classSubjectTeacherId = $classSubjectTeacher->id;
+                $timetable = $this->timetableRepository->getTimetableByDayAndTime($time,$day, $periodId);
+                if (is_null($timetable)) {
+                    break;
+                }
+                $timetableId = $timetable->id;
+
+
+                $teacherSubjectTimeTable      = $this->timetableRepository->checkUserExistTimetable($userId, $subjectId,
+                    $categoryTimetableId,
+                    $timetableId,
+                    $classId);
+                $countTeacherSubjectTimetable = $this->timetableRepository->countUserTimetable($subjectId,
+                    $categoryTimetableId, $classId);
+                $quantitySubjectConfig        = $this->timetableRepository->subjectConfig($subjectId);
+                if ($subjectId != 0 && $countTeacherSubjectTimetable >= $quantitySubjectConfig->quantity) {
+                    break;
+                }
+                if ($userId != 0 && !is_null($teacherSubjectTimeTable)) {
+                    break;
+                }
+                $checkTeacherSubjectTimeTableExits = $this->timetableRepository->checkUserExistTimetableOfClass($timetableId,
+                    $classId, $categoryTimetableId);
+                if ($checkTeacherSubjectTimeTableExits) {
+                    $this->timetableRepository->updateTeacherSubjectTeacher($classSubjectTeacherId, $timetableId, $classId,
+                        $userId, $subjectId, $categoryTimetableId);
+                } else {
+                    $this->timetableRepository->createTeacherSubjectTeacher($classSubjectTeacherId, $timetableId, $classId,
+                        $userId, $subjectId, $categoryTimetableId);
+                }
+
+            }
+
+        }
+        return $this->responseSuccess();
     }
 }
