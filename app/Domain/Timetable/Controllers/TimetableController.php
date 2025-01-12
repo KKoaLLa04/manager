@@ -200,6 +200,6 @@ class TimetableController extends BaseController
             }
 
         }
-        return $this->responseSuccess();
+        return $this->responseSuccess($message);
     }
 }
