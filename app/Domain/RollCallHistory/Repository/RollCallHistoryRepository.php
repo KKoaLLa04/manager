@@ -276,9 +276,9 @@ class RollCallHistoryRepository
         $studentAttendances = RollCall::where('class_id', $class_id)
             ->where('teacher_subject_timetable_id', $teacher_subject_timetable_id)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->with(['student', 'rollCallHistories','class']) // Load rollCallHistories for each RollCall
+            ->with(['student', 'rollCallHistories', 'class']) // Load rollCallHistories for each RollCall
             ->get();
-        
+
 
         // Tính số học sinh đã điểm danh
         $toltalStudentAttendance = $studentAttendances->where('status', StatusStudentEnum::PRESENT->value)->count();
@@ -304,7 +304,7 @@ class RollCallHistoryRepository
             'toltalStudentAttendance' => $toltalStudentAttendance, // Số học sinh đã điểm danh
             'toltalStudentUnPresent' => $toltalStudentUnPresent,
             'toltalStudentUnPresentPer' => $toltalStudentUnPresentPer,
-            'toltalStudentLate' => $toltalStudentLate, 
+            'toltalStudentLate' => $toltalStudentLate,
             'className' => $className->name ?? null,
             "data" => $students->map(function ($student) use ($studentAttendances) {
                 // Lấy trạng thái và ghi chú điểm danh từ rollCallHistories
@@ -316,7 +316,11 @@ class RollCallHistoryRepository
 
                 if ($studentAttendance && $studentAttendance->rollCallHistories) {
                     // Find the rollCallHistory for this student
-                    $rollCallHistory = $studentAttendance->rollCallHistories->where('student_id', $student->id)->first();
+                    $rollCallHistory = $studentAttendance->rollCallHistories
+                        ->where('student_id', $student->id)
+                        ->sortByDesc('created_at') // Sắp xếp giảm dần theo thời gian
+                        ->first();
+
 
                     if ($rollCallHistory) {
                         $status = $rollCallHistory->status ?? null;
@@ -330,7 +334,7 @@ class RollCallHistoryRepository
                     'student_code' => $student->student_code,
                     'dob' => is_null($student->dob) ? 0 : Carbon::parse($student->dob)->timestamp,
                     'status' => $status ?? null,
-                    'note' => $note ?? '', 
+                    'note' => $note ?? '',
                 ];
             })->toArray(),
         ];
