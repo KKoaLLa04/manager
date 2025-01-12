@@ -154,20 +154,20 @@ class TimetableController extends BaseController
                 $subject = $this->timetableRepository->getSubjectByName($name);
                 if (is_null($subject)) {
                     $message[] = 'tên môn học không tồn tại ' . $name;
-                    break;
+                    continue;
                 }
                 $subjectId = $subject->id;
                 $classSubjectTeacher = $this->timetableRepository->getClassSubjectTeachersByClassIdAndSubjectId($classId, $subjectId);
                 if (is_null($classSubjectTeacher)) {
                     $message[] = 'Môn học: '.$name.' chưa được gán cho giáo viên dạy. ';
-                    break;
+                    continue;
                 }
 
                 $classSubjectTeacherId = $classSubjectTeacher->id;
                 $timetable = $this->timetableRepository->getTimetableByDayAndTime($time,$day, $periodId);
                 if (is_null($timetable)) {
                     $message[] = 'Tiết hoặc ngày không tồn tại ';
-                    break;
+                    continue;
                 }
                 $timetableId = $timetable->id;
 
@@ -181,11 +181,11 @@ class TimetableController extends BaseController
                 $quantitySubjectConfig        = $this->timetableRepository->subjectConfig($subjectId);
                 if ($subjectId != 0 && $countTeacherSubjectTimetable >= $quantitySubjectConfig->quantity) {
                     $message[] = 'Môn học: '. $name .' đã đủ '.$quantitySubjectConfig->quantity.' tiết vào thứ ' . $day + 1 . ' tiet: '.$periodId;
-                    break;
+                    continue;
                 }
                 if ($userId != 0 && !is_null($teacherSubjectTimeTable)) {
                     $message[] = 'Giáo viên đag có tiết dạy ở lớp: '.$teacherSubjectTimeTable->class->name . 'của môn học ' . $name . ' vào thứ ' . $day + 1 . ' tiet: '.$periodId;
-                    break;
+                    continue;
                 }
                 $checkTeacherSubjectTimeTableExits = $this->timetableRepository->checkUserExistTimetableOfClass($timetableId,
                     $classId, $categoryTimetableId);
