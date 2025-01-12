@@ -180,11 +180,11 @@ class TimetableController extends BaseController
                     $categoryTimetableId, $classId);
                 $quantitySubjectConfig        = $this->timetableRepository->subjectConfig($subjectId);
                 if ($subjectId != 0 && $countTeacherSubjectTimetable >= $quantitySubjectConfig->quantity) {
-                    $message[] = 'Môn học: '. $name .' đã đủ '.$quantitySubjectConfig->quantity.' tiết'.' vào thứ ' . $day + 1 . ' tiet: '.$period;
+                    $message[] = 'Môn học: '. $name .' đã đủ '.$quantitySubjectConfig->quantity.' tiết vào thứ ' . $day + 1 . ' tiet: '.$periodId;
                     break;
                 }
                 if ($userId != 0 && !is_null($teacherSubjectTimeTable)) {
-                    $message[] = 'Giáo viên đag có tiết dạy ở lớp: '.$teacherSubjectTimeTable->class->name . 'của môn học ' . $name . ' vào thứ ' . $day + 1 . ' tiet: '.$period;
+                    $message[] = 'Giáo viên đag có tiết dạy ở lớp: '.$teacherSubjectTimeTable->class->name . 'của môn học ' . $name . ' vào thứ ' . $day + 1 . ' tiet: '.$periodId;
                     break;
                 }
                 $checkTeacherSubjectTimeTableExits = $this->timetableRepository->checkUserExistTimetableOfClass($timetableId,
