@@ -26,13 +26,13 @@ class StatisAttendanceResponsitory
         // Lặp qua tất cả các lớp
         foreach ($classes as $class) {
             // Lấy danh sách các bản ghi điểm danh mới nhất cho từng học sinh trong tiết học cuối cùng
-            $lastTimetable = StatisAttendance::select('teacher_subject_timetable_id')
-                ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-                ->whereDate('date', $today)
-                ->where('class_id', $class->id) // Lọc theo lớp hiện tại
-                ->distinct() // Lọc ra các tiết học
-                ->latest('created_at') // Lấy tiết học cuối cùng
-                ->first(); // Lấy bản ghi tiết học cuối cùng
+            $lastTimetable = StatisAttendance::select('teacher_subject_timetable_id', 'created_at')
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->whereDate('date', $today)
+            ->where('class_id', $class->id)
+            ->distinct() // Lọc ra các tiết học
+            ->orderBy('created_at', 'desc') // Sắp xếp theo `created_at` giảm dần
+            ->first();
 
             if ($lastTimetable) {
                 // Lấy các bản ghi điểm danh của tiết học cuối cùng
@@ -166,13 +166,14 @@ class StatisAttendanceResponsitory
         // Lặp qua tất cả các lớp
         foreach ($classes as $class) {
             // Lấy danh sách các bản ghi điểm danh mới nhất cho từng học sinh trong tiết học cuối cùng
-            $lastTimetable = StatisAttendance::select('teacher_subject_timetable_id')
-                ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-                ->whereBetween('date', [$startOfMonth, $endOfMonth])
-                ->where('class_id', $class->id) // Lọc theo lớp hiện tại
-                ->distinct() // Lọc ra các tiết học
-                ->latest('created_at') // Lấy tiết học cuối cùng
-                ->first(); // Lấy bản ghi tiết học cuối cùng
+         
+                $lastTimetable = StatisAttendance::select('teacher_subject_timetable_id', 'created_at')
+    ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+    ->whereBetween('date', [$startOfMonth, $endOfMonth])
+    ->where('class_id', $class->id)
+    ->distinct() // Lọc ra các tiết học
+    ->orderBy('created_at', 'desc') // Sắp xếp theo `created_at` giảm dần
+    ->first();
 
             if ($lastTimetable) {
                 // Lấy các bản ghi điểm danh của tiết học cuối cùng
