@@ -143,6 +143,7 @@ class TimetableController extends BaseController
         if (count($periods) > 5) {
             return $this->responseError('Dữ liệu bảng sai cấu trúc');
         }
+        $message = [];
 
         foreach ($periods as $key => $period) {
             $periodId = $period['period'];
@@ -152,19 +153,21 @@ class TimetableController extends BaseController
                 $day = $subject['day'];
                 $subject = $this->timetableRepository->getSubjectByName($name);
                 if (is_null($subject)) {
-                    break;
+                    $message[] = 'tên môn học không tồn tại ' . $name;
+                    continue;
                 }
                 $subjectId = $subject->id;
                 $classSubjectTeacher = $this->timetableRepository->getClassSubjectTeachersByClassIdAndSubjectId($classId, $subjectId);
                 if (is_null($classSubjectTeacher)) {
-
-                    break;
+                    $message[] = 'Môn học: '.$name.' chưa được gán cho giáo viên dạy. ';
+                    continue;
                 }
 
                 $classSubjectTeacherId = $classSubjectTeacher->id;
                 $timetable = $this->timetableRepository->getTimetableByDayAndTime($time,$day, $periodId);
                 if (is_null($timetable)) {
-                    break;
+                    $message[] = 'Tiết hoặc ngày không tồn tại ';
+                    continue;
                 }
                 $timetableId = $timetable->id;
 
@@ -177,10 +180,12 @@ class TimetableController extends BaseController
                     $categoryTimetableId, $classId);
                 $quantitySubjectConfig        = $this->timetableRepository->subjectConfig($subjectId);
                 if ($subjectId != 0 && $countTeacherSubjectTimetable >= $quantitySubjectConfig->quantity) {
-                    break;
+                    $message[] = 'Môn học: '. $name .' đã đủ '.$quantitySubjectConfig->quantity.' tiết vào thứ ' . $day + 1 . ' tiet: '.$periodId;
+                    continue;
                 }
                 if ($userId != 0 && !is_null($teacherSubjectTimeTable)) {
-                    break;
+                    $message[] = 'Giáo viên đag có tiết dạy ở lớp: '.$teacherSubjectTimeTable->class->name . 'của môn học ' . $name . ' vào thứ ' . $day + 1 . ' tiet: '.$periodId;
+                    continue;
                 }
                 $checkTeacherSubjectTimeTableExits = $this->timetableRepository->checkUserExistTimetableOfClass($timetableId,
                     $classId, $categoryTimetableId);
@@ -195,6 +200,6 @@ class TimetableController extends BaseController
             }
 
         }
-        return $this->responseSuccess();
+        return $this->responseSuccess($message);
     }
 }
