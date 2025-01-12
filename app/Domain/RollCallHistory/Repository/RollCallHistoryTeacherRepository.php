@@ -6,6 +6,7 @@ use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Common\Enums\GenderEnum;
 use App\Common\Enums\PaginateEnum;
+use App\Common\Enums\StatusClassAttendance;
 use App\Common\Enums\StatusClassStudentEnum;
 use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusStudentEnum;
@@ -26,60 +27,67 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class RollCallHistoryRepository
+class RollCallHistoryTeacherRepository
 {
 
 
-    public function getClassesWithRollCallHistories($pageSize, $keyWord = null)
+    public function getClassTeacher($user_id): array
     {
-        $query = Classes::where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->with(['grade', 'classHistory' => function ($query) {
-                $query->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-                    ->where('status', StatusEnum::ACTIVE->value)
-                    ->whereNull('end_date');
-            }, 'classSubjectTeacher.user' => function ($query) {
-                $query->select('id', 'fullname', 'email');
-            }]);
+        $classSubjectTeachers = ClassSubjectTeacher::query()
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->whereIn('access_type', [StatusTeacherEnum::MAIN_TEACHER->value, StatusTeacherEnum::TEACHER->value])
+            ->whereNull('end_date')
+            ->with(
+                [
+                    'class',
+                    'class.schoolYear',
+                    'class.grade',
+                    'class.academicYear',
+                    'class.user'
+                ]
+            )
+            ->where('user_id', $user_id)
+            ->get();
 
-        if ($keyWord) {
-            $query->where(function ($q) use ($keyWord) {
-                $q->where('name', 'LIKE', '%' . $keyWord . '%')
-                    ->orWhereHas('grade', function ($q) use ($keyWord) {
-                        $q->where('name', 'LIKE', '%' . $keyWord . '%');
-                    })
-                    ->orWhereHas('classSubjectTeacher.user', function ($q) use ($keyWord) {
-                        $q->where('fullname', 'LIKE', '%' . $keyWord . '%');
-                    });
-            });
-        }
-
-        // dd($query->toSql(), $query->getBindings()); 
-
-        $classes = $query->paginate($pageSize);
-
-        return [
-            'total' => $classes->total(),
-            'data' => $classes->map(function ($class) {
-                $mainTeacher = $class->classSubjectTeacher
-                    ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
-                    ->first()->user ?? null;
-
-                return [
-                    'class_id' => $class->id,
-                    'class_name' => $class->name ?? null,
-                    'grade_name' => $class->grade->name ?? null,
-                    'teacher_name' => $mainTeacher ? $mainTeacher->fullname : 'Chưa có giáo viên chủ nhiệm',
-                    'teacher_email' => $mainTeacher ? $mainTeacher->email : null,
-                    'total_students' => $class->classHistory->count(),
-                ];
-            }),
-            'current_page' => $classes->currentPage(),
-            'per_page' => $classes->perPage(),
-        ];
+        return $classSubjectTeachers->map(function ($classSubjectTeacher) {
+            $class = $classSubjectTeacher->class;
+            return [
+                'classId'   => $classSubjectTeacher->class->id,
+                'className' => $classSubjectTeacher->class->name,
+                "schoolYear"     => is_null($class->schoolYear->name) ? "" : $class->schoolYear->name,
+                "school_year_id" => is_null($class->schoolYear) ? 0 : $class->schoolYear->id,
+                "grade_name"          => is_null($class->grade->name) ? "" : $class->grade->name,
+                "academic_name"  => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
+                "academic_id"    => is_null($class->academicYear) ? 0 : $class->academicYear->id,
+                "academic_code"  => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
+                "teacher_id"     => is_null($class->user->first()) ? "" : (is_null($class->user->first()->id) ? "" : $class->user->first()->id),
+                "teacher_name"   => is_null($class->user->first()) ? "" : (is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname),
+                "teacher_email"  => is_null($class->user->first()) ? "" : (is_null($class->user->first()->email) ? "" : $class->user->first()->email),
+                "status_teacher" => $classSubjectTeacher->access_type
+            ];
+        })->toArray();
     }
 
-    public function getClassRollCallHistories($classId, $pageSize, $keyWord = null, $date = null)
+    public function getClassRollCallHistories($classId, $pageSize, $keyWord = null, $date = null,$user_id)
     {
+        $classSubjectTeachers = ClassSubjectTeacher::query()
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->whereIn('access_type', [StatusTeacherEnum::MAIN_TEACHER->value, StatusTeacherEnum::TEACHER->value])
+            ->whereNull('end_date')
+            ->with(
+                [
+                    'class',
+                    'class.schoolYear',
+                    'class.grade',
+                    'class.academicYear',
+                    'class.user'
+                ]
+            )
+            ->where('user_id', $user_id)
+            ->get();
+
         // Tính tổng số học sinh
         $totalStudents = StudentClassHistory::where('class_id', $classId)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
@@ -233,8 +241,6 @@ class RollCallHistoryRepository
             return $item['period'] . $item['from_time'] . $item['to_time'];
         })->values();
     }
-
-
 
     public function getClassRollCallHistoryDetailsByDate($class_id, $teacher_subject_timetable_id)
     {
