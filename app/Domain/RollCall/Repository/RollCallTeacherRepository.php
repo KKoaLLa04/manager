@@ -385,30 +385,32 @@ class RollCallTeacherRepository
                     'class.grade',
                     'class.academicYear',
                     'class.user'
-                ])
+                ]
+            )
             ->where('user_id', $user_id)
-            ->get();
+            ->get(); 
 
         return $classSubjectTeachers->map(function ($classSubjectTeacher) {
             $class = $classSubjectTeacher->class;
             return [
-                'classId'   => $classSubjectTeacher->class->id,
-                'className' => $classSubjectTeacher->class->name,
-                "schoolYear"     => is_null($class->schoolYear->name) ? "" : $class->schoolYear->name,
-                "school_year_id" => is_null($class->schoolYear) ? 0 : $class->schoolYear->id,
-                "grade"          => is_null($class->grade->name) ? "" : $class->grade->name,
-                "grade_id"       => is_null($class->grade) ? 0 : $class->grade->id,
-                "academic_name"  => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
-                "academic_id"    => is_null($class->academicYear) ? 0 : $class->academicYear->id,
-                "academic_code"  => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
-                "teacher_id"     => is_null($class->user->first()) ? "" : (is_null($class->user->first()->id) ? "" : $class->user->first()->id),
-                "teacher_name"   => is_null($class->user->first()) ? "" : (is_null($class->user->first()->fullname) ? "" : $class->user->first()->fullname),
-                "teacher_email"  => is_null($class->user->first()) ? "" : (is_null($class->user->first()->email) ? "" : $class->user->first()->email),
-                "status"         => is_null($class->status) ? "1" : $class->status,
-                "status_teacher" => $classSubjectTeacher->access_type
+                'classId'        => $classSubjectTeacher->class->id,
+                'className'      => $classSubjectTeacher->class->name,
+                'schoolYear'     => is_null($class->schoolYear->name) ? "" : $class->schoolYear->name,
+                'school_year_id' => is_null($class->schoolYear) ? 0 : $class->schoolYear->id,
+                'grade'          => is_null($class->grade->name) ? "" : $class->grade->name,
+                'grade_id'       => is_null($class->grade) ? 0 : $class->grade->id,
+                'academic_name'  => is_null($class->academicYear->name) ? "" : $class->academicYear->name,
+                'academic_id'    => is_null($class->academicYear) ? 0 : $class->academicYear->id,
+                'academic_code'  => is_null($class->academicYear->code) ? "" : $class->academicYear->code,
+                'teacher_id'     => optional($class->user->first())->id ?? "",
+                'teacher_name'   => optional($class->user->first())->fullname ?? "",
+                'teacher_email'  => optional($class->user->first())->email ?? "",
+                'status'         => $class->status ?? "1",
+                'status_teacher' => $classSubjectTeacher->access_type,
             ];
-        })->unique('classId')->toArray();
+        })->unique('classId')->values()->toArray();
     }
+
 
 
     private function attendanceLog($classId)
