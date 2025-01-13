@@ -52,10 +52,7 @@ class ClassController extends BaseController
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
-        $checkSchoolYearId = $this->schoolYearRepository->checkSchoolYearId($request->school_year_id);
-        if (!$checkSchoolYearId) {
-            return $this->responseError(trans('api.error.not_found'));
-        }
+
 
         list($totalPage, $page, $pageSize, $totalItems,$classes) = $this->classRepository->getClasses($request);
         return $this->responseSuccess($this->classRepository->transform($page, $totalPage, $pageSize,$totalItems, $classes));
