@@ -122,6 +122,6 @@ class LoginRepository
                 'classId'   => $classSubjectTeacher->class->id,
                 'className' => $classSubjectTeacher->class->name,
             ];
-        })->toArray();
+        })->unique('classId')->toArray();
     }
 }
