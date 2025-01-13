@@ -127,7 +127,7 @@ class CreateNotification implements ShouldQueue
         $attendanceBy = optional($rollCall->attendanceBy)->fullname ?? 'Không xác định';
         $note         = $rollCall->note ?? 'Không có ghi chú';
         $tiet         = $teacherSubjectTimetable->timetable->period ?? 'Không xác định';
-        $thu          = $teacherSubjectTimetable->timetable->day ?? 'Không xác định';
+        $thu          = $teacherSubjectTimetable->timetable->day + 1 ?? 'Không xác định';
         $subjectName  = $teacherSubjectTimetable->subject->name ?? 'Môn không xác định';
 
         $buoi     = $teacherSubjectTimetable->timetable->time;
