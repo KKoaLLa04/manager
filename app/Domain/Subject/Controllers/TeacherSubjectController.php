@@ -45,7 +45,7 @@ class TeacherSubjectController extends BaseController
         $teacherSubjectRepository = new TeacherSubjectRepository();
 
         $getClassMainTeacher = $teacherSubjectRepository->getClassMainTeacher($classId, $userId);
-        if (!is_null($getClassMainTeacher)) {
+        if (!empty($getClassMainTeacher)) {
             $classSubjects = $teacherSubjectRepository->getClassSubject($classId, $userId, true);
             $data          = $classSubjects->map(function ($classSubject) use ($getClassMainTeacher) {
                 $classSubjectIds = $getClassMainTeacher->pluck('class_subject_id')->toArray();
