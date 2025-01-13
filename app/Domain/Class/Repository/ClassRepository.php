@@ -113,7 +113,7 @@ class ClassRepository
 
     public function getAcademicYear(): Collection
     {
-        return AcademicYear::query()->where('is_deleted', DeleteEnum::NOT_DELETE->value)->get();
+        return AcademicYear::query()->where('is_deleted', DeleteEnum::NOT_DELETE->value)->where('status', StatusEnum::ACTIVE->value)->get();
     }
 
     public function getTeachers(): Collection
