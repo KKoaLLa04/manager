@@ -41,11 +41,10 @@ class TeacherSubjectController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-
         $teacherSubjectRepository = new TeacherSubjectRepository();
 
         $getClassMainTeacher = $teacherSubjectRepository->getClassMainTeacher($classId, $userId);
-        if (!empty($getClassMainTeacher)) {
+        if (!$getClassMainTeacher->isEmpty()) {
             $classSubjects = $teacherSubjectRepository->getClassSubject($classId, $userId, true);
             $data          = $classSubjects->map(function ($classSubject) use ($getClassMainTeacher) {
                 $classSubjectIds = $getClassMainTeacher->pluck('class_subject_id')->toArray();
