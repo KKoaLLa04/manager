@@ -187,7 +187,7 @@ class TeacherStudentRepository {
                         ->with('academicYear:id,name'); // Gọi tới quan hệ academicYear
                   }]);
         }, 'parents' => function($query) {
-            $query->select('users.id', 'fullname', 'username', 'phone', 'code', 'gender', 'email', 'dob', 'status')
+            $query->select('users.id', 'fullname', 'username', 'phone', 'code', 'gender', 'email', 'dob', 'status', 'address')
                   ->where('users.access_type', AccessTypeEnum::GUARDIAN->value)
                   ->where('users.is_deleted', DeleteEnum::NOT_DELETE->value);
         }])

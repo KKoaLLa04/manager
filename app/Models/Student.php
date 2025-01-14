@@ -29,9 +29,10 @@ class Student extends Model
         return $this->belongsToMany(User::class, 'user_student', 'student_id', 'user_id')
                     ->where('access_type', AccessTypeEnum::GUARDIAN->value) // Chỉ lấy user có access_type là phụ huynh
                     ->where('users.is_deleted', DeleteEnum::NOT_DELETE->value) // Chỉ lấy user chưa bị xóa
-                    ->select('users.id', 'fullname', 'phone', 'code', 'gender', 'email', 'dob') // Chỉ lấy các trường cần thiết
+                    ->select('users.id', 'fullname', 'phone', 'code', 'gender', 'email', 'dob', 'address') // Thêm cột address
                     ->withPivot([]); // Không lấy thông tin pivot
     }
+
 
     public function schoolYear()
     {

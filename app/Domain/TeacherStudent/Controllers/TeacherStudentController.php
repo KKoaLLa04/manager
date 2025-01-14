@@ -134,12 +134,8 @@ class TeacherStudentController extends BaseController
         }
 
         $repository = new TeacherStudentRepository();
-
-        // Gọi phương thức từ repository
-        // $student = $this->studentRepository->getStudentWithDetails($id);
         $student = $repository->getStudentWithDetails($id);
 
-        // Kiểm tra nếu không tìm thấy học sinh
         if (!$student) {
             return response()->json([
                 'message' => 'Học sinh này không tồn tại',
@@ -148,11 +144,8 @@ class TeacherStudentController extends BaseController
             ]);
         }
 
-        // Chuyển đổi dữ liệu học sinh thành mảng
         $studentArray = $student->toArray();
-
         $class = null;
-
         $studentHistory = StudentClassHistory::where('student_id', $student->id)->where('status', StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
 
         if($studentHistory){
@@ -160,12 +153,9 @@ class TeacherStudentController extends BaseController
             $class = Classes::find($studentHistory->class_id);
 
         }
-
-        $parent = null;
+        // $parent = null;
         $parent = $student->parents->first();
         $userStudent =  UserStudent::where('student_id', $student->id)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
-
-        
 
         unset($studentArray['parents']);
         unset($studentArray['class_history']);
@@ -181,7 +171,7 @@ class TeacherStudentController extends BaseController
         $studentArray['parents_code'] = $parent ? $parent->code : "";
         $studentArray['parents_gender'] = $parent ? $parent->gender : "";
         $studentArray['parents_email'] = $parent ? $parent->email : "";
-        $studentArray['parents_dob'] = $parent ? strtotime($parent->dob) : "";
+        $studentArray['parents_dob'] = $parent ? $parent->dob : "";
         $studentArray['parents_address'] = $parent ? $parent->address : "";
         $studentArray['parents_status'] = $parent ? $parent->status : "";
         $studentArray['parents_username'] = $parent ? $parent->username : "";
