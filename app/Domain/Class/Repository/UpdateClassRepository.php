@@ -59,6 +59,7 @@ class UpdateClassRepository extends ClassRepository
         return ClassSubjectTeacher::query()->where('class_id', $classId)
             ->where('user_id', $teacherId)
             ->where('status', StatusEnum::ACTIVE->value)
+            ->whereNull('end_date')
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
             ->exists();
