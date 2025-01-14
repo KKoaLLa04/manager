@@ -285,7 +285,7 @@ class RollCallHistoryRepository
         $toltalStudentUnPresent = $studentAttendances->where('status', StatusStudentEnum::UN_PRESENT->value)->count();
         $toltalStudentUnPresentPer = $studentAttendances->where('status', StatusStudentEnum::UN_PRESENT_PER->value)->count();
         $toltalStudentLate = $studentAttendances->where('status', StatusStudentEnum::LATE->value)->count();
-        $className = $studentAttendances->first()->class;
+        $className = optional($studentAttendances->first())->class;
         // Nếu không có điểm danh vào ngày hiện tại, tìm điểm danh của kỳ trước
         $period = optional($timetable)->period;
 
