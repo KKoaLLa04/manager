@@ -45,7 +45,7 @@ class RollCallController extends BaseController
         }
         $classId  = $request->classId;
         $date     = isset($request->date) ? Carbon::parse($request->date) : Carbon::now();
-        $dayQuery      = $date->dayOfWeek;
+        $dayQuery = $date->dayOfWeek;
 
         $class = $this->rollCallRepository->getClassById($classId);
         if (is_null($class)) {
@@ -58,40 +58,41 @@ class RollCallController extends BaseController
         $getTeacherSubjectTimetables = $this->rollCallRepository->getTeacherSubjectTimetable($classSubjectTeacherIds,
             $timetableIds);
         $studentIds                  = $this->rollCallRepository->getStudentInClass($classId);
-        $data = $getTeacherSubjectTimetables->map(function ($teacherSubjectTimetable) use (
+        $data                        = $getTeacherSubjectTimetables->map(function ($teacherSubjectTimetable) use (
             $timetables,
             $getClassSubjectTeachers,
             $studentIds,
             $date
         ) {
             $rollcalls              = $teacherSubjectTimetable->rollcalls;
-            $totalChecked = $rollcalls->whereIn('student_id',$studentIds)->count();
-            $attendanceLogs          = $this->rollCallRepository->getAttendanceLog($teacherSubjectTimetable->id,
+            $totalChecked           = $rollcalls->whereIn('student_id', $studentIds)->count();
+            $attendanceLogs         = $this->rollCallRepository->getAttendanceLog($teacherSubjectTimetable->id,
                 $teacherSubjectTimetable->class_id, $date);
-            $getClassSubjectTeacher = $getClassSubjectTeachers->where('id', $teacherSubjectTimetable->class_subject_teacher_id)->first();
+            $getClassSubjectTeacher = $getClassSubjectTeachers->where('id',
+                $teacherSubjectTimetable->class_subject_teacher_id)->first();
             $timetable              = $timetables->where('id', $teacherSubjectTimetable->timetable_id)->first();
-            $from_time = Carbon::parse($timetable->from_time);
-            $to_time = Carbon::parse($timetable->to_time);
+            $from_time              = Carbon::parse($timetable->from_time);
+            $to_time                = Carbon::parse($timetable->to_time);
             return [
                 'teacher_subject_timetable_id' => $teacherSubjectTimetable->id,
-                'timetable_id'        => $timetable->id,
-                'timetable_time'      => $timetable->time,
-                'timetable_period'    => $timetable->period,
-                'timetable_from_time' => $from_time->translatedFormat('H:i'),
-                'timetable_to_time'   =>  $to_time->translatedFormat('H:i'),
-                'teacher_id'          => $getClassSubjectTeacher->teacher->id,
-                'teacher_name'        => $getClassSubjectTeacher->teacher->fullname,
-                'teacher_email'       => $getClassSubjectTeacher->teacher->email,
-                'subject_id'          => $getClassSubjectTeacher->subject->id,
-                'subject_name'        => $getClassSubjectTeacher->subject->name,
-                'totalChecked'        => $totalChecked,
-                'totalStudent'        => count($studentIds),
-                'attendance_checked'  => $attendanceLogs->isEmpty() ? 0 : 1,
-                'attendance_histories'=> $attendanceLogs->map(function ($attendanceLog) {
+                'timetable_id'                 => $timetable->id,
+                'timetable_time'               => $timetable->time,
+                'timetable_period'             => $timetable->period,
+                'timetable_from_time'          => $from_time->translatedFormat('H:i'),
+                'timetable_to_time'            => $to_time->translatedFormat('H:i'),
+                'teacher_id'                   => $getClassSubjectTeacher->teacher->id,
+                'teacher_name'                 => $getClassSubjectTeacher->teacher->fullname,
+                'teacher_email'                => $getClassSubjectTeacher->teacher->email,
+                'subject_id'                   => $getClassSubjectTeacher->subject->id,
+                'subject_name'                 => $getClassSubjectTeacher->subject->name,
+                'totalChecked'                 => $totalChecked,
+                'totalStudent'                 => count($studentIds),
+                'attendance_checked'           => $attendanceLogs->isEmpty() ? 0 : 1,
+                'attendance_histories'         => $attendanceLogs->map(function ($attendanceLog) {
                     return [
                         'user_name' => $attendanceLog->user->fullname,
-                        'type' => $attendanceLog->type,
-                        'time' => Carbon::parse($attendanceLog->time)->format('d-m-Y H:i:s'),
+                        'type'      => $attendanceLog->type,
+                        'time'      => Carbon::parse($attendanceLog->time)->format('d-m-Y H:i:s'),
                     ];
                 })->sortBy('type')->toArray(),
             ];
@@ -107,7 +108,8 @@ class RollCallController extends BaseController
         $student_code = $request->input('student_code', null); // Mã học sinh
         $date         = isset($request->date) ? Carbon::parse($request->date) : Carbon::now();
         // Gọi repository để lấy danh sách học sinh theo lớp và tham số tìm kiếm
-        $student = $this->rollCallRepository->getStudent($class_id, $teacher_subject_timetable_id, $date, $name, $student_code);
+        $student = $this->rollCallRepository->getStudent($class_id, $teacher_subject_timetable_id, $date, $name,
+            $student_code);
         // Kiểm tra và trả về kết quả
         if ($student) {
             return $this->responseSuccess($student, trans('api.rollcall.index.success'));
@@ -133,10 +135,42 @@ class RollCallController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-        $rollCallData = $request->input('rollcallData', []);
-        $date         = isset($request->date) ? Carbon::parse($request->date) : now();
-        $teacher_subject_timetable_id   = $request->teacher_subject_timetable_id;
-        $this->rollCallRepository->attendanceStudentOfClass($teacher_subject_timetable_id, $classId, $rollCallData, $user_id, $date);
+        $rollCallData                 = $request->input('rollcallData', []);
+        $date                         = isset($request->date) ? Carbon::parse($request->date) : now();
+        $teacher_subject_timetable_id = $request->teacher_subject_timetable_id;
+        $this->rollCallRepository->attendanceStudentOfClass($teacher_subject_timetable_id, $classId, $rollCallData,
+            $user_id, $date);
+
+        return $this->responseSuccess();
+    }
+
+    public function rollCallOfClass(Request $request, $classId, GetUserRepository $getUserRepository)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->responseError(trans('api.error.user_not_logged_in'));
+        }
+
+        $user_id = $user->id;
+
+        $date                         = isset($request->date) ? Carbon::parse($request->date) : now();
+        $teacher_subject_timetable_id = $request->teacher_subject_timetable_id;
+        $studentId                    = $request->studentId;
+        $status                       = isset($request->status) ? $request->status : StatusStudentEnum::HOLIDAY->value;
+        $note                         = isset($request->note) ? $request->note : "";
+
+        $data = [
+            "student_id" => $studentId,
+            "status" => $status,
+            "note" => $note,
+        ];
+        $this->rollCallRepository->attendanceStudentOfClassOneStudent(
+            $teacher_subject_timetable_id,
+            $classId,
+            $data,
+            $user_id,
+            $date
+        );
 
         return $this->responseSuccess();
     }

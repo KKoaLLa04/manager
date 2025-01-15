@@ -13,6 +13,10 @@ Route::group(['prefix' => 'manager/rollcall', 'middleware' => 'auth:api'], funct
     Route::put('update/attendaced/{class_id}', [RollCallController::class, 'updateByClass']);
 });
 
+Route::group(['prefix' => 'rollcall', 'middleware' => 'auth:api'], function () {
+    Route::put('update/attendaced/{class_id}/student', [RollCallController::class, 'rollCallOfClass']);
+});
+
 Route::group(['prefix' => 'teacher/rollcall', 'middleware' => 'auth:api'], function () {
     Route::post('/', [RollCallTeacherController::class, 'index']);
     Route::get('/class', [RollCallTeacherController::class, 'getClass']);

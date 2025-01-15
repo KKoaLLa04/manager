@@ -346,6 +346,106 @@ class RollCallRepository
         RollCallHistory::query()->insert($dataInsertRollCallHistory);
     }
 
+    public function attendanceStudentOfClassOneStudent(
+        $teacher_subject_timetable_id,
+        $classId,
+        array $data = [],
+        $user_id,
+        Carbon $date,
+
+    ) {
+
+        $studentRecords = RollCall::query()
+            ->where('class_id', $classId)
+            ->where('teacher_subject_timetable_id', $teacher_subject_timetable_id)
+            ->where('date', $date->toDateString())
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->get()->keyBy('student_id');
+
+        $attendanceLog = AttendanceLog::query()->where('date', $date->toDateString())
+            ->where('class_id', $classId)
+            ->where('teacher_subject_timetable_id', $teacher_subject_timetable_id)
+            ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
+            ->first();
+        if (is_null($attendanceLog)) {
+            AttendanceLog::query()->create(
+                [
+                    'class_id'                     => $classId,
+                    'date'                         => $date->toDateString(),
+                    'type'                         => 1,
+                    'user_id'                      => $user_id,
+                    'teacher_subject_timetable_id' => $teacher_subject_timetable_id
+                ]
+            );
+        }else{
+            AttendanceLog::query()->create(
+                [
+                    'class_id'                     => $classId,
+                    'date'                         => $date->toDateString(),
+                    'type'                         => 2,
+                    'user_id'                      => $user_id,
+                    'teacher_subject_timetable_id' => $teacher_subject_timetable_id
+                ]
+            );
+        }
+        // Lấy tất cả học sinh trong lớp
+        $dataInsertRollCallHistory = [];
+            $rollCall = $studentRecords->get($data['student_id']);
+
+            if (!is_null($rollCall)) {
+                $dataUpdate = [
+                    "student_id"                   => $data['student_id'],
+                    "note"                         => $data['note'],
+                    "class_id"                     => $classId,
+                    "date"                         => $date->toDateString(),
+                    "time"                         => now()->toTimeString(),
+                    "status"                       => $data['status'],
+                    "teacher_subject_timetable_id" => $teacher_subject_timetable_id,
+                    "modified_user_id"             => $user_id,
+                ];
+                RollCall::query()->where('id', $rollCall->id)->update($dataUpdate);
+                $dataInsertRollCallHistory[] = [
+                    "student_id"   => $data['studentID'],
+                    "note"         => $data['note'],
+                    "class_id"     => $classId,
+                    "roll_call_id" => $rollCall->id,
+                    "date"         => $date->toDateString(),
+                    "time"         => now()->toTimeString(),
+                    "status"       => $data['status'],
+                    "user_id"      => $user_id,
+                    "created_at"   => now(),
+                    "updated_at"   => now(),
+                ];
+            } else {
+                $dataInsert = [
+                    "student_id"                   => $data['studentID'],
+                    "note"                         => $data['note'],
+                    "class_id"                     => $classId,
+                    "date"                         => $date->toDateString(),
+                    "time"                         => now()->toTimeString(),
+                    "status"                       => $data['status'],
+                    "teacher_subject_timetable_id" => $teacher_subject_timetable_id,
+                    "created_user_id"              => $user_id,
+                ];
+                $rollCall   = RollCall::query()->create($dataInsert);
+                CreateNotification::dispatch($rollCall);
+
+                $dataInsertRollCallHistory[] = [
+                    "student_id"   => $data['studentID'],
+                    "note"         => $data['note'],
+                    "class_id"     => $classId,
+                    "roll_call_id" => $rollCall->id,
+                    "date"         => $date->toDateString(),
+                    "time"         => now()->toTimeString(),
+                    "status"       => $data['status'],
+                    "user_id"      => $user_id,
+                    "created_at"   => now(),
+                    "updated_at"   => now(),
+                ];
+            }
+        RollCallHistory::query()->insert($dataInsertRollCallHistory);
+    }
+
     public function checkAttendanceLog($id, $diemdanhId)
     {
         return AttendanceLog::query()->where('class_id', $id)
