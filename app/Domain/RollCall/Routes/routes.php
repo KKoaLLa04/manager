@@ -14,7 +14,7 @@ Route::group(['prefix' => 'manager/rollcall', 'middleware' => 'auth:api'], funct
 });
 
 Route::group(['prefix' => 'rollcall', 'middleware' => 'auth:api'], function () {
-    Route::put('update/attendaced/{class_id}/student', [RollCallController::class, 'rollCallOfClass']);
+    Route::post('update/attendaced/{class_id}/student', [RollCallController::class, 'rollCallOfClass']);
 });
 
 Route::group(['prefix' => 'teacher/rollcall', 'middleware' => 'auth:api'], function () {

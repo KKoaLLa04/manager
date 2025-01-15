@@ -418,7 +418,7 @@ class RollCallRepository
                 ];
             } else {
                 $dataInsert = [
-                    "student_id"                   => $data['studentID'],
+                    "student_id"                   => $data['student_id'],
                     "note"                         => $data['note'],
                     "class_id"                     => $classId,
                     "date"                         => $date->toDateString(),
@@ -431,7 +431,7 @@ class RollCallRepository
                 CreateNotification::dispatch($rollCall);
 
                 $dataInsertRollCallHistory[] = [
-                    "student_id"   => $data['studentID'],
+                    "student_id"   => $data['student_id'],
                     "note"         => $data['note'],
                     "class_id"     => $classId,
                     "roll_call_id" => $rollCall->id,
