@@ -332,6 +332,7 @@ class RollCallHistoryRepository
                     'id' => $student->id,
                     'fullname' => $student->fullname,
                     'student_code' => $student->student_code,
+                    'gender' => $student->gender,
                     'dob' => is_null($student->dob) ? 0 : Carbon::parse($student->dob)->timestamp,
                     'status' => $status ?? null,
                     'note' => $note ?? '',
