@@ -405,7 +405,7 @@ class RollCallRepository
                 ];
                 RollCall::query()->where('id', $rollCall->id)->update($dataUpdate);
                 $dataInsertRollCallHistory[] = [
-                    "student_id"   => $data['studentID'],
+                    "student_id"   => $data['student_id'],
                     "note"         => $data['note'],
                     "class_id"     => $classId,
                     "roll_call_id" => $rollCall->id,

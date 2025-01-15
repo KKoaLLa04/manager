@@ -17,7 +17,14 @@ class StudentUpdateRepository {
         
         // Tìm học sinh với ID, sử dụng findOrFail để tự động trả về lỗi nếu không tìm thấy học sinh
         $item = ModelsStudent::findOrFail($id);
-        
+        if ($request->hasFile('file')) {
+            $avatar = $request->file('file');
+            $fileName = time() . '_' . $avatar->getClientOriginalName();
+            $destinationPath = public_path('uploads'); // Đường dẫn tới thư mục public/uploads
+            $avatar->move($destinationPath, $fileName);
+        }else{
+            $fileName = '';
+        }
         // Cập nhật thông tin học sinh
         $item->fullname = $request->fullname;
         $item->address = $request->address;
@@ -25,7 +32,8 @@ class StudentUpdateRepository {
         $item->gender = $request->gender;
         $item->status = $request->status;
         $item->modified_user_id = $user_id;
-    
+        $item->avatar = $fileName;
+
         $classId = $request->class_id;
         $status = $request->status;
         
@@ -92,4 +100,3 @@ class StudentUpdateRepository {
     }
 
 }
-    

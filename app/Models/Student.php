@@ -16,7 +16,7 @@ class Student extends Model
     public $table = 'students';
 
     protected $fillable = [
-        'fullname','address','student_code','dob','status','gender','is_deleted','created_user_id','modified_user_id','created_at','updated_at',
+        'fullname','address','student_code','dob','status','gender','is_deleted','created_user_id','modified_user_id','created_at','updated_at','avatar'
     ];
 
     public function classHistory()

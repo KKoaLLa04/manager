@@ -63,10 +63,16 @@ class StudentController extends BaseController
 
         // Lấy danh sách sinh viên
         $students = $studentRepository->paginateStudents($pageIndex,$pageSize,$keyWord);
+        $studentsData = collect($students->items())->map(function ($student) {
+            $avatar = isset($student['avatar']) ? url('uploads/' . $student['avatar']) : "";
+            $student['avatar'] = $avatar;
+            return $student;
+        });
+
         if ($students->count() > 0) {
             return response()->json([
                 'status' => 'success',
-                'data' => $students->items(),
+                'data' => $studentsData,
                 'total' => $students->total(),
                 'page_index' => $students->currentPage(),
                 'page_size' => $students->perPage(),
@@ -80,7 +86,6 @@ class StudentController extends BaseController
         $StudentAddRepository = new StudentAddRepository();
         $user_id = Auth::user()->id;
         $type = AccessTypeEnum::MANAGER->value;
-
         if (!$this->user->getUser($user_id, $type)) {
             return $this->responseError(trans('api.error.user_not_permission'));
         }
@@ -100,7 +105,6 @@ class StudentController extends BaseController
             }]) ->where('student_code', $request->student_code)
             ->orderBy('created_at', 'desc') // Sắp xếp theo thời gian tạo giảm dần
             ->first();
-
             return response()->json([
                 'message' => 'Thêm học sinh thành công',
                 'status' => 'success',

@@ -90,6 +90,7 @@ class StudentRepository {
                 'student_code' => $student->student_code,
                 'fullname' => $student->fullname,
                 'status' => $student->status,
+                'avatar' => $student->avatar,
                 'dob' => $student->dob ? strtotime($student->dob) : null,
                 'address'=> $student->address,
                 'gender' => $student->gender,
