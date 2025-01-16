@@ -53,7 +53,7 @@ class RollCallHistoryRepository
             });
         }
 
-        // dd($query->toSql(), $query->getBindings()); 
+        // dd($query->toSql(), $query->getBindings());
 
         $classes = $query->paginate($pageSize);
 
@@ -166,7 +166,7 @@ class RollCallHistoryRepository
                 // Lọc các tiết trùng lặp dựa trên 'period' hoặc 'from_time', 'to_time'
                 if ($fromTime->hour >= 7 && $fromTime->hour < 12) {
                     $morningTimetable[] = $formattedTimetable;
-                } elseif ($fromTime->hour >= 2 && $fromTime->hour < 6) {
+                } elseif ($fromTime->hour >= 12 && $fromTime->hour < 18) {
                     $afternoonTimetable[] = $formattedTimetable;
                 }
             }
@@ -332,6 +332,7 @@ class RollCallHistoryRepository
                     'id' => $student->id,
                     'fullname' => $student->fullname,
                     'student_code' => $student->student_code,
+                    'gender' => $student->gender,
                     'dob' => is_null($student->dob) ? 0 : Carbon::parse($student->dob)->timestamp,
                     'status' => $status ?? null,
                     'note' => $note ?? '',

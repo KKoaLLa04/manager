@@ -443,8 +443,10 @@ class StudentController extends BaseController
             return response()->json(['message' => 'Yêu cầu nhập số lượng lớn hơn 0']);
         }
 
+        $keyword = $request->input('keyword');
+
         // Gọi phương thức từ repository để lấy danh sách phụ huynh
-        $parents = $this->studentRepository->getAllParentsWithChildrenCount($pageSize);
+        $parents = $this->studentRepository->getAllParentsWithChildrenCount($pageSize, $keyword);
 
         if ($parents->count() > 0) {
             return response()->json([
