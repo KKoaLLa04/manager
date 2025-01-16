@@ -29,7 +29,7 @@ class ParentRollCallHistoryController extends BaseController
 
             $userId = $request->user()->id;
             $studentId = $request->query('studentId');
-            $pageSize = $request->query('pageSize', 10);
+            $pageSize = $request->query('pageSize', 50);
             $keyWord = $request->query('keyWord');
             $date = $request->query('date');
 

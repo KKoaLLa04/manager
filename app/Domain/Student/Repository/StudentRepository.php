@@ -253,33 +253,41 @@ class StudentRepository {
 
 
 
-    public function getAllParentsWithChildrenCount($pageSize)
+    public function getAllParentsWithChildrenCount($pageSize, $keyword = null)
     {
-        $parents = User::where('access_type', AccessTypeEnum::GUARDIAN->value)
-                        ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-                        ->with(['students' => function($query) {
-                            $query->select('students.id', 'student_code', 'fullname', 'gender', 'dob')
-                                ->with(['classHistory' => function($classQuery) {
-                                    $classQuery->where('status', 1)
-                                                ->where('is_deleted', 0)
-                                                ->whereNull('end_date') // Chỉ lấy lịch sử lớp học chưa kết thúc
-                                                ->with(['class' => function($class) {
-                                                    $class->select('id', 'name', 'academic_year_id') // Lấy thông tin lớp
-                                                        ->with(['academicYear' => function($yearQuery) {
-                                                            $yearQuery->select('id', 'name'); // Lấy thông tin niên khóa
-                                                        }]);
-                                                }]);
-                                }]);
-                        }])
-                        ->withCount('students') // Đếm số lượng học sinh
-                        ->paginate($pageSize);
+        $query = User::where('access_type', AccessTypeEnum::GUARDIAN->value)
+                     ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
+
+        // Thêm điều kiện tìm kiếm
+        if ($keyword) {
+            $query->where(function ($subQuery) use ($keyword) {
+                $subQuery->where('fullname', 'like', "%$keyword%")
+                         ->orWhere('email', 'like', "%$keyword%")
+                         ->orWhere('phone', 'like', "%$keyword%");
+            });
+        }
+
+        $parents = $query->with(['students' => function($query) {
+                        $query->select('students.id', 'student_code', 'fullname', 'gender', 'dob')
+                              ->with(['classHistory' => function($classQuery) {
+                                  $classQuery->where('status', 1)
+                                             ->where('is_deleted', 0)
+                                             ->whereNull('end_date')
+                                             ->with(['class' => function($class) {
+                                                 $class->select('id', 'name', 'academic_year_id')
+                                                       ->with(['academicYear' => function($yearQuery) {
+                                                           $yearQuery->select('id', 'name');
+                                                       }]);
+                                             }]);
+                              }]);
+                    }])
+                    ->withCount('students')
+                    ->paginate($pageSize);
 
         $parents->getCollection()->transform(function($parent) {
-            // Lấy danh sách học sinh và thông tin lớp và năm học
             $students = $parent->students->map(function($student) {
-                // Lấy lớp học gần nhất từ lịch sử lớp học
-                $classHistory = $student->classHistory->first(); // Giả định rằng lớp học đầu tiên là lớp hiện tại
-                $class = optional($classHistory)->class; // Lấy lớp từ lịch sử lớp học
+                $classHistory = $student->classHistory->first();
+                $class = optional($classHistory)->class;
 
                 return [
                     'fullname' => $student->fullname,
@@ -305,6 +313,7 @@ class StudentRepository {
 
         return $parents;
     }
+
 
 
 
