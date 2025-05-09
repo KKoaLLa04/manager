@@ -52,10 +52,7 @@ class ClassController extends BaseController
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
-        $checkSchoolYearId = $this->schoolYearRepository->checkSchoolYearId($request->school_year_id);
-        if (!$checkSchoolYearId) {
-            return $this->responseError(trans('api.error.not_found'));
-        }
+
 
         list($totalPage, $page, $pageSize, $totalItems,$classes) = $this->classRepository->getClasses($request);
         return $this->responseSuccess($this->classRepository->transform($page, $totalPage, $pageSize,$totalItems, $classes));
@@ -77,6 +74,7 @@ class ClassController extends BaseController
         $classSubjects = $this->classRepository->getSubjectOfClass($request->class_id);
 
         $subjectTeacher = $this->classRepository->getClassSubjectTeacher($classSubjects->pluck('id')->toArray());
+
         return $this->responseSuccess($this->classRepository->transformDetailClass($class, $students, $classSubjects,
             $subjectTeacher));
     }
@@ -110,11 +108,6 @@ class ClassController extends BaseController
             return $this->responseError(trans('api.error.not_found'));
         }
 
-        $checkTeacher = $this->getUserRepository->getUser($request->teacher_id, AccessTypeEnum::TEACHER->value);
-        if (!$checkTeacher) {
-            return $this->responseError(trans('api.error.not_found'));
-        }
-
         $checkGrade = $this->gradeRepository->checkGradeExits($request->grade_id);
         if (!$checkGrade) {
             return $this->responseError(trans('api.error.not_found'));
@@ -124,7 +117,7 @@ class ClassController extends BaseController
         if ($statusCreateClass) {
             $classId = $statusCreateClass->id;
             $this->createClassRepository->createClassTeacherSubject($classId,
-                $request->teacher_id);
+                $request->teacher_id ?? 0);
 
             return $this->responseSuccess();
         }
@@ -137,26 +130,14 @@ class ClassController extends BaseController
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
 
-
-        $checkTeacher = $this->getUserRepository->getUser($request->teacher_id, AccessTypeEnum::TEACHER->value);
-        if (!$checkTeacher) {
-            return $this->responseError(trans('api.error.not_found'));
-        }
-
         $checkGrade = $this->gradeRepository->checkGradeExits($request->grade_id);
         if (!$checkGrade) {
             return $this->responseError(trans('api.error.not_found'));
         }
 
-        $statusCreateClass = $this->updateClassRepository->UpdateClass($request);
-        if ($statusCreateClass) {
-            $classId = $request->class_id;
-            $this->updateClassRepository->createClassTeacherSubject($classId,
-                $request->teacher_id);
+        $this->updateClassRepository->UpdateClass($request);
 
-            return $this->responseSuccess();
-        }
-        return $this->responseError();
+        return $this->responseSuccess();
     }
 
     public function delete(DeleteClassRequest $request)
@@ -197,26 +178,74 @@ class ClassController extends BaseController
         return $this->responseSuccess();
     }
 
-    public function formUpdateTeacherForSubject()
+    // public function formUpdateTeacherForSubject()
+    // {
+    //     $teachers = $this->getUserRepository->getTeachers();
+    //     return $this->responseSuccess($this->classRepository->transformTeacher($teachers));
+    // }
+    public function formUpdateTeacherForSubject(Request $request)
     {
-        $teachers = $this->getUserRepository->getTeachers();
+        $subjectId = $request->get('subject_id');
+        $teachers = $this->getUserRepository->getTeachers($subjectId);
+
         return $this->responseSuccess($this->classRepository->transformTeacher($teachers));
     }
+
+
+    // public function updateTeacherForSubject(UpdateTeacherForSubjectOfClassRequest $request)
+    // {
+    //     if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+    //         return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+    //     }
+
+    //     $class_subject_id = 0;
+
+    //     if ($this->classRepository->checkClassSubject($request->class_id, $request->teacher_id,
+    //     $request->subject_id)) {
+    //         $class_subject_id = $this->classRepository->classSubject($request->class_id, $request->teacher_id,
+    //         $request->subject_id)->id;
+    //     } else {
+    //         $class_subject_id = $this->classRepository->createClassSubject($request->class_id, $request->subject_id)->id;
+    //     }
+
+
+    //     if ($this->classRepository->checkClassSubjectTeacher($request->class_id, $request->teacher_id,
+    //         $class_subject_id)) {
+    //         return $this->responseSuccess();
+    //     }
+
+
+    //     $this->classRepository->changeStatusClassSubjectTeacher($request->class_id, $class_subject_id);
+
+    //     $this->classRepository->updateClassSubjectTeacher($request->class_id, $request->teacher_id,
+    //         $class_subject_id);
+
+    //     return $this->responseSuccess();
+    // }
 
     public function updateTeacherForSubject(UpdateTeacherForSubjectOfClassRequest $request)
     {
         if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
-        if ($this->classRepository->checkClassSubjectTeacher($request->class_id, $request->teacher_id,
-            $request->class_subject_id)) {
-            return $this->responseSuccess();
+
+        // Kiểm tra xem môn học đã được gán cho lớp chưa
+        $classSubject = $this->classRepository->classSubject($request->class_id, $request->teacher_id, $request->subject_id);
+
+        if ($classSubject) {
+            // Nếu giáo viên hoặc môn học thay đổi, cập nhật lại
+            if ($classSubject->user_id !== $request->teacher_id || $classSubject->subject_id !== $request->subject_id) {
+                $this->classRepository->updateClassSubjectTeacher(
+                    $request->class_id,
+                    $request->teacher_id,
+                    $classSubject->id
+                );
+            }
+        } else {
+            // Nếu chưa có môn học, tạo mới
+            $classSubjectId = $this->classRepository->createClassSubject($request->class_id, $request->subject_id)->id;
+            $this->classRepository->updateClassSubjectTeacher($request->class_id, $request->teacher_id, $classSubjectId);
         }
-
-        $this->classRepository->changeStatusClassSubjectTeacher($request->class_id, $request->class_subject_id);
-
-        $this->classRepository->updateClassSubjectTeacher($request->class_id, $request->teacher_id,
-            $request->class_subject_id);
 
         return $this->responseSuccess();
     }
@@ -226,14 +255,17 @@ class ClassController extends BaseController
         if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
             return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
         }
-        $teachers          = $this->getUserRepository->getTeachers();
+
+        $subjectId = $request->subject_id; // Môn học được chọn
+        $teachers = $this->getUserRepository->getTeachersBySubject($subjectId); // Lấy danh sách giáo viên theo môn học
         $subjectIdsOfClass = $this->classRepository->getSubjectOfClass($request->class_id)
             ->pluck('subject_id')
             ->toArray();
-        $subjects          = $this->classRepository->getSubjectNotOfClass($subjectIdsOfClass);
+        $subjects = $this->classRepository->getSubjectNotOfClass($subjectIdsOfClass);
 
         return $this->responseSuccess($this->classRepository->transformCreateSubjectForClass($teachers, $subjects));
     }
+
 
     public function createSubjectForClass(CreateSubjectOfClassRequest $request)
     {
@@ -265,4 +297,25 @@ class ClassController extends BaseController
 
         return $this->responseError();
     }
+
+    public function getTeachersBySubject(Request $request)
+    {
+        if (Auth::user()->access_type != AccessTypeEnum::MANAGER->value) {
+            return $this->responseError(trans('api.error.not_found'), ResponseAlias::HTTP_UNAUTHORIZED);
+        }
+
+        $subjectId = $request->get('subject_id');
+        if (!$subjectId) {
+            return [];
+        }
+
+        $teachers = $this->getUserRepository->getTeachersBySubject($subjectId);
+
+        if ($teachers->isEmpty()) {
+            return $this->responseSuccess([], trans('chưa có giáo viên nào được gán cho môn học này'));
+        }
+
+        return $this->responseSuccess($teachers, trans('api.alert.teachers_retrieved'));
+    }
+
 }

@@ -7,6 +7,7 @@ use App\Common\Enums\StatusEnum;
 use App\Common\Enums\StatusTeacherEnum;
 use App\Domain\AcademicYear\Models\AcademicYear;
 use App\Domain\RollCall\Models\RollCall;
+use App\Domain\RollCallHistory\Models\RollCallHistory;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -34,19 +35,19 @@ class Classes extends Model
 
     public function grade(): HasOne
     {
-        return $this->hasOne(Grade::class,'id','grade_id');
+        return $this->hasOne(Grade::class, 'id', 'grade_id');
     }
 
     public function schoolYear(): HasOne
     {
-        return $this->hasOne(SchoolYear::class,'id','school_year_id');
+        return $this->hasOne(SchoolYear::class, 'id', 'school_year_id');
     }
 
     public function academicYear(): HasOne
     {
-        return $this->hasOne(AcademicYear::class,'id','academic_year_id');
+        return $this->hasOne(AcademicYear::class, 'id', 'academic_year_id');
     }
-    
+
 
     public function user(): BelongsToMany
     {
@@ -64,7 +65,7 @@ class Classes extends Model
     public function students()
     {
         return $this->belongsToMany(Student::class, 'student_class', 'class_id', 'student_id')
-                    ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value);
+            ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
     public function classSubjectTeacher()
     {
@@ -78,8 +79,24 @@ class Classes extends Model
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
 
-    public function rollCalls(){
+    public function rollCalls()
+    {
         return $this->hasMany(RollCall::class, 'class_id', 'id');
     }
-}
 
+    public function attendanceLog()
+    {
+        return $this->hasMany(AttendanceLog::class, 'class_id', 'id');
+    }
+
+    public function classSubjectTeachers()
+    {
+        return $this->hasMany(ClassSubjectTeacher::class, 'class_id', 'id');
+    }
+
+    public function rollCallHistory(){
+        return $this->hasMany(RollCallHistory::class, 'class_id', 'id');
+    }
+
+
+}

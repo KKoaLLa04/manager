@@ -28,7 +28,7 @@ class StudentClassHistory extends Model
 
     public function student()
     {
-        return $this->belongsTo(Student::class, 'student_id'); // Quan hệ với bảng Student
+        return $this->belongsTo(Student::class, 'student_id');
     }
 
     public function class()

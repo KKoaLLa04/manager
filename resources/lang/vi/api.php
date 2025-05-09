@@ -28,6 +28,10 @@ return [
         ],
         'student' => [
             'students_array_required' => 'Bắt buộc phải nhập và phải là một mảng',
+        ],
+        'subject' => [
+            'have_subject_class' => 'Lớp đã có môn học này',
+            'subjects_array_required' => 'bắt buộc phải nhập và phải là một mảng dữ liệu'
         ]
     ],
 
@@ -96,5 +100,40 @@ return [
         'attendaced.errors'=> 'Điểm danh thất bại',
         'attendaced_updated.success'=> 'Cập nhập điểm danh thành công',
         'attendaced_updated.errors'=> 'Cập nhập điểm danh thất bại'
+    ],
+
+
+    'leaveRequest' => [
+        'index.success'=> 'Lấy danh sách hóa đơn thành công',
+        'index.errors'=> 'Lấy danh sách hóa đơn thất bại',
+        'accept.success'=> 'Chấp nhận đơn thành công',
+        'accept.errors' => 'Chấp nhận đơn thất bại',
+        'reject.success' => 'Từ chối đơn thành công',
+        'reject.errors' => 'Từ chối đơn thất bại',
+        'detail.success'=> 'Lấy chi tiết đơn thành công',
+        'detail.errors' => 'Lấy chi tiết đơn thất bại',
+      ],
+
+    'guardianofguardian' => [
+        'show.success'=> 'Lấy thông tin phụ huynh thành công!',
+        'show.errors'=> 'Lấy thông tin phụ huynh thất bại!',
+        'show.access_denied' => 'Đây không phải là trang tài khoản của bạn',
+        'update.success'=> 'Cập nhập thông tin thành công!',
+        'update.errors'=> 'Cập nhập thông tin thất bại!'
+    ],
+
+    'StatisAttendance' => [
+        'showSchool.success'=> 'Lấy danh sách điểm danh trong ngày của trường thành công',
+        'showSchool.errors'=> 'Lấy danh sách điểm danh trong ngày của trường thất bại',
+        'showShoolOnWeek.success'=> 'Lấy danh sách điểm danh trong tuần của trường thành công',
+        'showShoolOnWeek.errors'=> 'Lấy danh sách điểm danh trong tuần của trường thành công',
+        'showShoolOnMonth.success'=> 'Lấy danh sách điểm danh trong tháng của trường thành công',
+        'showShoolOnMonth.errors'=> 'Lấy danh sách điểm danh trong tháng của trường thất bại',
+        'showShoolOnDayWithClass.success'=> 'Lấy danh sách điểm danh trong ngày của lớp thành công',
+        'showShoolOnDayWithClass.errors'=> 'Lấy danh sách điểm danh trong ngày của lớp thất bại',
+        'showShoolOnWeekWithClass.success'=> 'Lấy danh sách điểm danh trong tuần của lớp thành công',
+        'showShoolOnWeekWithClass.errors'=> 'Lấy danh sách điểm danh trong tuần của lớp thất bại',
+        'showShoolOnMonthWithClass.success'=> 'Lấy danh sách điểm danh trong tháng của lớp thất công',
+        'showShoolOnMonthWithClass.errors'=> 'Lấy danh sách điểm danh trong tháng của lớp thất bại',
     ]
 ];

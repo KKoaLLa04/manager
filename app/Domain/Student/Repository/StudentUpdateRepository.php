@@ -17,7 +17,14 @@ class StudentUpdateRepository {
         
         // Tìm học sinh với ID, sử dụng findOrFail để tự động trả về lỗi nếu không tìm thấy học sinh
         $item = ModelsStudent::findOrFail($id);
-        
+        if ($request->hasFile('file')) {
+            $avatar = $request->file('file');
+            $fileName = time() . '_' . $avatar->getClientOriginalName();
+            $destinationPath = public_path('uploads'); // Đường dẫn tới thư mục public/uploads
+            $avatar->move($destinationPath, $fileName);
+        }else{
+            $fileName = '';
+        }
         // Cập nhật thông tin học sinh
         $item->fullname = $request->fullname;
         $item->address = $request->address;
@@ -25,7 +32,8 @@ class StudentUpdateRepository {
         $item->gender = $request->gender;
         $item->status = $request->status;
         $item->modified_user_id = $user_id;
-    
+        $item->avatar = $fileName;
+
         $classId = $request->class_id;
         $status = $request->status;
         
@@ -35,17 +43,18 @@ class StudentUpdateRepository {
             ->orderBy('updated_at', 'desc')              
             ->orderBy('id', 'desc')                      
             ->first();
-    
-        if ($status == StatusClassStudentEnum::NOT_YET_CLASS->value && $currentClassHistory) {
-            throw new \Exception('Không thể chuyển sang trạng thái "Chưa vào lớp" khi học sinh đã có lớp học.');
-        }
+            
+            
+            // if (!$status == StatusClassStudentEnum::NOT_YET_CLASS->value) {              
+            //     throw new \Exception('Không thể chuyển sang trạng thái "Chưa vào lớp" khi học sinh đã có lớp học.');                
+            // }
+
+            $item->save();
         
-        $item->save();
     
         // Kiểm tra nếu có sự thay đổi về `class_id` hoặc `status`
         $isClassChanged = $currentClassHistory && $currentClassHistory->class_id != $classId;
         $isStatusChanged = $currentClassHistory && $currentClassHistory->status != $status;
-    
         // Nếu chưa có bản ghi lớp học thì tạo mới
         if (!$currentClassHistory) {
             StudentClassHistory::create([
@@ -91,4 +100,3 @@ class StudentUpdateRepository {
     }
 
 }
-    
