@@ -18,7 +18,7 @@ class CreateClassRequest extends FormRequest
         $status = StatusClassEnum::values();
         return [
             "school_year_id" => ["required",'integer',"exists:school_year,id"],
-            "teacher_id"     => ["nullable","integer","exists:users,id"],
+            "teacher_id"     => ["nullable","exists:users,id"],
             "name"           => ["required","string","max:255"],
             "academic_id"    =>["required","integer","exists:academic_year,id"],
             "status"         => ["required","integer",Rule::in($status)],

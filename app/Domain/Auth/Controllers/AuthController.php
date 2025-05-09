@@ -38,17 +38,26 @@ class AuthController extends BaseController
         }
         $studentOfUser = $this->loginRepository->getStudentOfUser($user);
         $schoolYear = $this->getSchoolYearRepository->getSchoolYear();
-        $dataResponse = $this->loginRepository->transform($user, $studentOfUser, $token,$schoolYear);
+        $classTeachers = $this->loginRepository->getClassTeacher($user->id);
+        $dataResponse = $this->loginRepository->transform($user, $studentOfUser, $token,$schoolYear,$classTeachers);
         return $this->responseSuccess($dataResponse);
     }
 
     public function storeDeviceToken(DeviceRequest $request)
     {
-        UserDevice::query()->create([
-            "user_id" => auth()->id(),
-            "device_token" => $request->device_token,
-            "device_type" => $request->device_type,
-            "status" => StatusEnum::ACTIVE->value
-        ]);
+        $checkExits = UserDevice::query()
+            ->where('user_id', auth()->id())
+            ->where('device_token', $request->device_token)
+            ->where('device_type', $request->device_type)
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->exists();
+        if (!$checkExits){
+            UserDevice::query()->create([
+                "user_id" => auth()->id(),
+                "device_token" => $request->device_token,
+                "device_type" => $request->device_type,
+                "status" => StatusEnum::ACTIVE->value
+            ]);
+        }
     }
 }

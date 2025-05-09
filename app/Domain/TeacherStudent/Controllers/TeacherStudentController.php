@@ -65,24 +65,24 @@ class TeacherStudentController extends BaseController
 
 
         // Lấy kích thước trang
+        $pageIndex = $request->input('pageIndex',1);
         $pageSize = $request->input('pageSize', 10);
         if (!is_numeric($pageSize) || $pageSize <= 0) {
             // $pageSize = 10; // Mặc định về 10 bản ghi
             return response()->json(['message' => 'yêu cầu nhập số lượng lớn hơn 1']);
         }
-
+        $keyWord = $request->input('keyword', null);
         $studentRepository = new TeacherStudentRepository();
 
         // Lấy danh sách sinh viên
-        $students = $studentRepository->paginateStudents($pageSize, $request->class_id);
+        $students = $studentRepository->paginateStudents($pageIndex,$pageSize, $request->class_id, $keyWord);
         if ($students->count() > 0) {
             return response()->json([
                 'status' => 'success',
-                'data' => $students->items(), // Thay items() bằng all() ở đây
-                'total' => $students->total(), // Tổng số bản ghi
-                'page_index' => $students->currentPage(), // Trang hiện tại
-                // 'page' => $students->lastPage(), // Trang cuối cùng
-                'page_size' => $students->perPage(), // Số bản ghi mỗi trang
+                'data' => $students->items(),
+                'total' => $students->total(),
+                'page_index' => $students->currentPage(),
+                'page_size' => $students->perPage(),
             ]);
         } else {
             return response()->json(['status' => 'success', 'data' => []]);
@@ -134,12 +134,8 @@ class TeacherStudentController extends BaseController
         }
 
         $repository = new TeacherStudentRepository();
-
-        // Gọi phương thức từ repository
-        // $student = $this->studentRepository->getStudentWithDetails($id);
         $student = $repository->getStudentWithDetails($id);
 
-        // Kiểm tra nếu không tìm thấy học sinh
         if (!$student) {
             return response()->json([
                 'message' => 'Học sinh này không tồn tại',
@@ -148,11 +144,8 @@ class TeacherStudentController extends BaseController
             ]);
         }
 
-        // Chuyển đổi dữ liệu học sinh thành mảng
         $studentArray = $student->toArray();
-
         $class = null;
-
         $studentHistory = StudentClassHistory::where('student_id', $student->id)->where('status', StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
 
         if($studentHistory){
@@ -160,14 +153,9 @@ class TeacherStudentController extends BaseController
             $class = Classes::find($studentHistory->class_id);
 
         }
-
-        $parent = null;
-
+        // $parent = null;
+        $parent = $student->parents->first();
         $userStudent =  UserStudent::where('student_id', $student->id)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
-
-        if ($userStudent) {
-            $parent = User::find($userStudent->id);
-        }
 
         unset($studentArray['parents']);
         unset($studentArray['class_history']);
@@ -183,8 +171,10 @@ class TeacherStudentController extends BaseController
         $studentArray['parents_code'] = $parent ? $parent->code : "";
         $studentArray['parents_gender'] = $parent ? $parent->gender : "";
         $studentArray['parents_email'] = $parent ? $parent->email : "";
-        $studentArray['parents_dob'] = $parent ? strtotime($parent->dob) : "";
+        $studentArray['parents_dob'] = $parent ? $parent->dob : "";
         $studentArray['parents_address'] = $parent ? $parent->address : "";
+        $studentArray['parents_status'] = $parent ? $parent->status : "";
+        $studentArray['parents_username'] = $parent ? $parent->username : "";
 
         return response()->json([
             'message' => 'Lấy thông tin học sinh thành công',
@@ -241,14 +231,15 @@ class TeacherStudentController extends BaseController
             return $this->responseError(trans('api.error.user_not_permission'));
         }
 
-        $pageSize = $request->input('pageSize', 10);
+        $pageSize = $request->input('pageSize', 15);
         if (!is_numeric($pageSize) || $pageSize <= 0) {
             return response()->json(['message' => 'Yêu cầu nhập số lượng lớn hơn 0']);
         }
-
+        $pageIndex = $request->input('pageIndex', 1);
+        $keyWord = $request->input('keyWord', null);
         $studentRepository = new TeacherStudentRepository();
         // Gọi phương thức từ repository để lấy danh sách phụ huynh
-        $parents = $studentRepository->getAllParentsWithChildrenCount($pageSize);
+        $parents = $studentRepository->getAllParentsWithChildrenCount($keyWord, $pageIndex, $pageSize);
 
         if ($parents->count() > 0) {
             return response()->json([

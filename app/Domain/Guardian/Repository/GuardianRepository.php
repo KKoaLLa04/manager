@@ -18,7 +18,8 @@ class GuardianRepository
     {
         $query = Guardian::where('access_type', AccessTypeEnum::GUARDIAN->value)
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
-            ->with(['students.classHistories']);
+            ->with(['students.classHistories'])
+            ->orderBy('created_at', 'desc');
 
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
@@ -27,7 +28,7 @@ class GuardianRepository
             });
         }
 
-        $paginatedResult = $query->paginate($pageSize);
+        $paginatedResult = $query->paginate($pageSize, ['*'], 'page', $pageIndex);
 
         $mappedData = $paginatedResult->getCollection()->map(function ($guardian) {
             return [
@@ -53,7 +54,12 @@ class GuardianRepository
                         'dob' => strtotime($student->dob),
                         'gender' => $student->gender,
                         'phone' => $student->phone,
-                        'academicYear' => $student->classHistories->first()->class->academicYear->name,
+                        'academicYear' => $student->classHistories->isNotEmpty() &&
+                        $student->classHistories->first()->class &&
+                        $student->classHistories->first()->class->academicYear
+                        ? $student->classHistories->first()->class->academicYear->name
+                        : null,
+
                         'username' => $student->username,
                     ];
                 }),

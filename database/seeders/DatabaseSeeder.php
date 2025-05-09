@@ -14,14 +14,16 @@ class DatabaseSeeder extends Seeder
     {
         // \App\Models\User::factory(10)->create();
         $this->call([
-            UserSeeder::class,
-            GradeSeeder::class,
-            SchoolSeeder::class,
-            SchoolYearSeeder::class,
-            SubjectSeeder::class,
-            AcademicYearSeeder::class,
-            ClassSeeder::class,
-            RollCallSeeder::class,
+//            UserSeeder::class,
+//            GradeSeeder::class,
+//            SchoolSeeder::class,
+//            SchoolYearSeeder::class,
+//            SubjectSeeder::class,
+//            AcademicYearSeeder::class,
+//            ClassSeeder::class,
+//            RollCallSeeder::class,
+//            TimeTableSeeder::class,
+            SubjectConfigSeeder::class
         ]);
         // \App\Models\User::factory()->create([
         //     'name' => 'Test User',

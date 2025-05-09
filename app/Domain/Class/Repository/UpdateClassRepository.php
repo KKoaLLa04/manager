@@ -19,12 +19,13 @@ class UpdateClassRepository extends ClassRepository
     {
         $dataUpdate = [
             "name"            => isset($request->name) ? $request->name : "",
+            "status"          => isset($request->status) ? $request->status : "",
             "code"            => now()->timestamp,
             "grade_id"        => isset($request->grade_id) ? $request->grade_id : null,
             "modified_user_id" => Auth::user()->id
         ];
 
-        return Classes::query()->where('id', $request->class_id)->update($dataUpdate);
+         Classes::query()->where('id', $request->class_id)->update($dataUpdate);
     }
 
     public function createClassTeacherSubject(int $classId, int $teacherId)
@@ -58,6 +59,7 @@ class UpdateClassRepository extends ClassRepository
         return ClassSubjectTeacher::query()->where('class_id', $classId)
             ->where('user_id', $teacherId)
             ->where('status', StatusEnum::ACTIVE->value)
+            ->whereNull('end_date')
             ->where('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)
             ->exists();

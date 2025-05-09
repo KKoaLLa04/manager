@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Common\Enums\AccessTypeEnum;
 use App\Common\Enums\DeleteEnum;
 use App\Domain\AcademicYear\Models\AcademicYear;
+use App\Domain\RollCall\Models\RollCall;
 use App\Domain\SchoolYear\Models\SchoolYear;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,31 +15,32 @@ class Student extends Model
     use HasFactory;
     public $table = 'students';
 
-    protected $fillable = [       
-        'fullname','address','student_code','dob','status','gender','is_deleted','created_user_id','modified_user_id','created_at','updated_at',
+    protected $fillable = [
+        'fullname','address','student_code','dob','status','gender','avatar','is_deleted','created_user_id','modified_user_id','created_at','updated_at',
     ];
 
     public function classHistory()
     {
         return $this->hasMany(StudentClassHistory::class, 'student_id')->where('is_deleted', DeleteEnum::NOT_DELETE->value);
     }
-    
+
     public function parents()
     {
         return $this->belongsToMany(User::class, 'user_student', 'student_id', 'user_id')
                     ->where('access_type', AccessTypeEnum::GUARDIAN->value) // Chỉ lấy user có access_type là phụ huynh
                     ->where('users.is_deleted', DeleteEnum::NOT_DELETE->value) // Chỉ lấy user chưa bị xóa
-                    ->select('users.id', 'fullname', 'phone', 'code', 'gender', 'email', 'dob') // Chỉ lấy các trường cần thiết
+                    ->select('users.id', 'fullname', 'phone', 'code', 'gender', 'email', 'dob', 'address') // Thêm cột address
                     ->withPivot([]); // Không lấy thông tin pivot
     }
-    
+
+
     public function schoolYear()
     {
-        return $this->belongsTo(SchoolYear::class, 'school_year_name'); 
+        return $this->belongsTo(SchoolYear::class, 'school_year_name');
     }
     public function academic()
     {
-        return $this->belongsTo(AcademicYear::class, 'academic_year_name'); 
+        return $this->belongsTo(AcademicYear::class, 'academic_year_name');
     }
     protected static function boot()
     {
@@ -58,10 +60,17 @@ class Student extends Model
     }
 
 
-    
+    public function pointStudents()
+    {
+        return $this->hasMany(PointStudent::class, 'student_id', 'id');
+    }
 
 
     public function classHistories(){
         return $this->hasMany(StudentClassHistory::class, 'student_id', 'id');
+    }
+
+    public function rollCall(){
+        return $this->hasMany(RollCall::class,'student_id', 'id');
     }
 }

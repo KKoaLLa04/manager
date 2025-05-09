@@ -9,7 +9,7 @@ class GetClassRequest extends BaseRequest
     public function __construct()
     {
     }
-    
+
     public function rules(): array
     {
         return [
@@ -19,11 +19,11 @@ class GetClassRequest extends BaseRequest
             "search" => "string|nullable",
         ];
     }
-    
+
     public function messages(): array
     {
         return [
         ];
     }
-    
+
 }

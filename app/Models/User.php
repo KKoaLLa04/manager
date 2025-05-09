@@ -84,7 +84,7 @@ class User extends Authenticatable implements JWTSubject
             ->wherePivot('is_deleted', DeleteEnum::NOT_DELETE->value)
             ->withTimestamps()
             ->where('students.status', StatusEnum::ACTIVE->value);
-        }
+    }
 
 
     public function assign_relationship(): BelongsToMany
@@ -101,11 +101,12 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(ClassSubjectTeacher::class, 'user_id');
     }
 
-    public function infoMainTearchWithClass () {
+    public function infoMainTearchWithClass()
+    {
 
         $itemTearchMainHasClass = ClassSubjectTeacher::where('user_id', $this->id)->where('end_date', null)->where('access_type', StatusTeacherEnum::MAIN_TEACHER->value)->where('status', StatusEnum::ACTIVE->value)->where('is_deleted', DeleteEnum::NOT_DELETE->value)->first();
 
-        if($itemTearchMainHasClass){
+        if ($itemTearchMainHasClass) {
 
             $class = Classes::find($itemTearchMainHasClass->class_id);
 
@@ -121,16 +122,15 @@ class User extends Authenticatable implements JWTSubject
                 "userCode" => $this->code,
                 "userEmail" => $this->email,
                 "userPhone" => $this->phone,
-                "userMainClassName" => $class->name,
-                "userMainClassId" => $class->id,
+                "userMainClassName" => $class->name ?? null,
+                "userMainClassId" => $class->id ?? null,
                 "userAccessType" => $this->access_type,
                 "userStatus" => $this->status,
                 "gender" => $this->gender,
                 "address" => $this->address,
                 "userDob" => strtotime($this->dob),
             ];
-
-        }else{
+        } else {
 
             // return array_merge(
             //     $this->toArray(),
@@ -152,18 +152,15 @@ class User extends Authenticatable implements JWTSubject
                 "address" => $this->address,
                 "userDob" => strtotime($this->dob),
             ];
-
         }
-
     }
-//tai khoan
+    //tai khoan
     public function classSubjectTeacher(): HasMany
     {
         return $this->hasMany(ClassSubjectTeacher::class, 'user_id', 'id');
     }
-
-
+    public function teacherSubjects()
+    {
+        return $this->hasMany(TeacherSubject::class, 'user_id', 'id');
     }
-
-
-
+}
